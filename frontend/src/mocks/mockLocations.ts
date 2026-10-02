@@ -211,6 +211,7 @@ function toResult(seed: MockSeed, metrics: MockMetrics, phase: "INITIAL" | "FOLL
     resultImageUrl: "",
     overlay: generateMockOverlay(metrics.obstacleTypes, obstructionRatio, `${seed.id}-${suffix}`),
     analyzedAt: metrics.analyzedAt,
+    isMock: true,
   };
 }
 
@@ -239,6 +240,7 @@ export const MOCK_LOCATIONS: Location[] = SEEDS.map((s) => {
     resultImage: latest.resultImageUrl,
     status: s.status,
     plannedActions: s.plannedActions,
+    isSample: true,
   };
 });
 

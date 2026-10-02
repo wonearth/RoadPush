@@ -56,6 +56,8 @@ export interface AnalysisResult {
   resultImageUrl: string;
   overlay: AnalysisOverlay | null;
   analyzedAt: string;
+  /** mock AI 서비스가 만든 모의 결과 (실제 모델 추론 아님) */
+  isMock?: boolean;
 }
 
 /**

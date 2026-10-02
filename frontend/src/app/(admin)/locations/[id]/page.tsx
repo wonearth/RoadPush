@@ -86,7 +86,7 @@ export default function LocationDetailPage() {
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <h2 className="text-2xl font-bold text-slate-900">{location.name}</h2>
               <StatusBadge status={location.status} />
-              <MockBadge />
+              {location.isSample && <MockBadge label="예시 데이터" />}
             </div>
             <p className="mt-1 flex items-center gap-1 text-[13px] text-slate-500">
               <MapPin className="size-3.5" /> {location.address}

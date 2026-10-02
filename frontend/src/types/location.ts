@@ -30,6 +30,8 @@ export interface Location {
   resultImage: string;
   status: LocationStatus;
   plannedActions: ActionType[];
+  /** 예시 데이터 여부 — 실제 촬영·AI 분석 결과가 아닌 개발용/모의 데이터 */
+  isSample?: boolean;
 }
 
 export interface CreateLocationInput {

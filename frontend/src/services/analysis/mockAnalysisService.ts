@@ -80,6 +80,7 @@ export const mockAnalysisService: AnalysisService = {
     // 개발용 예시 장면(mock://)은 같은 seed 를 써서 원본 일러스트와 탐지 박스 위치를 맞춘다.
     const seed = isMockMediaUrl(input.originalImageUrl) ? input.originalImageUrl : result.id;
     result.overlay = generateMockOverlay(result.obstacleTypes, result.obstructionRatio, seed);
+    result.isMock = true;
     return result;
   },
 };

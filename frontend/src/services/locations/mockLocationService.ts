@@ -27,6 +27,7 @@ function applyAnalysis(location: Location, analysis: AnalysisResult): Location {
     analyzedAt: analysis.analyzedAt,
     beforeImage: analysis.originalImageUrl,
     resultImage: analysis.resultImageUrl,
+    isSample: Boolean(location.isSample || analysis.isMock),
   };
 }
 
