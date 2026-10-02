@@ -39,6 +39,8 @@ export interface LocationService {
   getAnalysisHistory(locationId: string): Promise<AnalysisResult[]>;
   getActionLogs(locationId: string): Promise<ActionLog[]>;
   updateAction(locationId: string, input: UpdateActionInput, actor: string): Promise<Location>;
+  /** 데이터가 비어 있을 때 신촌·이대 예시 데이터를 넣는다. 넣은 구간 수를 반환 (이미 있으면 0) */
+  seedSampleData(): Promise<number>;
 }
 
 export interface AnalyzeInput {

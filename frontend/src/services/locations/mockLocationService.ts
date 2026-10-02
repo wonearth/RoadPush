@@ -88,6 +88,12 @@ export const mockLocationService: LocationService = {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
 
+  async seedSampleData() {
+    if (mockDb.read().locations.length) return 0;
+    mockDb.reset();
+    return mockDb.read().locations.length;
+  },
+
   async updateAction(locationId, input, actor) {
     await delay(350);
     return mockDb.write((db) => {

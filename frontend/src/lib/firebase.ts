@@ -5,7 +5,7 @@
  */
 import { getApp, getApps, initializeApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 // NEXT_PUBLIC_ 값은 빌드 시점에 번들에 인라인되므로 반드시 리터럴로 참조한다.
@@ -31,5 +31,19 @@ function app(): FirebaseApp {
 }
 
 export const firebaseAuth = (): Auth => getAuth(app());
-export const firestore = (): Firestore => getFirestore(app());
+let firestoreInstance: Firestore | null = null;
+
+/** undefined 필드(예: 선택값)는 저장 시 자동으로 제외한다. */
+export function firestore(): Firestore {
+  if (!firestoreInstance) {
+    const firebaseApp = app();
+    try {
+      firestoreInstance = initializeFirestore(firebaseApp, { ignoreUndefinedProperties: true });
+    } catch {
+      // 개발 서버 HMR 등으로 이미 초기화된 경우
+      firestoreInstance = getFirestore(firebaseApp);
+    }
+  }
+  return firestoreInstance;
+}
 export const firebaseStorage = (): FirebaseStorage => getStorage(app());
