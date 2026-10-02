@@ -7,6 +7,9 @@ export const ADMIN_NAV = [
 ] as const;
 
 export function getPageMeta(pathname: string) {
+  if (pathname.startsWith("/account")) {
+    return { title: "계정 설정", description: "내 정보와 비밀번호를 관리합니다" };
+  }
   if (pathname.startsWith("/locations/")) {
     return { title: "위험구간 상세", description: "분석 결과와 현장조치, 조치 전·후 개선효과를 관리합니다" };
   }
