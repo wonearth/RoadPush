@@ -3,6 +3,7 @@
 import { AlertTriangle, ArrowRight, Gauge, Route, ScanSearch, ShieldAlert, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { PriorityList } from "@/components/dashboard/PriorityList";
 import { RiskMap } from "@/components/map/RiskMap";
@@ -20,7 +21,7 @@ import { locationService } from "@/services";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { data, loading } = useAsync(
+  const { data, loading, reload } = useAsync(
     () => Promise.all([locationService.getDashboardSummary(), locationService.list({ sort: "risk-desc" })]),
     "dashboard",
   );
@@ -29,6 +30,14 @@ export default function DashboardPage() {
   const recent = [...locations].sort((a, b) => b.analyzedAt.localeCompare(a.analyzedAt)).slice(0, 4);
   const avgLevel = summary ? getRiskLevel(summary.averageRiskScore) : "SAFE";
   const top = priority[0];
+
+  if (summary && summary.totalCount === 0) {
+    return (
+      <div className="p-4 sm:p-6">
+        <EmptyDashboard onSeeded={reload} />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6">
