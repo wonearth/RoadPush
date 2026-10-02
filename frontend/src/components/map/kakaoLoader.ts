@@ -1,6 +1,7 @@
 /**
  * Kakao Maps JavaScript SDK 로더.
  * 한 번만 스크립트를 넣고, kakao.maps.load 완료 후 resolve 한다.
+ * services 라이브러리(주소 검색·장소 검색·좌표→주소 변환)를 함께 불러온다.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
@@ -21,7 +22,7 @@ export function loadKakaoMaps(): Promise<any> {
 
   loading = new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_KEY}&libraries=services&autoload=false`;
     script.async = true;
     script.onload = () => {
       if (!window.kakao?.maps) {
