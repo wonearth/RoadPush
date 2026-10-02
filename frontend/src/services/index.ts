@@ -1,6 +1,7 @@
 /**
  * 서비스 구현체 선택 지점.
- * 현재는 모두 개발용 mock 구현을 사용한다. 실제 연결 시 이 파일만 교체하면 된다.
+ * Firebase 환경변수가 있으면 Firebase 구현을, 없으면 개발용 mock 구현을 사용한다 (services/config.ts).
+ * 아직 Firebase 구현이 없는 서비스는 mock 을 사용한다.
  *
  *   authService      → Firebase Authentication (services/auth/firebaseAuthService.ts)
  *   locationService  → Cloud Firestore
@@ -13,6 +14,8 @@ import { mockLocationService } from "./locations/mockLocationService";
 import { mockDb } from "./mock/mockDb";
 import { mockStorageService } from "./storage/mockStorageService";
 import type { AnalysisService, AuthService, LocationService, StorageService } from "./types";
+
+export { DATA_SOURCE } from "./config";
 
 export const authService: AuthService = mockAuthService;
 export const locationService: LocationService = mockLocationService;
