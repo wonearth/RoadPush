@@ -139,7 +139,7 @@ function RiskMapPageContent() {
       </aside>
 
       {/* 지도 */}
-      <section className="relative h-[520px] flex-1 lg:h-auto">
+      <section className="relative h-[520px] lg:h-auto lg:flex-1">
         <div className="absolute inset-0">
           <RiskMap locations={filtered} selectedId={selectedId} onSelect={select} className="size-full" />
         </div>
