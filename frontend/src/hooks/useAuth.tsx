@@ -10,6 +10,8 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<User>;
   signUp: (input: SignUpInput) => Promise<User>;
   signOut: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -34,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn: (email, password) => authService.signIn(email, password),
       signUp: (input) => authService.signUp(input),
       signOut: () => authService.signOut(),
+      changePassword: (current, next) => authService.changePassword(current, next),
+      deleteAccount: (password) => authService.deleteAccount(password),
     }),
     [user, loading],
   );

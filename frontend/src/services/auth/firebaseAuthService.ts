@@ -5,14 +5,18 @@
  */
 import { FirebaseError } from "firebase/app";
 import {
+  EmailAuthProvider,
   createUserWithEmailAndPassword,
+  deleteUser,
+  reauthenticateWithCredential,
+  updatePassword,
   onAuthStateChanged as onFirebaseAuthStateChanged,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
   type User as FirebaseUser,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import { firebaseAuth, firestore } from "@/lib/firebase";
 import type { AuthService } from "@/services/types";
 import type { User } from "@/types";
@@ -26,6 +30,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   "auth/weak-password": "비밀번호는 6자 이상이어야 합니다.",
   "auth/too-many-requests": "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.",
   "auth/network-request-failed": "네트워크 연결을 확인해 주세요.",
+  "auth/requires-recent-login": "보안을 위해 다시 로그인한 뒤 시도해 주세요.",
   "auth/operation-not-allowed": "이메일/비밀번호 로그인이 활성화되지 않았습니다. (Firebase 콘솔 설정 필요)",
 };
 
@@ -100,4 +105,32 @@ export const firebaseAuthService: AuthService = {
   async signOut() {
     await firebaseSignOut(firebaseAuth());
   },
+
+  async changePassword(currentPassword, newPassword) {
+    try {
+      const user = await reauthenticate(currentPassword);
+      await updatePassword(user, newPassword);
+    } catch (e) {
+      throw toKoreanError(e);
+    }
+  },
+
+  async deleteAccount(password) {
+    try {
+      const user = await reauthenticate(password);
+      // 프로필 문서는 인증된 상태에서만 지울 수 있으므로 계정보다 먼저 삭제한다.
+      await deleteDoc(doc(firestore(), "users", user.uid));
+      await deleteUser(user);
+    } catch (e) {
+      throw toKoreanError(e);
+    }
+  },
 };
+
+/** 민감한 작업 전에 현재 비밀번호로 다시 인증한다. */
+async function reauthenticate(password: string): Promise<FirebaseUser> {
+  const user = firebaseAuth().currentUser;
+  if (!user?.email) throw new Error("로그인이 필요합니다.");
+  await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+  return user;
+}

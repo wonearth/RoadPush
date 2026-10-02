@@ -80,4 +80,27 @@ export const mockAuthService: AuthService = {
   async signOut() {
     setSession(null);
   },
+
+  async changePassword(currentPassword, newPassword) {
+    await delay(400);
+    const session = readSession();
+    mockDb.write((db) => {
+      const record = db.users.find((u) => u.uid === session?.uid);
+      if (!record) throw new Error("로그인이 필요합니다.");
+      if (record.password !== currentPassword) throw new Error("현재 비밀번호가 올바르지 않습니다.");
+      record.password = newPassword;
+    });
+  },
+
+  async deleteAccount(password) {
+    await delay(400);
+    const session = readSession();
+    mockDb.write((db) => {
+      const record = db.users.find((u) => u.uid === session?.uid);
+      if (!record) throw new Error("로그인이 필요합니다.");
+      if (record.password !== password) throw new Error("비밀번호가 올바르지 않습니다.");
+      db.users = db.users.filter((u) => u.uid !== record.uid);
+    });
+    setSession(null);
+  },
 };

@@ -22,6 +22,10 @@ export interface AuthService {
   signIn(email: string, password: string): Promise<User>;
   signUp(input: SignUpInput): Promise<User>;
   signOut(): Promise<void>;
+  /** 현재 비밀번호 확인 후 변경 */
+  changePassword(currentPassword: string, newPassword: string): Promise<void>;
+  /** 비밀번호 확인 후 계정과 프로필을 삭제 (회원 탈퇴) */
+  deleteAccount(password: string): Promise<void>;
 }
 
 export interface LocationService {
