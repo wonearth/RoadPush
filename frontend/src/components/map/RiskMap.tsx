@@ -2,19 +2,28 @@
 
 /**
  * 위험지도 진입점.
- * TODO(map): Kakao Map / Naver Map 연결 시
- *   1) components/map/KakaoRiskMap.tsx 를 RiskMapProps 계약대로 구현
- *      - SDK 로드: next/script 로 //dapi.kakao.com/v2/maps/sdk.js?appkey=...&autoload=false
- *      - marker: RISK_META[level].hex 색상의 CustomOverlay, 클릭 시 onSelect(id)
- *      - selectedId 변경 시 map.panTo(new kakao.maps.LatLng(lat, lng))
- *   2) 아래 MockRiskMap 을 KakaoRiskMap 으로 교체
- * 페이지 코드는 수정할 필요가 없다.
+ * - NEXT_PUBLIC_KAKAO_MAP_KEY 가 있으면 카카오맵(KakaoRiskMap)
+ * - 키가 없거나 SDK 로딩에 실패하면 개발용 SVG 지도(MockRiskMap)
+ * 페이지는 RiskMapProps 계약만 사용하므로 지도 구현을 바꿔도 수정할 필요가 없다.
  */
+import { useState } from "react";
+import { KAKAO_MAP_KEY } from "./kakaoLoader";
+import { KakaoRiskMap } from "./KakaoRiskMap";
 import { MockRiskMap } from "./MockRiskMap";
 import type { RiskMapProps } from "./types";
 
 export function RiskMap(props: RiskMapProps) {
-  return <MockRiskMap {...props} />;
+  const [failed, setFailed] = useState(false);
+  if (!KAKAO_MAP_KEY || failed) return <MockRiskMap {...props} />;
+  return (
+    <KakaoRiskMap
+      {...props}
+      onError={(e) => {
+        console.warn("[RiskMap] 카카오맵을 불러오지 못해 개발용 지도로 대체합니다:", e.message);
+        setFailed(true);
+      }}
+    />
+  );
 }
 
 export type { RiskMapProps };

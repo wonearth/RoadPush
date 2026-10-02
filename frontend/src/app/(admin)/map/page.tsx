@@ -143,12 +143,12 @@ function RiskMapPageContent() {
         <div className="absolute inset-0">
           <RiskMap locations={filtered} selectedId={selectedId} onSelect={select} className="size-full" />
         </div>
-        <div className="absolute top-4 left-4 rounded-lg border border-slate-200 bg-white/95 px-3 py-2 shadow-sm">
+        <div className="absolute top-4 left-4 z-10 rounded-lg border border-slate-200 bg-white/95 px-3 py-2 shadow-sm">
           <p className="mb-1 text-[11px] font-semibold text-slate-500">보행공간 단절 위험도</p>
           <RiskLegend />
         </div>
         {selected && (
-          <div className="absolute inset-x-4 bottom-4 sm:inset-x-auto sm:right-4">
+          <div className="absolute inset-x-4 bottom-4 z-10 sm:inset-x-auto sm:right-4">
             <LocationSummaryCard location={selected} onClose={() => select(null)} />
           </div>
         )}
