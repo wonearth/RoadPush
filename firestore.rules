@@ -10,5 +10,23 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
+
+    // 위험구간: 로그인한 관리자가 조회·등록·상태 변경할 수 있다. 삭제는 막는다.
+    match /locations/{locationId} {
+      allow read, create, update: if signedIn();
+      allow delete: if false;
+    }
+
+    // 분석 이력: 기록만 추가할 수 있고 수정·삭제는 막는다.
+    match /analysisResults/{resultId} {
+      allow read, create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    // 현장조치 이력: 감사 기록이므로 추가만 허용한다.
+    match /actions/{actionId} {
+      allow read, create: if signedIn();
+      allow update, delete: if false;
+    }
   }
 }
