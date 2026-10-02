@@ -9,7 +9,7 @@ import { PasswordField, TextField } from "@/components/ui/Field";
 import { Spinner } from "@/components/ui/States";
 import { useAuth } from "@/hooks/useAuth";
 import { MOCK_DEMO_ACCOUNT } from "@/mocks/mockUsers";
-import { IS_MOCK_MODE } from "@/services";
+import { IS_MOCK_AUTH } from "@/services";
 
 function LoginForm() {
   const router = useRouter();
@@ -65,7 +65,7 @@ function LoginForm() {
         </Button>
       </form>
 
-      {IS_MOCK_MODE && (
+      {IS_MOCK_AUTH && (
         <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3">
           <p className="flex items-center gap-1.5 text-xs font-bold text-amber-800">
             <KeyRound className="size-3.5" /> 개발용 데모 계정 (Mock 인증)

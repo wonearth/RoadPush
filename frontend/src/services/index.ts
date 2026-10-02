@@ -9,18 +9,23 @@
  *   analysisService  → FastAPI + Python AI inference (services/analysis/apiAnalysisService.ts)
  */
 import { mockAnalysisService } from "./analysis/mockAnalysisService";
+import { firebaseAuthService } from "./auth/firebaseAuthService";
 import { mockAuthService } from "./auth/mockAuthService";
+import { DATA_SOURCE } from "./config";
 import { mockLocationService } from "./locations/mockLocationService";
 import { mockDb } from "./mock/mockDb";
 import { mockStorageService } from "./storage/mockStorageService";
 import type { AnalysisService, AuthService, LocationService, StorageService } from "./types";
 
-export { DATA_SOURCE } from "./config";
+export { DATA_SOURCE };
 
-export const authService: AuthService = mockAuthService;
+export const authService: AuthService = DATA_SOURCE === "firebase" ? firebaseAuthService : mockAuthService;
 export const locationService: LocationService = mockLocationService;
 export const storageService: StorageService = mockStorageService;
 export const analysisService: AnalysisService = mockAnalysisService;
+
+/** 로그인이 개발용 mock 인증인지 (데모 계정 안내 표시용) */
+export const IS_MOCK_AUTH = authService === mockAuthService;
 
 /** 현재 mock 데이터를 사용 중인지 (UI 에 '개발용 데이터' 표시용) */
 export const IS_MOCK_MODE = true;
