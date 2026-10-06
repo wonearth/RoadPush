@@ -67,7 +67,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {summary ? (
           <>
-            <KpiCard label="전체 분석 구간" value={summary.totalCount} unit="개" icon={<Route className="size-4" />} hint="신촌·이대 생활권" />
+            <KpiCard label="전체 분석 구간" value={summary.totalCount} unit="개" icon={<Route className="size-4" />} hint={`${new Set(locations.map((l) => l.area)).size}개 생활권`} />
             <KpiCard
               label="발견된 단절구간"
               value={summary.disconnectedCount}

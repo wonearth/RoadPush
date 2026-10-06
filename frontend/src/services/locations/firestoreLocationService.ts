@@ -63,7 +63,7 @@ export const firestoreLocationService: LocationService = {
         id: locationRef.id,
         name: input.name.trim(),
         address: input.address.trim(),
-        area: input.area?.trim() || "신촌·이대",
+        area: input.area?.trim() || "기타",
         latitude: input.latitude ?? fallback.latitude,
         longitude: input.longitude ?? fallback.longitude,
         status: "NEW",

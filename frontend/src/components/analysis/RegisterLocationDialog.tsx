@@ -63,7 +63,7 @@ export function RegisterLocationDialog({
       description="분석 결과를 관리 대상 구간으로 등록하면 위험지도와 대시보드에 표시되고 현장조치를 관리할 수 있습니다."
     >
       <form onSubmit={submit} className="space-y-4">
-        <TextField label="구간명" placeholder="예: 신촌 J구간" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        <TextField label="구간명" placeholder="예: ○○동 A구간" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         {CAN_PICK_LOCATION && (
           <LocationPicker
             onChange={(value) => {

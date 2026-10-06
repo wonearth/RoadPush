@@ -38,7 +38,7 @@ export const mockLocationService: LocationService = {
       id,
       name: input.name.trim(),
       address: input.address.trim(),
-      area: input.area?.trim() || "신촌·이대",
+      area: input.area?.trim() || "기타",
       latitude,
       longitude,
       status: "NEW",
