@@ -99,7 +99,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-5 xl:grid-cols-12">
         {/* 우선점검 필요 구간 */}
-        <Card className="xl:col-span-8">
+        <Card className="min-w-0 xl:col-span-8">
           <CardHeader
             title="우선점검 필요 구간"
             description="조치가 완료되지 않은 단절구간을 위험도 높은 순으로 표시합니다"
@@ -124,7 +124,7 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        <div className="space-y-5 xl:col-span-4">
+        <div className="min-w-0 space-y-5 xl:col-span-4">
           <Card>
             <CardHeader
               title="위험지도"
