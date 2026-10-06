@@ -178,7 +178,7 @@ export default function LandingPage() {
       <footer className="border-t border-slate-200">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-xs text-slate-400 sm:flex-row sm:px-6">
           <Logo />
-          <p>RoadPush MVP · 2026 AI Life Solution Challenge · 이화여자대학교 RoadPush 팀</p>
+          <p>RoadPush MVP · 2026 AI 라이프 아이디어 챌린지 · 이화여자대학교</p>
         </div>
       </footer>
     </div>

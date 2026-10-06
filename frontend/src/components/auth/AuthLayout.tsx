@@ -28,7 +28,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             ))}
           </ul>
         </div>
-        <p className="text-xs text-brand-300/70">RoadPush MVP · AI Life Solution Challenge 2026</p>
+        <p className="text-xs text-brand-300/70">RoadPush MVP · 2026 AI 라이프 아이디어 챌린지</p>
         {/* 보도 패턴 장식 */}
         <svg className="pointer-events-none absolute -right-16 -bottom-10 w-96 opacity-[0.07]" viewBox="0 0 200 200" aria-hidden>
           {Array.from({ length: 10 }).map((_, r) =>

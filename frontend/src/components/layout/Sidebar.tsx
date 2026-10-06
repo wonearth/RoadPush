@@ -36,7 +36,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
       <div className="border-t border-slate-200 px-5 py-4">
         <p className="text-xs font-bold text-slate-700">RoadPush MVP</p>
-        <p className="mt-0.5 text-[11px] text-slate-400">AI Life Solution Challenge 2026</p>
+        <p className="mt-0.5 text-[11px] text-slate-400">2026 AI 라이프 아이디어 챌린지</p>
         {IS_MOCK_MODE && (
           <button
             type="button"
