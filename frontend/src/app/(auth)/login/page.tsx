@@ -11,6 +11,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { MOCK_DEMO_ACCOUNT } from "@/mocks/mockUsers";
 import { IS_MOCK_AUTH } from "@/services";
 
+/** 로그인 후 이동할 주소는 이 사이트 안의 경로만 허용한다. ("//외부도메인" 형태 차단) */
+function isSafeNextPath(path: string | null): path is string {
+  return Boolean(path && path.startsWith("/") && !path.startsWith("//") && !path.startsWith("/\\"));
+}
+
 function LoginForm() {
   const router = useRouter();
   const next = useSearchParams().get("next");
@@ -30,7 +35,7 @@ function LoginForm() {
     setError(null);
     try {
       await signIn(email, password);
-      router.push(next?.startsWith("/") ? next : "/dashboard");
+      router.push(isSafeNextPath(next) ? next : "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "로그인에 실패했습니다.");
       setSubmitting(false);
