@@ -1,15 +1,32 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
+/**
+ * RoadPush 로고 마크 (A-3+).
+ * 왼쪽 밝은 띠 = 보도, 오른쪽 파란 면 + 점선 = 차도, 노란 블록 = 장애물.
+ * 장애물을 피해 차도로 밀려 나간 보행 경로가 RoadPush 의 'P' 를 이룬다.
+ */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" className={cn("size-8", className)} aria-hidden>
-      <rect width="32" height="32" rx="8" className="fill-brand-600" />
-      {/* 보도(세로) 위로 이어지는 보행 경로 + 차도로 밀려나는 지점 */}
-      <path d="M11 25V7" stroke="white" strokeWidth="2.6" strokeLinecap="round" />
-      <path d="M11 16h4.5a3.5 3.5 0 0 0 0-7H11" stroke="white" strokeWidth="2.6" fill="none" strokeLinejoin="round" />
-      <path d="M15.5 16 21 25" stroke="white" strokeWidth="2.6" strokeLinecap="round" />
-      <circle cx="23.5" cy="10" r="2.2" fill="#fbbf24" />
+    <svg viewBox="0 0 64 64" className={cn("size-8", className)} aria-hidden>
+      <rect width="64" height="64" rx="15" fill="#2553eb" />
+      <path d="M15 0H30V64H15A15 15 0 0 1 0 49V15A15 15 0 0 1 15 0Z" fill="#dbe8fe" />
+      <path
+        d="M52 4V10M52 18V26M52 34V42M52 50V58"
+        stroke="#fff"
+        strokeOpacity={0.55}
+        strokeWidth={2.4}
+        strokeLinecap="round"
+      />
+      <rect x="11" y="19" width="15" height="15" rx="2.5" fill="#fbbf24" />
+      <path
+        d="M20 57V39H31C38.5 39 43 34.5 43 26.5C43 18.5 38.5 14 31 14H20V7"
+        stroke="#172152"
+        strokeWidth={5}
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
