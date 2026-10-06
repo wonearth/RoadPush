@@ -14,10 +14,13 @@ import { Spinner } from "../ui/States";
  */
 export function FollowUpAnalysis({
   locationId,
+  baseline,
   onComplete,
   compact = false,
 }: {
   locationId: string;
+  /** 최초 분석 결과 (조치 전) */
+  baseline?: { riskScore: number; walkableRatio: number };
   onComplete: (result: AnalysisResult) => Promise<void>;
   compact?: boolean;
 }) {
@@ -33,6 +36,7 @@ export function FollowUpAnalysis({
       const result = await analysisService.analyze({
         file,
         locationId,
+        baseline,
         mediaType: media?.mediaType ?? "image",
         originalImageUrl: media?.imageUrl ?? `mock://scene/${locationId}/followup-${Date.now()}`,
         originalVideoUrl: media?.videoUrl,

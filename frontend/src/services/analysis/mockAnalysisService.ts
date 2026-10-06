@@ -10,7 +10,6 @@ import { isMockMediaUrl } from "@/lib/scene";
 import { generateMockOverlay } from "@/mocks/mockOverlay";
 import type { AnalysisService } from "@/services/types";
 import type { AnalysisApiResponse, AnalysisResult } from "@/types";
-import { mockDb } from "../mock/mockDb";
 
 /** 신규 분석 시 반환하는 예시 응답 (FastAPI 응답 계약과 동일한 형식) */
 export const MOCK_ANALYSIS_RESPONSE: AnalysisApiResponse = {
@@ -23,12 +22,10 @@ export const MOCK_ANALYSIS_RESPONSE: AnalysisApiResponse = {
   resultImageUrl: "",
 };
 
-/** 조치 후 재분석 예시: 위험도와 잠식률이 크게 줄어든 결과를 만든다. */
-function mockFollowUpResponse(locationId: string): AnalysisApiResponse {
-  const history = mockDb.read().analysisResults.filter((r) => r.locationId === locationId);
-  const initial = history.find((r) => r.phase === "INITIAL") ?? history[0];
-  const baseScore = initial?.riskScore ?? 82;
-  const baseWalkable = initial?.walkableRatio ?? 0.31;
+/** 조치 후 재분석 예시: 최초 분석 대비 위험도와 잠식률이 크게 줄어든 결과를 만든다. */
+function mockFollowUpResponse(baseline?: { riskScore: number; walkableRatio: number }): AnalysisApiResponse {
+  const baseScore = baseline?.riskScore ?? 82;
+  const baseWalkable = baseline?.walkableRatio ?? 0.31;
   const riskScore = Math.max(8, Math.round(baseScore * 0.34));
   const walkableRatio = Math.min(0.92, Math.round((baseWalkable + 0.45) * 100) / 100);
   return {
@@ -68,7 +65,7 @@ export const mockAnalysisService: AnalysisService = {
   async analyze(input) {
     await delay(2600);
     const isFollowUp = Boolean(input.locationId);
-    const res = isFollowUp ? mockFollowUpResponse(input.locationId!) : MOCK_ANALYSIS_RESPONSE;
+    const res = isFollowUp ? mockFollowUpResponse(input.baseline) : MOCK_ANALYSIS_RESPONSE;
     const result = toAnalysisResult(res, {
       mediaType: input.mediaType,
       originalImageUrl: input.originalImageUrl,

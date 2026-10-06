@@ -51,6 +51,8 @@ export interface AnalyzeInput {
   originalVideoUrl?: string;
   /** 재분석일 경우 대상 구간 */
   locationId?: string;
+  /** 재분석일 경우 비교 기준이 되는 최초 분석 결과 (mock 분석에서 조치 후 결과를 만들 때 사용) */
+  baseline?: { riskScore: number; walkableRatio: number };
 }
 
 export interface AnalysisService {

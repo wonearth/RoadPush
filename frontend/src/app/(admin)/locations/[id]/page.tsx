@@ -204,6 +204,7 @@ export default function LocationDetailPage() {
               <FollowUpAnalysis
                 compact
                 locationId={location.id}
+                baseline={initial}
                 onComplete={async (r) => {
                   await locationService.addFollowUpAnalysis(location.id, r);
                   await reload();
@@ -231,6 +232,7 @@ export default function LocationDetailPage() {
               </div>
               <FollowUpAnalysis
                 locationId={location.id}
+                baseline={initial}
                 onComplete={async (r) => {
                   await locationService.addFollowUpAnalysis(location.id, r);
                   await reload();
