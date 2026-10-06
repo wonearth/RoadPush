@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "inverse";
 type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
@@ -10,6 +10,8 @@ const VARIANTS: Record<Variant, string> = {
   secondary: "bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 shadow-sm",
   ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
   danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
+  /** 진한 배경 위에 놓는 흰색 버튼 */
+  inverse: "bg-white text-brand-800 hover:bg-brand-50 shadow-sm",
 };
 
 const SIZES: Record<Size, string> = {

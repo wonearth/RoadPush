@@ -170,7 +170,7 @@ export default function LandingPage() {
               <p className="text-lg font-bold">지자체·도로관리기관을 위한 보행안전 관리 플랫폼</p>
               <p className="mt-1 text-sm text-brand-200">기관 계정으로 로그인해 위험구간을 확인하고 현장조치를 관리하세요.</p>
             </div>
-            <ButtonLink href="/login" size="lg" className="bg-white text-brand-800 hover:bg-brand-50">
+            <ButtonLink href="/login" size="lg" variant="inverse">
               관리자 로그인 <ArrowRight className="size-4" />
             </ButtonLink>
           </div>
