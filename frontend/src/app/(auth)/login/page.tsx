@@ -1,6 +1,5 @@
 "use client";
 
-import { KeyRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -8,8 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { PasswordField, TextField } from "@/components/ui/Field";
 import { Spinner } from "@/components/ui/States";
 import { useAuth } from "@/hooks/useAuth";
-import { MOCK_DEMO_ACCOUNT } from "@/mocks/mockUsers";
-import { IS_MOCK_AUTH } from "@/services";
 
 /** 로그인 후 이동할 주소는 이 사이트 안의 경로만 허용한다. ("//외부도메인" 형태 차단) */
 function isSafeNextPath(path: string | null): path is string {
@@ -70,26 +67,6 @@ function LoginForm() {
         </Button>
       </form>
 
-      {IS_MOCK_AUTH && (
-        <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3">
-          <p className="flex items-center gap-1.5 text-xs font-bold text-amber-800">
-            <KeyRound className="size-3.5" /> 개발용 데모 계정 (Mock 인증)
-          </p>
-          <p className="tabular mt-1 text-xs text-amber-900/80">
-            {MOCK_DEMO_ACCOUNT.email} / {MOCK_DEMO_ACCOUNT.password}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setEmail(MOCK_DEMO_ACCOUNT.email);
-              setPassword(MOCK_DEMO_ACCOUNT.password);
-            }}
-            className="mt-1.5 text-xs font-semibold text-amber-800 underline underline-offset-2"
-          >
-            데모 계정 입력
-          </button>
-        </div>
-      )}
 
       <p className="mt-8 text-center text-sm text-slate-500">
         계정이 없으신가요?{" "}

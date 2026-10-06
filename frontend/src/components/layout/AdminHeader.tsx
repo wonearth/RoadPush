@@ -3,9 +3,7 @@
 import { LogIn, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { IS_MOCK_MODE } from "@/services";
 import { ButtonLink } from "../ui/Button";
-import { MockBadge } from "../ui/MockNotice";
 import { getPageMeta } from "./navigation";
 import { UserMenu } from "./UserMenu";
 
@@ -28,7 +26,6 @@ export function AdminHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
         <h1 className="truncate text-[17px] font-bold text-slate-900">{meta.title}</h1>
         <p className="hidden truncate text-xs text-slate-500 sm:block">{meta.description}</p>
       </div>
-      {IS_MOCK_MODE && <MockBadge className="hidden md:inline-flex" />}
       {user ? (
         <UserMenu user={user} onSignOut={signOut} />
       ) : (

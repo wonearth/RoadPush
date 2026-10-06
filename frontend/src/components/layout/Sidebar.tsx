@@ -1,10 +1,8 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { IS_MOCK_MODE, resetMockData } from "@/services";
 import { Logo } from "./Logo";
 import { ADMIN_NAV } from "./navigation";
 
@@ -37,21 +35,6 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="border-t border-slate-200 px-5 py-4">
         <p className="text-xs font-bold text-slate-700">RoadPush MVP</p>
         <p className="mt-0.5 text-[11px] text-slate-400">2026 AI 라이프 아이디어 챌린지</p>
-        {IS_MOCK_MODE && (
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm("데모 중 변경한 등록·조치·재분석 내용을 초기 mock 데이터로 되돌릴까요?")) {
-                resetMockData();
-                window.location.reload();
-              }
-            }}
-            className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-slate-600"
-          >
-            <RotateCcw className="size-3" aria-hidden />
-            데모 데이터 초기화
-          </button>
-        )}
       </div>
     </div>
   );
