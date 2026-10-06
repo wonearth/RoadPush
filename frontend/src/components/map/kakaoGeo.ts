@@ -19,14 +19,11 @@ export interface GeoAddress {
   area: string;
 }
 
-// 신촌·이대 생활권 중심 — 장소 검색 결과를 이 근처로 우선 정렬
-const SEARCH_CENTER = { lat: 37.5575, lng: 126.9415 };
-
 function call<T>(fn: (cb: (result: T, status: string) => void) => void): Promise<{ result: T; ok: boolean }> {
   return new Promise((resolve) => fn((result, status) => resolve({ result, ok: status === "OK" })));
 }
 
-/** 주소 검색 → 결과 없으면 장소(키워드) 검색 */
+/** 주소 검색 → 결과 없으면 장소(키워드) 검색 (특정 지역을 우선하지 않는다) */
 export async function searchPlaces(query: string): Promise<GeoPlace[]> {
   const kakao = await loadKakaoMaps();
   const q = query.trim();
@@ -45,10 +42,7 @@ export async function searchPlaces(query: string): Promise<GeoPlace[]> {
 
   const places = new kakao.maps.services.Places();
   const byKeyword = await call<any[]>((cb) =>
-    places.keywordSearch(q, cb, {
-      location: new kakao.maps.LatLng(SEARCH_CENTER.lat, SEARCH_CENTER.lng),
-      size: 7,
-    }),
+    places.keywordSearch(q, cb, { size: 7 }),
   );
   if (!byKeyword.ok) return [];
   return byKeyword.result.map((r) => ({

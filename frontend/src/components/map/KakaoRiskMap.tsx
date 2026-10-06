@@ -12,9 +12,9 @@ import type { Location } from "@/types";
 import { loadKakaoMaps } from "./kakaoLoader";
 import type { RiskMapProps } from "./types";
 
-// 신촌역 ~ 이대역 사이
-const DEFAULT_CENTER = { lat: 37.5575, lng: 126.9415 };
-const DEFAULT_LEVEL = 4;
+// 등록된 구간이 없을 때 보여줄 기본 범위: 서울 전체 (구간이 있으면 구간 위치에 자동으로 맞춘다)
+const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
+const DEFAULT_LEVEL = 9;
 
 function markerElement(loc: Location, selected: boolean, interactive: boolean, onClick?: () => void) {
   const color = RISK_META[loc.riskLevel].hex;

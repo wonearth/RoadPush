@@ -21,7 +21,8 @@ export interface PickedLocation {
   area: string;
 }
 
-const START = { lat: 37.5575, lng: 126.9415 };
+// 서울 전체에서 시작 → 검색하거나 확대해 위치 지정
+const START = { lat: 37.5665, lng: 126.978, level: 8 };
 
 export function LocationPicker({ onChange }: { onChange: (value: PickedLocation) => void }) {
   const mapEl = useRef<HTMLDivElement>(null);
@@ -64,7 +65,7 @@ export function LocationPicker({ onChange }: { onChange: (value: PickedLocation)
     loadKakaoMaps()
       .then((kakao) => {
         if (cancelled || !mapEl.current) return;
-        const map = new kakao.maps.Map(mapEl.current, { center: new kakao.maps.LatLng(START.lat, START.lng), level: 3 });
+        const map = new kakao.maps.Map(mapEl.current, { center: new kakao.maps.LatLng(START.lat, START.lng), level: START.level });
         map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
         kakao.maps.event.addListener(map, "click", (e: any) => void moveTo(e.latLng.getLat(), e.latLng.getLng()));
         mapRef.current = map;
