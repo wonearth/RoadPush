@@ -1,4 +1,4 @@
-import { ArrowRight, Camera, ClipboardCheck, Gauge, MapPinned, RefreshCw, ScanSearch, Split, X, Check } from "lucide-react";
+import { ArrowDown, ArrowRight, Camera, Check, ClipboardCheck, Gauge, LogIn, MapPinned, RefreshCw, ScanSearch, Split, X } from "lucide-react";
 import { HeroPreview } from "@/components/landing/HeroPreview";
 import { PublicNav } from "@/components/landing/PublicNav";
 import { Logo } from "@/components/layout/Logo";
@@ -57,11 +57,11 @@ export default function LandingPage() {
               AI로 찾아내고, 지자체·도로관리기관이 우선순위에 따라 조치할 수 있도록 돕습니다.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <ButtonLink href="/map" size="lg" icon={<MapPinned className="size-4" />}>
-                위험지도 보기
+              <ButtonLink href="/login" size="lg" icon={<LogIn className="size-4" />}>
+                관리자 로그인
               </ButtonLink>
-              <ButtonLink href="/analysis" size="lg" variant="secondary" icon={<ScanSearch className="size-4" />}>
-                AI 분석 체험하기
+              <ButtonLink href="#about" size="lg" variant="secondary" icon={<ArrowDown className="size-4" />}>
+                서비스 소개 보기
               </ButtonLink>
             </div>
             <p className="mt-4 text-xs text-slate-400">※ MVP의 모든 화면은 개발용 mock 데이터로 구성되어 있습니다.</p>
@@ -166,10 +166,10 @@ export default function LandingPage() {
           <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-2xl bg-brand-900 px-8 py-8 text-white md:flex-row">
             <div>
               <p className="text-lg font-bold">지자체·도로관리기관을 위한 보행안전 관리 플랫폼</p>
-              <p className="mt-1 text-sm text-brand-200">위험구간을 확인하고 조치 흐름을 직접 체험해 보세요.</p>
+              <p className="mt-1 text-sm text-brand-200">기관 계정으로 로그인해 위험구간을 확인하고 현장조치를 관리하세요.</p>
             </div>
-            <ButtonLink href="/dashboard" size="lg" className="bg-white text-brand-800 hover:bg-brand-50">
-              대시보드 체험하기 <ArrowRight className="size-4" />
+            <ButtonLink href="/login" size="lg" className="bg-white text-brand-800 hover:bg-brand-50">
+              관리자 로그인 <ArrowRight className="size-4" />
             </ButtonLink>
           </div>
         </div>

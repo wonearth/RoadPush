@@ -16,11 +16,11 @@ export function PublicNav() {
           </Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <ButtonLink href="/login" variant="ghost" size="sm">
-            로그인
+          <ButtonLink href="/signup" variant="ghost" size="sm">
+            회원가입
           </ButtonLink>
-          <ButtonLink href="/dashboard" size="sm">
-            대시보드 체험하기
+          <ButtonLink href="/login" size="sm">
+            관리자 로그인
           </ButtonLink>
         </div>
       </div>
