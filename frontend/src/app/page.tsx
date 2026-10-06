@@ -47,8 +47,10 @@ export default function LandingPage() {
             <p className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-100">
               AI 기반 보행공간 단절 탐지 및 위험도 관리 서비스
             </p>
-            <h1 className="mt-5 text-4xl leading-[1.25] font-bold tracking-tight text-slate-900 sm:text-[44px]">
-              보행자를 차도로 밀어내는 길,
+            <h1 className="mt-5 text-[34px] leading-[1.25] font-bold tracking-tight text-slate-900 sm:text-[44px]">
+              {/* 모바일에서는 "보행자를 차도로 / 밀어내는 길," 로 자연스럽게 줄바꿈 */}
+              <span className="whitespace-nowrap">보행자를 차도로</span>{" "}
+              <span className="whitespace-nowrap">밀어내는 길,</span>
               <br />
               <span className="text-brand-600">사고 전에</span> 발견합니다.
             </h1>
