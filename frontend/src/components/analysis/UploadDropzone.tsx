@@ -53,13 +53,13 @@ export function UploadDropzone({
           if (!disabled) handle(e.dataTransfer.files[0]);
         }}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed text-center transition-colors",
+          "flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed text-center transition-colors",
           compact ? "px-4 py-6" : "px-6 py-12",
-          dragging ? "border-brand-500 bg-brand-50" : "border-slate-300 bg-slate-50/60 hover:border-brand-400 hover:bg-brand-50/40",
+          dragging ? "border-brand-500 bg-brand-50" : "border-slate-300 bg-slate-50 hover:border-brand-400 hover:bg-brand-50",
           disabled && "pointer-events-none opacity-60",
         )}
       >
-        <span className="flex size-11 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm ring-1 ring-slate-200">
+        <span className="flex size-12 items-center justify-center rounded-full bg-white text-brand-600">
           <UploadCloud className="size-5" />
         </span>
         <p className="mt-3 text-sm font-semibold text-slate-800">

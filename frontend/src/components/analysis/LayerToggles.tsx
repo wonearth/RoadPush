@@ -18,8 +18,8 @@ export function LayerToggles({ layers, onChange }: { layers: OverlayLayers; onCh
           aria-pressed={layers[key]}
           onClick={() => onChange({ ...layers, [key]: !layers[key] })}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold ring-1 ring-inset transition-colors",
-            layers[key] ? "bg-white text-slate-700 ring-slate-300" : "bg-slate-50 text-slate-400 ring-slate-200",
+            "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
+            layers[key] ? "bg-slate-100 text-slate-800" : "bg-slate-50 text-slate-400",
           )}
         >
           <span className={cn("size-2 rounded-sm", swatch, !layers[key] && "opacity-30")} />

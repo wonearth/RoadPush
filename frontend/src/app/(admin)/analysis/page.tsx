@@ -89,7 +89,7 @@ export default function AnalysisPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6">
+    <div className="space-y-5 px-4 pt-5 pb-10 sm:px-8">
       {/* 업로드 */}
       {phase === "idle" && (
         <Card>
@@ -245,7 +245,7 @@ export default function AnalysisPage() {
             { icon: ScanSearch, title: "2. 보행공간 분석", body: "장애물 자체가 아니라, 남아 있는 유효 보행공간과 차도 이탈 필요성을 판단합니다." },
             { icon: MapPinPlus, title: "3. 위험구간 등록", body: "위험지도에 등록하고 현장조치·재분석으로 개선효과를 확인합니다." },
           ].map(({ icon: Icon, title, body }) => (
-            <div key={title} className="rounded-xl border border-slate-200 bg-white p-5">
+            <div key={title} className="rounded-2xl bg-white p-6">
               <Icon className="size-5 text-brand-600" />
               <p className="mt-3 text-sm font-semibold text-slate-900">{title}</p>
               <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{body}</p>

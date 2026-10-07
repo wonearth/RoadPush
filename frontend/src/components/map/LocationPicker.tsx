@@ -126,7 +126,7 @@ export function LocationPicker({ onChange }: { onChange: (value: PickedLocation)
       </div>
 
       {results && (
-        <ul className="max-h-40 overflow-y-auto rounded-lg border border-slate-200 text-[13px]">
+        <ul className="max-h-40 overflow-y-auto rounded-xl bg-slate-50 text-sm">
           {results.length ? (
             results.map((r, i) => (
               <li key={`${r.label}-${i}`}>
@@ -142,7 +142,7 @@ export function LocationPicker({ onChange }: { onChange: (value: PickedLocation)
         </ul>
       )}
 
-      <div className="relative h-56 overflow-hidden rounded-lg ring-1 ring-slate-200">
+      <div className="relative h-56 overflow-hidden rounded-xl">
         <div ref={mapEl} className="absolute inset-0" />
         {!picked && (
           <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 mx-auto w-fit rounded-md bg-white/90 px-2.5 py-1 text-[11px] font-medium text-slate-600 shadow-sm">
