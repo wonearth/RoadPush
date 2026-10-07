@@ -125,7 +125,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5 p-4 sm:p-6">
+    <div className="max-w-3xl space-y-5 px-4 pt-5 pb-10 sm:px-8">
       <Card>
         <CardHeader title="내 정보" />
         <CardBody>
