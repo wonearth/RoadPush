@@ -54,10 +54,10 @@ function RiskMapPageContent() {
   const select = (id: string | null) => router.replace(id ? `/map?selected=${id}` : "/map", { scroll: false });
 
   return (
-    <div className="flex flex-col lg:h-[calc(100vh-4rem)] lg:flex-row">
+    <div className="flex flex-col gap-4 px-4 pt-5 pb-8 lg:h-[calc(100vh-7.75rem)] lg:flex-row sm:px-8">
       {/* 목록 panel */}
-      <aside className="flex flex-col border-b border-slate-200 bg-white lg:w-[400px] lg:shrink-0 lg:border-r lg:border-b-0">
-        <div className="space-y-3 border-b border-slate-200 p-4">
+      <aside className="flex min-h-0 flex-col rounded-2xl bg-white p-4 lg:w-[380px] lg:shrink-0">
+        <div className="space-y-3 px-1 pb-3">
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -78,13 +78,12 @@ function RiskMapPageContent() {
                   onClick={() => setLevel(lv)}
                   aria-pressed={active}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset transition-colors",
-                    active ? "bg-slate-900 text-white ring-slate-900" : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50",
+                    "inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors",
+                    active ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200",
                   )}
                 >
-                  {lv !== "ALL" && <span className="size-2 rounded-full" style={{ backgroundColor: RISK_META[lv].hex }} />}
                   {lv === "ALL" ? "전체" : RISK_META[lv].label}
-                  <span className={cn("tabular", active ? "text-slate-300" : "text-slate-400")}>
+                  <span className={cn("tabular", active ? "text-slate-300" : "text-slate-500")}>
                     {lv === "ALL" ? all.length : counts[lv]}
                   </span>
                 </button>
@@ -98,7 +97,7 @@ function RiskMapPageContent() {
               <select
                 value={obstacle}
                 onChange={(e) => setObstacle(e.target.value as ObstacleType | "")}
-                className={cn(inputClass, "py-2 pl-8 text-[13px]")}
+                className={cn(inputClass, "py-2.5 pl-8 text-sm")}
               >
                 <option value="">모든 원인</option>
                 {OBSTACLE_TYPES.map((t) => (
@@ -110,7 +109,7 @@ function RiskMapPageContent() {
             </label>
             <label className="w-36">
               <span className="sr-only">정렬</span>
-              <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={cn(inputClass, "py-2 text-[13px]")}>
+              <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={cn(inputClass, "py-2.5 text-sm")}>
                 <option value="risk-desc">위험도 높은순</option>
                 <option value="risk-asc">위험도 낮은순</option>
                 <option value="recent">최근 분석순</option>
@@ -118,10 +117,10 @@ function RiskMapPageContent() {
             </label>
           </div>
         </div>
-        <p className="border-b border-slate-100 px-4 py-2 text-xs text-slate-500">
-          <span className="tabular font-semibold text-slate-800">{filtered.length}</span>개 구간
+        <p className="px-1 pb-1 text-sm text-slate-500">
+          <span className="tabular font-bold text-slate-900">{filtered.length}</span>개 구간
         </p>
-        <div className="max-h-[420px] flex-1 divide-y divide-slate-100 overflow-y-auto lg:max-h-none">
+        <div className="max-h-[420px] flex-1 space-y-0.5 overflow-y-auto lg:max-h-none">
           {loading ? (
             <div className="space-y-2 p-4">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -139,13 +138,12 @@ function RiskMapPageContent() {
       </aside>
 
       {/* 지도 */}
-      <section className="relative h-[520px] lg:h-auto lg:flex-1">
+      <section className="relative h-[520px] overflow-hidden rounded-2xl lg:h-auto lg:flex-1">
         <div className="absolute inset-0">
           <RiskMap locations={filtered} selectedId={selectedId} onSelect={select} className="size-full" />
         </div>
-        <div className="absolute top-4 left-4 z-10 rounded-lg border border-slate-200 bg-white/95 px-3 py-2 shadow-sm">
-          <p className="mb-1 text-[11px] font-semibold text-slate-500">보행공간 단절 위험도</p>
-          <RiskLegend />
+        <div className="absolute top-4 left-4 z-10 rounded-xl bg-white px-4 py-2.5 shadow-[0_2px_10px_rgba(25,31,40,0.10)]">
+          <RiskLegend compact />
         </div>
         {selected && (
           <div className="absolute inset-x-4 bottom-4 z-10 sm:inset-x-auto sm:right-4">
@@ -159,7 +157,7 @@ function RiskMapPageContent() {
 
 export default function RiskMapPage() {
   return (
-    <Suspense fallback={<Skeleton className="m-6 h-[600px]" />}>
+    <Suspense fallback={<Skeleton className="mx-8 mt-5 h-[600px] rounded-2xl" />}>
       <RiskMapPageContent />
     </Suspense>
   );
