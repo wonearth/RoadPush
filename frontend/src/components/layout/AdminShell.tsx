@@ -25,7 +25,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       {menuOpen && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal>
           <div className="absolute inset-0 bg-slate-900/40" onClick={() => setMenuOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-64 bg-white shadow-xl">
+          <div className="absolute inset-y-0 left-0 w-64 bg-white">
             <button
               type="button"
               onClick={() => setMenuOpen(false)}
@@ -38,7 +38,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       )}
-      <div className="flex min-h-screen flex-col lg:pl-56">
+      <div className="flex min-h-screen flex-col lg:pl-60">
         <AdminHeader onOpenMenu={() => setMenuOpen(true)} />
         <main className="flex-1">
           {!user ? (

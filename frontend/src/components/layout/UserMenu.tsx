@@ -25,32 +25,27 @@ export function UserMenu({ user, onSignOut }: { user: User; onSignOut: () => Pro
   }, [open]);
 
   return (
-    <div ref={ref} className="relative border-l border-slate-200 pl-3">
+    <div ref={ref} className="relative shrink-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex items-center gap-3 rounded-lg py-1 pr-1 pl-2 hover:bg-slate-50"
+        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[15px] hover:bg-slate-200/60"
       >
-        <span className="hidden text-right sm:block">
-          <span className="block text-[13px] font-semibold text-slate-800">{user.name}</span>
-          <span className="block text-[11px] text-slate-500">{user.organization}</span>
-        </span>
-        <span className="flex size-8 items-center justify-center rounded-full bg-brand-100 text-[13px] font-bold text-brand-700">
-          {user.name.slice(0, 1)}
-        </span>
-        <ChevronDown className="size-3.5 text-slate-400" />
+        <span className="font-bold text-slate-900">{user.name}</span>
+        {user.organization && <span className="hidden text-slate-600 sm:inline">· {user.organization}</span>}
+        <ChevronDown className="size-4 text-slate-500" />
       </button>
 
       {open && (
-        <div role="menu" className="absolute top-full right-0 z-30 mt-2 w-52 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-          <p className="truncate border-b border-slate-100 px-3 py-2 text-xs text-slate-500">{user.email}</p>
+        <div role="menu" className="absolute top-full right-0 z-30 mt-2 w-56 rounded-xl bg-white py-2 shadow-[0_8px_24px_rgba(25,31,40,0.12)]">
+          <p className="truncate border-b border-slate-100 px-4 pb-2.5 text-[13px] text-slate-500">{user.email}</p>
           <Link
             href="/account"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="flex items-center gap-2 px-4 py-2.5 text-[15px] text-slate-700 hover:bg-slate-100"
           >
             <UserCog className="size-4 text-slate-400" /> 계정 설정
           </Link>
@@ -62,7 +57,7 @@ export function UserMenu({ user, onSignOut }: { user: User; onSignOut: () => Pro
               await onSignOut();
               router.push("/login");
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-[15px] text-slate-700 hover:bg-slate-100"
           >
             <LogOut className="size-4 text-slate-400" /> 로그아웃
           </button>

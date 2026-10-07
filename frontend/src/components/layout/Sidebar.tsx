@@ -13,28 +13,29 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center px-5">
+      <div className="flex h-20 items-center px-6">
         <Logo href="/dashboard" />
       </div>
-      <nav className="flex-1 space-y-0.5 px-3 pt-2" aria-label="관리자 메뉴">
-        {ADMIN_NAV.map(({ href, label, icon: Icon }) => (
+      <nav className="flex-1 space-y-1 px-3" aria-label="관리자 메뉴">
+        {ADMIN_NAV.map(({ href, label }) => (
           <Link
             key={href}
             href={href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              isActive(href) ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+              "block rounded-xl px-4 py-3 text-base transition-colors",
+              isActive(href)
+                ? "bg-brand-50 font-bold text-brand-600"
+                : "font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900",
             )}
           >
-            <Icon className="size-[18px]" aria-hidden />
             {label}
           </Link>
         ))}
       </nav>
-      <div className="border-t border-slate-200 px-5 py-4">
-        <p className="text-xs font-bold text-slate-700">RoadPush MVP</p>
-        <p className="mt-0.5 text-[11px] text-slate-400">2026 AI 라이프 아이디어 챌린지</p>
+      <div className="px-6 py-6 text-[13px] leading-relaxed text-slate-500">
+        <p>RoadPush MVP</p>
+        <p>2026 AI 라이프 아이디어 챌린지</p>
       </div>
     </div>
   );
@@ -42,7 +43,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-56 border-r border-slate-200 bg-white lg:block">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 bg-white lg:block">
       <SidebarContent />
     </aside>
   );
