@@ -1,184 +1,194 @@
-import { ArrowDown, ArrowRight, Camera, Check, ClipboardCheck, Gauge, LogIn, MapPinned, RefreshCw, ScanSearch, Split, X } from "lucide-react";
-import { HeroPreview } from "@/components/landing/HeroPreview";
+import Image from "next/image";
 import { PublicNav } from "@/components/landing/PublicNav";
 import { Logo } from "@/components/layout/Logo";
-import { RiskLegend } from "@/components/risk/RiskLegend";
+import { MediaFrame } from "@/components/media/MediaFrame";
 import { ButtonLink } from "@/components/ui/Button";
+import { RISK_LEVELS, RISK_META } from "@/constants/risk";
+import { MOCK_SAMPLE_OVERLAY, MOCK_SAMPLE_SCENE_URL } from "@/mocks/mockOverlay";
 
-const WORKFLOW = [
-  { icon: Camera, title: "영상 확보", body: "CCTV · 블랙박스 · 현장 촬영" },
-  { icon: ScanSearch, title: "AI 분석", body: "보도·차도 구분, 장애요인 탐지" },
-  { icon: Split, title: "단절 판단", body: "남은 보행공간의 연속성 판단" },
-  { icon: Gauge, title: "위험도 산출", body: "0~100점 단계화 · 지도화" },
-  { icon: ClipboardCheck, title: "현장조치", body: "위험도 높은 구간부터 우선 점검" },
-  { icon: RefreshCw, title: "개선 확인", body: "동일 구간 재분석 · 전후 비교" },
+const STATS = [
+  { value: "35,356건", label: "2025년 보행자 교통사고" },
+  { value: "926명", label: "보행자 사망" },
+  { value: "11,498건", label: "노인 보행자 교통사고" },
 ];
 
-const FEATURES = [
-  {
-    icon: ScanSearch,
-    title: "AI 보행공간 분석",
-    body: "도로·보행 영상에서 보도와 차도를 구분하고 주정차 차량, 공사시설, 적치물, 방치 PM 등 보행 방해 요인을 탐지합니다.",
-    points: ["보도·차도 영역 구분", "장애요인 탐지", "유효 보행공간 산출"],
-  },
-  {
-    icon: Gauge,
-    title: "보행공간 단절 위험도 산출",
-    body: "장애물의 종류가 아니라 실제 남아 있는 보행공간의 연속성, 공간 잠식 정도, 차도 우회 필요 여부로 위험도를 판단합니다.",
-    points: ["0~100점 위험도", "안전·주의·경고·위험 4단계", "위험 원인 함께 제시"],
-  },
-  {
-    icon: MapPinned,
-    title: "위험구간 지도화 및 관리",
-    body: "위험구간을 지도에 표시하고 우선점검 → 현장조치 → 재분석까지 관리해 조치 전·후 개선효과를 정량적으로 확인합니다.",
-    points: ["우선점검 구간 제시", "조치 상태 관리", "조치 전·후 비교"],
-  },
+const STEPS = [
+  { tag: "01 발견", title: "남은 보행공간을 분석해요", body: "장애물의 종류가 아니라 실제로 걸을 수 있는 공간이 얼마나 남았는지로 위험도(0~100)를 계산해요." },
+  { tag: "02 조치", title: "위험한 곳부터 점검해요", body: "위험지도와 우선점검 목록으로 담당자가 어디부터 가야 할지 바로 판단해요." },
+  { tag: "03 확인", title: "개선 효과를 숫자로 봐요", body: "조치 후 같은 구간을 다시 분석해 위험도와 보행공간이 얼마나 나아졌는지 비교해요." },
 ];
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <p className="text-base font-bold text-brand-600 sm:text-lg">{children}</p>;
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="mt-3 text-[28px] leading-snug font-extrabold tracking-tight text-slate-900 sm:text-[40px]">{children}</h2>;
+}
 
 export default function LandingPage() {
   return (
     <div className="bg-white">
       <PublicNav />
 
-      {/* Hero */}
-      <section className="border-b border-slate-200 bg-slate-50/70">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
-          <div>
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-100">
-              AI 기반 보행공간 단절 탐지 및 위험도 관리 서비스
-            </p>
-            <h1 className="mt-5 text-[34px] leading-[1.25] font-bold tracking-tight text-slate-900 sm:text-[44px]">
-              {/* 모바일에서는 "보행자를 차도로 / 밀어내는 길," 로 자연스럽게 줄바꿈 */}
-              <span className="whitespace-nowrap">보행자를 차도로</span>{" "}
-              <span className="whitespace-nowrap">밀어내는 길,</span>
-              <br />
-              <span className="text-brand-600">사고 전에</span> 발견합니다.
-            </h1>
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-slate-600">
-              RoadPush는 주정차 차량·공사시설·적치물·방치 PM 등으로 보행공간이 끊겨 보행자가 차도로 내려가야 하는 구간을
-              AI로 찾아내고, 지자체·도로관리기관이 우선순위에 따라 조치할 수 있도록 돕습니다.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <ButtonLink href="/login" size="lg" icon={<LogIn className="size-4" />}>
-                관리자 로그인
-              </ButtonLink>
-              <ButtonLink href="#about" size="lg" variant="secondary" icon={<ArrowDown className="size-4" />}>
-                서비스 소개 보기
-              </ButtonLink>
-            </div>
-            <p className="mt-4 text-xs text-slate-400">※ MVP의 모든 화면은 개발용 mock 데이터로 구성되어 있습니다.</p>
-          </div>
-          <HeroPreview />
+      {/* 첫 화면 */}
+      <section className="px-5 pt-14 text-center sm:px-8 sm:pt-20">
+        <h1 className="text-[34px] leading-[1.28] font-extrabold tracking-tight text-slate-900 sm:text-[58px]">
+          <span className="whitespace-nowrap">보행자를 차도로</span> <span className="whitespace-nowrap">밀어내는 길,</span>
+          <br />
+          <span className="text-brand-600">사고 전에</span> 발견합니다
+        </h1>
+        <p className="mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-slate-600 sm:text-xl">
+          주정차 차량·공사시설·적치물·방치 킥보드·자전거로 보도가 끊긴 곳을 AI가 찾아내고, 지자체가 위험한 곳부터 조치할 수 있도록
+          돕습니다.
+        </p>
+        <div className="mt-9 flex flex-wrap justify-center gap-3">
+          <ButtonLink href="/login" size="lg">
+            관리자 로그인
+          </ButtonLink>
+          <ButtonLink href="#about" size="lg" variant="secondary">
+            서비스 소개 보기
+          </ButtonLink>
+        </div>
+        <div className="mx-auto mt-14 max-w-6xl overflow-hidden rounded-t-3xl bg-slate-100 px-3 pt-3 sm:px-7 sm:pt-7">
+          <Image
+            src="/landing/riskmap-preview.jpg"
+            alt="RoadPush 보행공간 단절 위험지도 화면"
+            width={2160}
+            height={1350}
+            priority
+            className="block w-full rounded-t-2xl shadow-[0_10px_40px_rgba(25,31,40,0.12)]"
+          />
         </div>
       </section>
 
-      {/* 핵심 질문 + 차별점 */}
-      <section id="about" className="scroll-mt-16">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold text-brand-600">RoadPush의 핵심 질문</p>
-            <blockquote className="mt-4 text-2xl leading-snug font-bold text-slate-900 sm:text-[32px]">
-              &ldquo;무엇이 놓여 있는가가 아니라,
-              <br />
-              보행자가 <span className="underline decoration-brand-300 decoration-4 underline-offset-[6px]">계속 걸을 수 있는 공간</span>이 남아 있는가?&rdquo;
-            </blockquote>
-          </div>
-
-          <div className="mt-14 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-7">
-              <p className="text-sm font-bold text-slate-500">기존 방식</p>
-              <ul className="mt-5 space-y-4">
-                {["개별 장애물 중심 탐지", "사고·민원 발생 이후 관리"].map((t) => (
-                  <li key={t} className="flex items-center gap-3 text-[17px] font-semibold text-slate-500">
-                    <span className="flex size-7 items-center justify-center rounded-full bg-slate-200">
-                      <X className="size-4 text-slate-500" />
-                    </span>
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-brand-200 bg-brand-50/50 p-7">
-              <p className="text-sm font-bold text-brand-700">RoadPush</p>
-              <ul className="mt-5 space-y-4">
-                {["실제 남아 있는 보행공간 판단", "사고 이전 위험구간 발견"].map((t) => (
-                  <li key={t} className="flex items-center gap-3 text-[17px] font-semibold text-slate-900">
-                    <span className="flex size-7 items-center justify-center rounded-full bg-brand-600">
-                      <Check className="size-4 text-white" />
-                    </span>
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Workflow */}
-          <div className="mt-20">
-            <h2 className="text-center text-xl font-bold text-slate-900">발견에서 개선 확인까지, 하나의 관리 흐름</h2>
-            <ol className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-              {WORKFLOW.map(({ icon: Icon, title, body }, i) => (
-                <li key={title} className="relative rounded-xl border border-slate-200 bg-white p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="flex size-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-                      <Icon className="size-[18px]" />
-                    </span>
-                    <span className="tabular text-xs font-bold text-slate-300">0{i + 1}</span>
-                  </div>
-                  <p className="mt-3 text-sm font-bold text-slate-900">{title}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-500">{body}</p>
-                  {i < WORKFLOW.length - 1 && (
-                    <ArrowRight className="absolute top-1/2 -right-[11px] z-10 hidden size-4 -translate-y-1/2 rounded-full bg-white text-slate-300 lg:block" />
-                  )}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      {/* 핵심 기능 */}
-      <section id="features" className="scroll-mt-16 border-t border-slate-200 bg-slate-50/70">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <p className="text-sm font-semibold text-brand-600">주요 기능</p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-900">관리자가 &lsquo;어디부터 점검할지&rsquo; 바로 판단합니다</h2>
-            </div>
-            <RiskLegend />
-          </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, title, body, points }) => (
-              <article key={title} className="rounded-2xl border border-slate-200 bg-white p-6">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-brand-600 text-white">
-                  <Icon className="size-5" />
-                </span>
-                <h3 className="mt-5 text-base font-bold text-slate-900">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{body}</p>
-                <ul className="mt-5 space-y-1.5 border-t border-slate-100 pt-4">
-                  {points.map((p) => (
-                    <li key={p} className="flex items-center gap-2 text-[13px] text-slate-700">
-                      <Check className="size-3.5 text-brand-600" /> {p}
-                    </li>
-                  ))}
-                </ul>
-              </article>
+      {/* 왜 필요한가요 */}
+      <section id="about" className="scroll-mt-18 bg-slate-100 px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-6xl">
+          <Eyebrow>왜 필요한가요</Eyebrow>
+          <SectionTitle>
+            보행자 사고는 여전히 많지만,
+            <br />
+            사고가 나기 전의 위험은 관리되지 않습니다
+          </SectionTitle>
+          <dl className="mt-10 flex flex-wrap gap-x-16 gap-y-6">
+            {STATS.map((s) => (
+              <div key={s.label}>
+                <dt className="tabular text-[40px] leading-none font-extrabold tracking-tight text-slate-900 sm:text-[52px]">{s.value}</dt>
+                <dd className="mt-2 text-base text-slate-600 sm:text-lg">{s.label}</dd>
+              </div>
             ))}
+          </dl>
+          <p className="mt-7 text-sm text-slate-500">출처: 한국도로교통공단 교통사고분석시스템(TAAS), 「2025년 보행자 교통사고 통계」</p>
+        </div>
+      </section>
+
+      {/* RoadPush의 질문 */}
+      <section className="px-5 py-16 text-center sm:px-8 sm:py-20">
+        <Eyebrow>RoadPush의 질문</Eyebrow>
+        <p className="mt-4 text-[26px] leading-snug font-extrabold tracking-tight text-slate-900 sm:text-[40px]">
+          무엇이 놓여 있는가가 아니라,
+          <br />
+          보행자가 <span className="text-brand-600">계속 걸을 수 있는 공간</span>이 남아 있는가?
+        </p>
+        <div className="mx-auto mt-10 grid max-w-4xl gap-4 text-left sm:grid-cols-2">
+          <div className="rounded-2xl bg-slate-100 p-7">
+            <p className="text-base font-semibold text-slate-500">기존 방식</p>
+            <ul className="mt-3 space-y-2 text-lg font-bold text-slate-500 sm:text-xl">
+              <li>개별 장애물 중심 탐지</li>
+              <li>사고·민원 발생 이후 관리</li>
+            </ul>
           </div>
-          <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-2xl bg-brand-900 px-8 py-8 text-white md:flex-row">
+          <div className="rounded-2xl bg-brand-50 p-7">
+            <p className="text-base font-semibold text-brand-600">RoadPush</p>
+            <ul className="mt-3 space-y-2 text-lg font-bold text-slate-900 sm:text-xl">
+              <li>실제 남아 있는 보행공간 판단</li>
+              <li>사고 이전 위험구간 발견</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* AI가 보는 것 */}
+      <section className="bg-slate-100 px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-6xl">
+          <Eyebrow>AI가 보는 것</Eyebrow>
+          <SectionTitle>사진 한 장에서 남은 보행공간을 계산해요</SectionTitle>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            <figure className="rounded-2xl bg-white p-4">
+              <figcaption className="mb-3 px-1 font-semibold text-slate-700">원본 사진</figcaption>
+              <MediaFrame variant="original" src={MOCK_SAMPLE_SCENE_URL} overlay={MOCK_SAMPLE_OVERLAY} />
+            </figure>
+            <figure className="rounded-2xl bg-white p-4">
+              <figcaption className="mb-3 px-1 font-semibold text-slate-700">AI 분석 결과 · 보도·장애물·남은 보행공간</figcaption>
+              <MediaFrame
+                variant="result"
+                src={MOCK_SAMPLE_SCENE_URL}
+                overlay={MOCK_SAMPLE_OVERLAY}
+                walkableRatio={0.31}
+                roadDetourRequired
+              />
+            </figure>
+          </div>
+          <dl className="mt-7 flex flex-wrap gap-x-12 gap-y-4">
             <div>
-              <p className="text-lg font-bold">지자체·도로관리기관을 위한 보행안전 관리 플랫폼</p>
-              <p className="mt-1 text-sm text-brand-200">기관 계정으로 로그인해 위험구간을 확인하고 현장조치를 관리하세요.</p>
+              <dt className={`tabular text-[40px] leading-none font-extrabold ${RISK_META.DANGER.text}`}>82</dt>
+              <dd className="mt-1.5 text-slate-600">단절 위험도 · 위험</dd>
             </div>
-            <ButtonLink href="/login" size="lg" variant="inverse">
-              관리자 로그인 <ArrowRight className="size-4" />
-            </ButtonLink>
+            <div>
+              <dt className="tabular text-[40px] leading-none font-extrabold text-[#16a34a]">31%</dt>
+              <dd className="mt-1.5 text-slate-600">유효 보행공간</dd>
+            </div>
+            <div>
+              <dt className="text-[40px] leading-none font-extrabold text-slate-900">있음</dt>
+              <dd className="mt-1.5 text-slate-600">차도 우회 필요</dd>
+            </div>
+          </dl>
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {RISK_LEVELS.map((lv) => (
+              <li key={lv} className="rounded-xl bg-white px-5 py-4">
+                <p className={`text-lg font-bold ${RISK_META[lv].text}`}>{RISK_META[lv].label}</p>
+                <p className="tabular mt-0.5 text-[15px] text-slate-600">
+                  {RISK_META[lv].min}~{RISK_META[lv].max} · {RISK_META[lv].description}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* 어떻게 동작하나요 */}
+      <section id="how" className="scroll-mt-18 px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-6xl">
+          <Eyebrow>어떻게 동작하나요</Eyebrow>
+          <SectionTitle>발견부터 개선 확인까지, 한 흐름으로</SectionTitle>
+          <ol className="mt-10 grid gap-10 md:grid-cols-3">
+            {STEPS.map((s) => (
+              <li key={s.tag} className="border-t-[3px] border-slate-900 pt-5">
+                <p className="font-bold text-brand-600">{s.tag}</p>
+                <p className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">{s.title}</p>
+                <p className="mt-2.5 text-[17px] leading-relaxed text-slate-600">{s.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* 마지막 안내 */}
+      <section className="px-5 pb-16 sm:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 rounded-2xl bg-brand-50 px-7 py-7 sm:flex-row sm:items-center sm:px-9">
+          <div>
+            <p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">지자체·도로관리기관을 위한 보행안전 관리 플랫폼</p>
+            <p className="mt-1.5 text-base text-slate-600 sm:text-[17px]">기관 계정으로 로그인해 위험구간을 확인하고 현장조치를 관리하세요.</p>
           </div>
+          <ButtonLink href="/login" size="lg" className="shrink-0">
+            관리자 로그인
+          </ButtonLink>
         </div>
       </section>
 
       <footer className="border-t border-slate-200">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-xs text-slate-400 sm:flex-row sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-3 px-5 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:px-8">
           <Logo />
           <p>RoadPush MVP · 2026 AI 라이프 아이디어 챌린지 · 이화여자대학교</p>
         </div>
