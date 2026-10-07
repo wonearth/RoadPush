@@ -48,7 +48,7 @@ export function ActionManagement({
       <div className="space-y-5 lg:col-span-3">
         {/* 상태 stepper */}
         <div>
-          <p className="mb-2 text-xs font-semibold text-slate-500">조치 상태</p>
+          <p className="mb-2.5 text-sm font-semibold text-slate-600">조치 상태</p>
           <ol className="grid grid-cols-4 gap-1.5">
             {STATUS_ORDER.map((s, i) => {
               const done = i < currentIndex;
@@ -60,10 +60,10 @@ export function ActionManagement({
                     onClick={() => setStatus(s)}
                     aria-pressed={active}
                     className={cn(
-                      "flex w-full flex-col items-start gap-1.5 rounded-lg border px-3 py-2.5 text-left transition-colors",
-                      active && "border-brand-500 bg-brand-50 ring-1 ring-brand-500",
-                      done && "border-slate-200 bg-slate-50",
-                      !active && !done && "border-slate-200 bg-white hover:bg-slate-50",
+                      "flex w-full flex-col items-start gap-1.5 rounded-xl px-3.5 py-3 text-left transition-colors",
+                      active && "bg-brand-50 ring-2 ring-brand-500 ring-inset",
+                      done && "bg-slate-100",
+                      !active && !done && "bg-slate-50 hover:bg-slate-100",
                     )}
                   >
                     <span
@@ -74,7 +74,7 @@ export function ActionManagement({
                     >
                       {done ? <Check className="size-3" /> : i + 1}
                     </span>
-                    <span className={cn("text-[13px] font-semibold", active ? "text-brand-700" : "text-slate-600")}>
+                    <span className={cn("text-[15px] font-semibold", active ? "text-brand-700" : "text-slate-700")}>
                       {STATUS_META[s].label}
                     </span>
                   </button>
@@ -86,7 +86,7 @@ export function ActionManagement({
 
         {/* 조치 유형 */}
         <div>
-          <p className="mb-2 text-xs font-semibold text-slate-500">현장조치</p>
+          <p className="mb-2.5 text-sm font-semibold text-slate-600">현장조치</p>
           <div className="grid grid-cols-2 gap-2">
             {ACTION_TYPES.map((a) => {
               const checked = actions.includes(a);
@@ -94,8 +94,8 @@ export function ActionManagement({
                 <label
                   key={a}
                   className={cn(
-                    "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 text-[13px] transition-colors",
-                    checked ? "border-brand-300 bg-brand-50/60" : "border-slate-200 hover:bg-slate-50",
+                    "flex cursor-pointer items-center gap-2.5 rounded-xl px-3.5 py-3 text-[15px] transition-colors",
+                    checked ? "bg-brand-50 ring-2 ring-brand-500 ring-inset" : "bg-slate-50 hover:bg-slate-100",
                   )}
                 >
                   <input
@@ -106,7 +106,7 @@ export function ActionManagement({
                   />
                   <span className="flex-1 font-medium text-slate-800">{ACTION_META[a].label}</span>
                   {recommended.includes(a) && (
-                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">권장</span>
+                    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-800">권장</span>
                   )}
                 </label>
               );
@@ -115,7 +115,7 @@ export function ActionManagement({
         </div>
 
         <div>
-          <label htmlFor="action-memo" className="mb-2 block text-xs font-semibold text-slate-500">
+          <label htmlFor="action-memo" className="mb-2.5 block text-sm font-semibold text-slate-600">
             조치 메모
           </label>
           <textarea
@@ -137,7 +137,7 @@ export function ActionManagement({
 
       {/* 조치 이력 */}
       <div className="lg:col-span-2">
-        <p className="mb-2 text-xs font-semibold text-slate-500">조치 이력</p>
+        <p className="mb-2.5 text-sm font-semibold text-slate-600">조치 이력</p>
         {logs.length ? (
           <ol className="relative space-y-4 border-l border-slate-200 pl-4">
             {logs.map((log) => (

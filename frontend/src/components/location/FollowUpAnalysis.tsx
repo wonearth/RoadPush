@@ -53,7 +53,7 @@ export function FollowUpAnalysis({
     <div className="space-y-3">
       {!compact &&
         (file ? (
-          <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px]">
+          <div className="flex items-center justify-between rounded-xl bg-white px-4 py-2.5 text-sm">
             <span className="truncate font-medium text-slate-700">{file.name}</span>
             <button
               type="button"

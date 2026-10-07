@@ -8,7 +8,7 @@ import { RiskBadge } from "../risk/RiskBadge";
 function Snapshot({ title, result, tone }: { title: string; result: AnalysisResult; tone: "before" | "after" }) {
   const meta = RISK_META[result.riskLevel];
   return (
-    <div className="flex-1 rounded-xl border border-slate-200 bg-white p-4">
+    <div className="flex-1 rounded-2xl bg-slate-50 p-5">
       <div className="mb-3 flex items-center justify-between">
         <span
           className={
@@ -74,7 +74,7 @@ function ChangeBar({
   const Icon = diff < 0 ? TrendingDown : TrendingUp;
   const deltaText = unit === "%" ? `${Math.abs(diff)}%p ${diff > 0 ? "증가" : "감소"}` : `${Math.abs(diff)}점 ${diff > 0 ? "증가" : "감소"}`;
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl bg-slate-50 p-6">
       <p className="text-xs font-semibold text-slate-500">{label}</p>
       <div className="mt-2 flex items-baseline gap-2">
         <span className="tabular text-xl font-bold text-slate-400">

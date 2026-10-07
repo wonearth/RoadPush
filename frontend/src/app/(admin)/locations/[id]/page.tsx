@@ -43,7 +43,7 @@ export default function LocationDetailPage() {
 
   if (loading && !data) {
     return (
-      <div className="mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6">
+      <div className="space-y-5 px-4 pt-5 pb-10 sm:px-8">
         <Skeleton className="h-36 rounded-xl" />
         <Skeleton className="h-[420px] rounded-xl" />
       </div>
@@ -74,38 +74,35 @@ export default function LocationDetailPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1360px] space-y-5 p-4 sm:p-6">
+    <div className="space-y-5 px-4 pt-5 pb-10 sm:px-8">
       {/* 요약 헤더: 위험도 → 위치 → 원인 → 보행공간 → 차도 이탈 → 조치상태 */}
-      <Card className="overflow-hidden">
-        <div className="h-1" style={{ backgroundColor: meta.hex }} />
-        <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center">
+      <Card>
+        <div className="flex flex-col gap-6 p-6 lg:flex-row lg:items-center">
           <div className="min-w-0 flex-1">
-            <Link href="/map" className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800">
+            <Link href="/map" className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-800">
               <ArrowLeft className="size-3.5" /> 위험지도
             </Link>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <h2 className="text-2xl font-bold text-slate-900">{location.name}</h2>
+              <h2 className="text-[26px] font-bold text-slate-900">{location.name}</h2>
               <StatusBadge status={location.status} />
               {location.isSample && <MockBadge label="예시 데이터" />}
             </div>
-            <p className="mt-1 flex items-center gap-1 text-[13px] text-slate-500">
+            <p className="mt-1 flex items-center gap-1 text-[15px] text-slate-500">
               <MapPin className="size-3.5" /> {location.address}
             </p>
-            <p className="mt-3 text-sm text-slate-700">{describeRisk(location)}</p>
+            <p className="mt-3 text-base text-slate-700">{describeRisk(location)}</p>
             <div className="mt-4">
               <WorkflowProgress current={workflowStage(location.status, Boolean(followUp))} />
             </div>
           </div>
-          <div className={`flex items-center gap-5 rounded-xl border px-6 py-4 ${meta.border} ${meta.softBg}`}>
-            <div>
-              <p className="text-xs font-semibold text-slate-500">보행공간 단절 위험도</p>
-              <p className="mt-1 flex items-baseline gap-1">
-                <span className={`tabular text-5xl font-bold tracking-tight ${meta.text}`}>{location.riskScore}</span>
-                <span className="text-sm text-slate-400">/ 100</span>
-              </p>
-              <RiskBar score={location.riskScore} level={location.riskLevel} className="mt-2 w-40 bg-white" />
-            </div>
-            <RiskBadge level={location.riskLevel} className="px-3 py-1.5 text-base" />
+          <div className="rounded-2xl bg-slate-50 px-7 py-5 lg:min-w-64">
+            <p className="text-[15px] text-slate-500">보행공간 단절 위험도</p>
+            <p className="mt-1 flex items-baseline gap-1.5">
+              <span className={`tabular text-5xl font-extrabold tracking-tight ${meta.text}`}>{location.riskScore}</span>
+              <span className="text-base text-slate-500">/ 100</span>
+              <RiskBadge level={location.riskLevel} className="ml-1 text-lg" />
+            </p>
+            <RiskBar score={location.riskScore} level={location.riskLevel} className="mt-3 w-full bg-white" />
           </div>
         </div>
       </Card>
@@ -217,7 +214,7 @@ export default function LocationDetailPage() {
           {initial && followUp ? (
             <BeforeAfterComparison before={initial} after={followUp} />
           ) : (
-            <div className="grid gap-6 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-6 lg:grid-cols-2">
+            <div className="grid gap-6 rounded-2xl bg-slate-50 p-6 lg:grid-cols-2">
               <div>
                 <ScanSearch className="size-6 text-slate-400" />
                 <p className="mt-3 text-sm font-semibold text-slate-900">아직 조치 후 재분석 결과가 없습니다</p>
