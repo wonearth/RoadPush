@@ -3,21 +3,18 @@ import { cn } from "@/lib/cn";
 import type { LocationStatus, RiskLevel } from "@/types";
 import { Badge } from "../ui/Badge";
 
+/** 위험등급: 배경 없이 등급 색 글자로만 표시한다. */
 export function RiskBadge({ level, className }: { level: RiskLevel; className?: string }) {
   return (
-    <Badge className={cn(RISK_META[level].badge, className)}>
-      <span className="size-1.5 rounded-full" style={{ backgroundColor: RISK_META[level].hex }} aria-hidden />
+    <span className={cn("text-sm font-bold whitespace-nowrap", RISK_META[level].text, className)}>
       {RISK_META[level].label}
-    </Badge>
+    </span>
   );
 }
 
 export function StatusBadge({ status, className }: { status: LocationStatus; className?: string }) {
   return (
-    <Badge className={cn(STATUS_META[status].badge, className)}>
-      <span className={cn("size-1.5 rounded-full", STATUS_META[status].dot)} aria-hidden />
-      {STATUS_META[status].label}
-    </Badge>
+    <Badge className={cn(STATUS_META[status].badge, className)}>{STATUS_META[status].label}</Badge>
   );
 }
 

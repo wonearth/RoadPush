@@ -6,18 +6,18 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "inverse";
 type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700 shadow-sm disabled:bg-brand-300",
-  secondary: "bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 shadow-sm",
+  primary: "bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300",
+  secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
   ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-  danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
+  danger: "bg-[#d92d20] text-white hover:bg-[#b42318]",
   /** 진한 배경 위에 놓는 흰색 버튼 */
-  inverse: "bg-white text-brand-800 hover:bg-brand-50 shadow-sm",
+  inverse: "bg-white text-brand-700 hover:bg-brand-50",
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "h-8 px-3 text-[13px] gap-1.5 rounded-md",
-  md: "h-10 px-4 text-sm gap-2 rounded-lg",
-  lg: "h-12 px-5 text-[15px] gap-2 rounded-lg",
+  sm: "h-9 px-3.5 text-sm gap-1.5 rounded-lg",
+  md: "h-11 px-5 text-[15px] gap-2 rounded-xl",
+  lg: "h-13 px-6 text-base gap-2 rounded-xl",
 };
 
 interface BaseProps {

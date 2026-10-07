@@ -5,9 +5,9 @@ import { useId, useState, type ComponentProps, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 export const inputClass = cn(
-  "block w-full rounded-lg border-0 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm",
-  "ring-1 ring-inset ring-slate-300 placeholder:text-slate-400",
-  "focus:ring-2 focus:ring-inset focus:ring-brand-500 focus:outline-none",
+  "block w-full rounded-xl border-0 bg-slate-100 px-4 py-3 text-[15px] text-slate-900",
+  "placeholder:text-slate-500",
+  "focus:bg-white focus:ring-2 focus:ring-inset focus:ring-brand-500 focus:outline-none",
   "aria-[invalid=true]:ring-red-400",
 );
 
@@ -22,7 +22,7 @@ export function TextField({ label, error, hint, className, id, ...props }: Field
   const inputId = id ?? autoId;
   return (
     <div className={className}>
-      <label htmlFor={inputId} className="mb-1.5 block text-[13px] font-semibold text-slate-700">
+      <label htmlFor={inputId} className="mb-2 block text-sm font-semibold text-slate-700">
         {label}
       </label>
       <input id={inputId} aria-invalid={Boolean(error)} className={inputClass} {...props} />
@@ -37,7 +37,7 @@ export function PasswordField({ label, error, hint, className, id, ...props }: F
   const [visible, setVisible] = useState(false);
   return (
     <div className={className}>
-      <label htmlFor={inputId} className="mb-1.5 block text-[13px] font-semibold text-slate-700">
+      <label htmlFor={inputId} className="mb-2 block text-sm font-semibold text-slate-700">
         {label}
       </label>
       <div className="relative">

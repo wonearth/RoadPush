@@ -6,7 +6,7 @@ export function MockBadge({ className, label = "개발용 Mock 데이터" }: { c
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 ring-1 ring-inset ring-amber-600/20",
+        "inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800",
         className,
       )}
     >
