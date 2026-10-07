@@ -36,3 +36,11 @@ export function describeRisk(input: {
     : "보행은 가능하지만 통행 폭이 좁아졌습니다.";
   return `${cause} 때문에 보행공간의 ${formatPercent(obstructionRatio)}가 잠식되어 ${tail}`;
 }
+
+/** 목록용 짧은 주소: 앞의 시·도·구 단위를 빼고 도로명·장소만 남긴다. */
+export function shortAddress(address: string): string {
+  const parts = address.trim().split(/\s+/);
+  let i = 0;
+  while (i < parts.length - 1 && i < 2 && /(특별시|광역시|특별자치시|도|시|구|군|서울)$/.test(parts[i])) i++;
+  return parts.slice(i).join(" ");
+}
