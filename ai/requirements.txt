@@ -1,0 +1,8 @@
+torch
+transformers
+ultralytics
+opencv-python
+pillow
+pillow-heif
+numpy
+pandas
