@@ -1,0 +1,55 @@
+{
+  "_note": "점수 산식의 가중치·임계값은 여기서만 바꾼다. 코드는 건드리지 않는다.",
+  "seg_model": "nvidia/segformer-b0-finetuned-cityscapes-1024-1024",
+  "classes": {
+    "_note": "Cityscapes 기준 id. 다른 세그멘테이션 모델로 바꾸면 이 id도 바꿔야 한다.",
+    "sidewalk": 1,
+    "obstacle_ids": [
+      13,
+      14,
+      15,
+      17,
+      18
+    ]
+  },
+  "dilate_ratio": 0.03,
+  "min_area_ratio": 0.01,
+  "choke_percentile": 10,
+  "choke_ok": 0.3,
+  "vcov_min": 0.6,
+  "choke_min": 0.1,
+  "weights": {
+    "erosion": 0.5,
+    "disconnect": 0.3,
+    "departure": 0.2
+  },
+  "stage_thresholds": [
+    25,
+    50,
+    75
+  ],
+  "yolo": {
+    "_note": "weights가 빈 문자열이면 YOLO를 쓰지 않는다. COCO id: 1 bicycle, 2 car, 3 motorcycle, 5 bus, 7 truck",
+    "weights": "",
+    "conf": 0.3,
+    "obstacle_class_ids": [
+      1,
+      2,
+      3,
+      5,
+      7
+    ]
+  },
+  "fallback": {
+    "_note": "보도 미검출 시 쓰는 가상 보행 띠. Cityscapes id: road 0, building 2, wall 3, fence 4",
+    "enabled": true,
+    "road_id": 0,
+    "building_ids": [
+      2,
+      3,
+      4
+    ],
+    "strip_ratio": 0.25,
+    "min_row_ratio": 0.35
+  }
+}
