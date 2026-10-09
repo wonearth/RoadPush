@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Save, XCircle } from "lucide-react";
+import { Camera, Check, Save, XCircle } from "lucide-react";
 import { useState } from "react";
 import {
   ACTION_META,
@@ -24,12 +24,15 @@ export function ActionManagement({
   logs,
   recommendFrom,
   onSave,
+  onResolve,
 }: {
   location: Location;
   logs: ActionLog[];
   /** 권장 조치를 계산할 장애요인 (최초 분석 기준) */
   recommendFrom: Location["obstacleTypes"];
   onSave: (input: UpdateActionInput) => Promise<void>;
+  /** 조치 완료로 바꿀 때 바로 저장하지 않고 사진·재분석 흐름으로 넘긴다 */
+  onResolve?: (input: UpdateActionInput) => void;
 }) {
   const [status, setStatus] = useState<LocationStatus>(location.status);
   const [closeReason, setCloseReason] = useState<CloseReason | undefined>(location.closeReason);
@@ -50,10 +53,14 @@ export function ActionManagement({
 
   const toggle = (a: ActionType) => setActions((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
 
+  const resolving = status === "RESOLVED" && location.status !== "RESOLVED" && !!onResolve;
+
   const save = async () => {
+    const input = { status, closeReason: closed ? closeReason : undefined, actionTypes: actions, memo };
+    if (resolving) return onResolve(input);
     setSaving(true);
     try {
-      await onSave({ status, closeReason: closed ? closeReason : undefined, actionTypes: actions, memo });
+      await onSave(input);
       setMemo("");
     } finally {
       setSaving(false);
@@ -180,8 +187,8 @@ export function ActionManagement({
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={save} disabled={!dirty || saving || (closed && !closeReason)} icon={saving ? <Spinner /> : <Save className="size-4" />}>
-            조치 내용 저장
+          <Button onClick={save} disabled={!dirty || saving || (closed && !closeReason)} icon={saving ? <Spinner /> : resolving ? <Camera className="size-4" /> : <Save className="size-4" />}>
+            {resolving ? "조치 완료 · 현장 사진으로 확인" : "조치 내용 저장"}
           </Button>
         </div>
       </div>

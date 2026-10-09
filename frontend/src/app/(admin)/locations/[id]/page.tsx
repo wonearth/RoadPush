@@ -8,6 +8,7 @@ import { LayerToggles } from "@/components/analysis/LayerToggles";
 import { ActionManagement } from "@/components/location/ActionManagement";
 import { BeforeAfterComparison } from "@/components/location/BeforeAfterComparison";
 import { FollowUpAnalysis } from "@/components/location/FollowUpAnalysis";
+import { ResolveFlowDialog } from "@/components/location/ResolveFlowDialog";
 import { WorkflowProgress } from "@/components/location/WorkflowProgress";
 import { DEFAULT_LAYERS } from "@/components/media/AnalysisOverlayLayer";
 import { MediaFrame } from "@/components/media/MediaFrame";
@@ -24,7 +25,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/hooks/useAuth";
 import { describeRisk, formatDateTime } from "@/lib/format";
 import { locationService } from "@/services";
-import type { LocationStatus } from "@/types";
+import type { AnalysisResult, LocationStatus, UpdateActionInput } from "@/types";
 
 /** 조치상태를 상단 진행 단계로 바꾼다. 재분석까지 마쳤으면 모든 단계 완료(4). */
 function workflowStage(status: Exclude<LocationStatus, "CLOSED">, hasFollowUp: boolean) {
@@ -36,6 +37,8 @@ export default function LocationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [layers, setLayers] = useState(DEFAULT_LAYERS);
+  // 조치 완료로 저장하려는 내용 — 사진·재분석 흐름(ResolveFlowDialog)을 거쳐 저장한다
+  const [pendingResolve, setPendingResolve] = useState<UpdateActionInput | null>(null);
 
   const { data, loading, reload } = useAsync(
     () =>
@@ -70,9 +73,18 @@ export default function LocationDetailPage() {
   const followUp = history.length > 1 && latest?.phase === "FOLLOW_UP" ? latest : undefined;
   const meta = RISK_META[location.riskLevel];
 
-  const saveAction = async (input: Parameters<typeof locationService.updateAction>[1]) => {
+  const saveAction = async (input: UpdateActionInput) => {
     await locationService.updateAction(location.id, input, user?.name ?? "데모 관리자");
     await reload();
+  };
+
+  const completeResolve = async (result: AnalysisResult | null) => {
+    if (!pendingResolve) return;
+    await locationService.updateAction(location.id, pendingResolve, user?.name ?? "데모 관리자");
+    if (result) await locationService.addFollowUpAnalysis(location.id, result);
+    setPendingResolve(null);
+    await reload();
+    if (result) document.getElementById("before-after")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -192,12 +204,22 @@ export default function LocationDetailPage() {
             logs={logs}
             recommendFrom={initial?.obstacleTypes ?? location.obstacleTypes}
             onSave={saveAction}
+            onResolve={setPendingResolve}
           />
         </CardBody>
       </Card>
 
+      <ResolveFlowDialog
+        open={!!pendingResolve}
+        locationId={location.id}
+        before={location}
+        baseline={initial}
+        onClose={() => setPendingResolve(null)}
+        onSubmit={completeResolve}
+      />
+
       {/* 조치 전·후 비교 */}
-      <Card>
+      <Card id="before-after" className="scroll-mt-4">
         <CardHeader
           title={
             <span className="inline-flex items-center gap-2">
@@ -232,11 +254,12 @@ export default function LocationDetailPage() {
                 </p>
                 {isOpenStatus(location.status) && (
                   <p className="mt-3 text-[13px] font-medium text-amber-700">
-                    현재 상태는 &lsquo;{STATUS_META[location.status].label}&rsquo;입니다. 조치 완료 후 재분석을 권장합니다.
+                    현재 상태는 &lsquo;{STATUS_META[location.status].label}&rsquo;입니다. 현장조치 관리에서 &lsquo;조치 완료&rsquo;를 고르면 사진 촬영과 재분석이 바로 이어집니다.
                   </p>
                 )}
               </div>
               <FollowUpAnalysis
+                camera
                 locationId={location.id}
                 baseline={initial}
                 onComplete={async (r) => {

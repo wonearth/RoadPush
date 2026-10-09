@@ -1,6 +1,6 @@
 "use client";
 
-import { FileImage, FileVideo, UploadCloud } from "lucide-react";
+import { Camera, FileImage, FileVideo, UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
@@ -11,12 +11,16 @@ export function UploadDropzone({
   onFile,
   compact = false,
   disabled = false,
+  camera = false,
 }: {
   onFile: (file: File) => void;
   compact?: boolean;
   disabled?: boolean;
+  /** 휴대폰에서 바로 카메라를 여는 버튼을 함께 보여준다 */
+  camera?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,6 +91,29 @@ export function UploadDropzone({
           }}
         />
       </div>
+      {camera && (
+        <>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => cameraRef.current?.click()}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-[15px] font-semibold text-white disabled:opacity-60 sm:hidden"
+          >
+            <Camera className="size-4" /> 카메라로 촬영
+          </button>
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              handle(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </>
+      )}
       {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
     </div>
   );
