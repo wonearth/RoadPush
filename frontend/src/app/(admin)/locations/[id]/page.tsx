@@ -27,9 +27,9 @@ import { describeRisk, formatDateTime } from "@/lib/format";
 import { locationService } from "@/services";
 import type { AnalysisResult, LocationStatus, UpdateActionInput } from "@/types";
 
-/** 조치상태를 상단 진행 단계로 바꾼다. 재분석까지 마쳤으면 모든 단계 완료(4). */
+/** 조치상태를 상단 진행 단계로 바꾼다. 조치 완료 후 재분석까지 마쳤으면 모든 단계 완료(4). */
 function workflowStage(status: Exclude<LocationStatus, "CLOSED">, hasFollowUp: boolean) {
-  if (hasFollowUp) return 4;
+  if (status === "RESOLVED" && hasFollowUp) return 4;
   return { NEW: 0, ACTION_PLANNED: 1, RESOLVED: 2 }[status];
 }
 
