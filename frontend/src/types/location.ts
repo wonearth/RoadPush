@@ -1,3 +1,4 @@
+import type { AnalysisResult } from "./analysis";
 import type { ActionType, CloseReason, LocationStatus, ObstacleType, RiskLevel } from "./risk";
 
 /**
@@ -42,6 +43,13 @@ export interface CreateLocationInput {
   area?: string;
   latitude?: number;
   longitude?: number;
+}
+
+/** 조치 완료 후 재분석까지 마친 구간의 조치 전·후 결과 */
+export interface Improvement {
+  location: Location;
+  before: AnalysisResult;
+  after: AnalysisResult;
 }
 
 export interface LocationQuery {

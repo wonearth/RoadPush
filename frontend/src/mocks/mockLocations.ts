@@ -4,7 +4,7 @@
  * 좌표·위험도·장애요인은 모두 임의로 작성된 값이다.
  */
 import { getRiskLevel } from "@/constants/risk";
-import type { ActionLog, AnalysisResult, Location, LocationStatus, ObstacleType } from "@/types";
+import type { ActionLog, AnalysisResult, CloseReason, Location, LocationStatus, ObstacleType } from "@/types";
 import type { ActionType } from "@/types";
 import { generateMockOverlay } from "./mockOverlay";
 
@@ -24,6 +24,7 @@ interface MockSeed {
   latitude: number;
   longitude: number;
   status: LocationStatus;
+  closeReason?: CloseReason;
   plannedActions: ActionType[];
   initial: MockMetrics;
   /** 조치 후 재분석이 이미 수행된 구간 */
@@ -191,6 +192,98 @@ const SEEDS: MockSeed[] = [
       analyzedAt: "2026-09-29T13:50:00+09:00",
     },
   },
+  // ── 조치 완료 + 재분석까지 마친 구간 (대시보드 개선 효과 예시) ──
+  {
+    id: "sinchon-j",
+    name: "신촌 J구간",
+    address: "서울 서대문구 연세로 현대백화점 앞 보도",
+    area: "신촌",
+    latitude: 37.5565,
+    longitude: 126.9358,
+    status: "RESOLVED",
+    plannedActions: ["PARKING_ENFORCEMENT"],
+    initial: {
+      riskScore: 81,
+      walkableRatio: 0.27,
+      roadDetourRequired: true,
+      obstacleTypes: ["ILLEGAL_PARKING"],
+      analyzedAt: "2026-09-15T18:40:00+09:00",
+    },
+    followUp: {
+      riskScore: 18,
+      walkableRatio: 0.86,
+      roadDetourRequired: false,
+      obstacleTypes: [],
+      analyzedAt: "2026-09-22T18:30:00+09:00",
+    },
+  },
+  {
+    id: "daehyeon-k",
+    name: "대현동 K구간",
+    address: "서울 서대문구 신촌로 대현동 상가 앞 보도",
+    area: "대현동",
+    latitude: 37.5583,
+    longitude: 126.9432,
+    status: "RESOLVED",
+    plannedActions: ["MATERIAL_REMOVAL"],
+    initial: {
+      riskScore: 63,
+      walkableRatio: 0.46,
+      roadDetourRequired: false,
+      obstacleTypes: ["STACKED_MATERIALS"],
+      analyzedAt: "2026-09-16T11:00:00+09:00",
+    },
+    followUp: {
+      riskScore: 21,
+      walkableRatio: 0.83,
+      roadDetourRequired: false,
+      obstacleTypes: [],
+      analyzedAt: "2026-09-24T10:30:00+09:00",
+    },
+  },
+  {
+    id: "ewha-l",
+    name: "이대 L구간",
+    address: "서울 서대문구 이화여대길 이대 후문 방향 보도",
+    area: "이대",
+    latitude: 37.5619,
+    longitude: 126.9441,
+    status: "RESOLVED",
+    plannedActions: ["PM_RELOCATION"],
+    initial: {
+      riskScore: 57,
+      walkableRatio: 0.52,
+      roadDetourRequired: false,
+      obstacleTypes: ["ABANDONED_PM"],
+      analyzedAt: "2026-09-20T08:50:00+09:00",
+    },
+    followUp: {
+      riskScore: 27,
+      walkableRatio: 0.76,
+      roadDetourRequired: false,
+      obstacleTypes: ["ABANDONED_PM"],
+      analyzedAt: "2026-09-27T09:10:00+09:00",
+    },
+  },
+  // ── 조치 없이 종료된 구간 (잘못 분석됨 예시) ──
+  {
+    id: "sinchon-m",
+    name: "신촌 M구간",
+    address: "서울 서대문구 명물길 신촌 먹자골목 입구",
+    area: "신촌",
+    latitude: 37.5578,
+    longitude: 126.9368,
+    status: "CLOSED",
+    closeReason: "FALSE_POSITIVE",
+    plannedActions: [],
+    initial: {
+      riskScore: 46,
+      walkableRatio: 0.6,
+      roadDetourRequired: false,
+      obstacleTypes: ["STACKED_MATERIALS"],
+      analyzedAt: "2026-09-27T20:10:00+09:00",
+    },
+  },
 ];
 
 function toResult(seed: MockSeed, metrics: MockMetrics, phase: "INITIAL" | "FOLLOW_UP"): AnalysisResult {
@@ -239,6 +332,7 @@ export const MOCK_LOCATIONS: Location[] = SEEDS.map((s) => {
     beforeImage: latest.originalImageUrl,
     resultImage: latest.resultImageUrl,
     status: s.status,
+    ...(s.closeReason && { closeReason: s.closeReason }),
     plannedActions: s.plannedActions,
     isSample: true,
   };
@@ -270,6 +364,43 @@ export const MOCK_ACTION_LOGS: ActionLog[] = [
     actionTypes: ["CONSTRUCTION_CLEANUP", "MATERIAL_REMOVAL"],
     memo: "가림막 재설치 및 자재 이동 완료 (개발용 예시)",
     createdAt: "2026-09-25T17:30:00+09:00",
+    createdBy: "데모 관리자",
+  },
+  {
+    id: "mock-action-sinchon-j-1",
+    locationId: "sinchon-j",
+    status: "RESOLVED",
+    actionTypes: ["PARKING_ENFORCEMENT"],
+    memo: "저녁 시간대 집중 단속 후 불법 주정차 해소 (개발용 예시)",
+    createdAt: "2026-09-22T17:00:00+09:00",
+    createdBy: "데모 관리자",
+  },
+  {
+    id: "mock-action-daehyeon-k-1",
+    locationId: "daehyeon-k",
+    status: "RESOLVED",
+    actionTypes: ["MATERIAL_REMOVAL"],
+    memo: "상가 앞 적치물 자진 정리 안내 및 수거 완료 (개발용 예시)",
+    createdAt: "2026-09-23T16:00:00+09:00",
+    createdBy: "데모 관리자",
+  },
+  {
+    id: "mock-action-ewha-l-1",
+    locationId: "ewha-l",
+    status: "RESOLVED",
+    actionTypes: ["PM_RELOCATION"],
+    memo: "PM 운영사에 방치 기기 이동 요청, 일부 기기 남음 (개발용 예시)",
+    createdAt: "2026-09-26T15:00:00+09:00",
+    createdBy: "데모 관리자",
+  },
+  {
+    id: "mock-action-sinchon-m-1",
+    locationId: "sinchon-m",
+    status: "CLOSED",
+    closeReason: "FALSE_POSITIVE",
+    actionTypes: [],
+    memo: "현장 확인 결과 영업 중 일시 적재로 확인, 상시 장애물 아님 (개발용 예시)",
+    createdAt: "2026-09-28T11:00:00+09:00",
     createdBy: "데모 관리자",
   },
 ];

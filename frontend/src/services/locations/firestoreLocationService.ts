@@ -112,6 +112,26 @@ export const firestoreLocationService: LocationService = {
       .sort((a, b) => a.analyzedAt.localeCompare(b.analyzedAt));
   },
 
+  async getImprovements() {
+    const resolved = (await fetchAll()).filter((l) => l.status === "RESOLVED");
+    if (!resolved.length) return [];
+    // 단일 조건 쿼리만 쓴다 (복합 색인 불필요). in 조건은 최대 30개까지라 나눠서 읽는다.
+    const ids = resolved.map((l) => l.id);
+    const chunks = Array.from({ length: Math.ceil(ids.length / 30) }, (_, i) => ids.slice(i * 30, i * 30 + 30));
+    const snaps = await Promise.all(chunks.map((c) => getDocs(query(resultsCol(), where("locationId", "in", c)))));
+    const results = snaps
+      .flatMap((snap) => snap.docs.map((d) => fromStoredAnalysis(d.id, d.data() as StoredAnalysisResult)))
+      .sort((a, b) => a.analyzedAt.localeCompare(b.analyzedAt));
+    return resolved
+      .flatMap((location) => {
+        const own = results.filter((r) => r.locationId === location.id);
+        const before = own.find((r) => r.phase === "INITIAL");
+        const after = own.filter((r) => r.phase === "FOLLOW_UP").at(-1);
+        return before && after ? [{ location, before, after }] : [];
+      })
+      .sort((a, b) => b.before.riskScore - b.after.riskScore - (a.before.riskScore - a.after.riskScore));
+  },
+
   async getActionLogs(locationId) {
     const snap = await getDocs(query(actionsCol(), where("locationId", "==", locationId)));
     return snap.docs
@@ -149,12 +169,20 @@ export const firestoreLocationService: LocationService = {
   },
 
   async seedSampleData() {
-    if (!(await getDocs(locationsCol())).empty) return 0;
+    // 아직 없는 예시 구간만 추가한다 (이미 있는 구간은 담당자가 바꾼 상태를 그대로 둔다).
+    // 실제 데이터만 있고 예시 데이터를 쓰지 않는 환경이면 건드리지 않는다.
+    const existing = await fetchAll();
+    if (existing.length && !existing.some((l) => l.isSample)) return 0;
+    const ids = new Set(existing.map((l) => l.id));
+    const missing = new Set(MOCK_LOCATIONS.filter((l) => !ids.has(l.id)).map((l) => l.id));
+    if (!missing.size) return 0;
     const batch = writeBatch(firestore());
-    MOCK_LOCATIONS.forEach((l) => batch.set(doc(locationsCol(), l.id), withoutId(l)));
-    MOCK_ANALYSIS_RESULTS.forEach((r) => batch.set(doc(resultsCol(), r.id), toStoredAnalysis(r)));
-    MOCK_ACTION_LOGS.forEach((a) => batch.set(doc(actionsCol(), a.id), withoutId(a)));
+    MOCK_LOCATIONS.filter((l) => missing.has(l.id)).forEach((l) => batch.set(doc(locationsCol(), l.id), withoutId(l)));
+    MOCK_ANALYSIS_RESULTS.filter((r) => r.locationId && missing.has(r.locationId)).forEach((r) =>
+      batch.set(doc(resultsCol(), r.id), toStoredAnalysis(r)),
+    );
+    MOCK_ACTION_LOGS.filter((a) => missing.has(a.locationId)).forEach((a) => batch.set(doc(actionsCol(), a.id), withoutId(a)));
     await batch.commit();
-    return MOCK_LOCATIONS.length;
+    return missing.size;
   },
 };

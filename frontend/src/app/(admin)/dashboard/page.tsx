@@ -3,7 +3,9 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
+import { ImprovementPanel } from "@/components/dashboard/ImprovementPanel";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { PriorityList } from "@/components/dashboard/PriorityList";
 import { RiskMap } from "@/components/map/RiskMap";
@@ -18,10 +20,25 @@ import { locationService } from "@/services";
 export default function DashboardPage() {
   const router = useRouter();
   const { data, loading, reload } = useAsync(
-    () => Promise.all([locationService.getDashboardSummary(), locationService.list({ sort: "risk-desc" })]),
+    () =>
+      Promise.all([
+        locationService.getDashboardSummary(),
+        locationService.list({ sort: "risk-desc" }),
+        locationService.getImprovements(),
+      ]),
     "dashboard",
   );
-  const [summary, locations = []] = data ?? [];
+  const [summary, locations = [], improvements = []] = data ?? [];
+
+  // 예시 데이터를 쓰는 환경이면, 새로 추가된 예시 구간(조치 완료 사례 등)을 한 번 채워 넣는다
+  const synced = useRef(false);
+  useEffect(() => {
+    if (synced.current || !locations.some((l) => l.isSample)) return;
+    synced.current = true;
+    locationService.seedSampleData().then((n) => {
+      if (n > 0) reload();
+    });
+  }, [locations, reload]);
   // 종료된 구간(잘못 분석됨·중복 등)은 대시보드에서 뺀다
   const active = locations.filter((l) => l.status !== "CLOSED");
   const priority = active.filter((l) => isOpenStatus(l.status) && l.riskLevel !== "SAFE").slice(0, 6);
@@ -143,6 +160,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* 조치 현황 · 개선 효과 */}
+      <Card>
+        <CardHeader title="조치 현황 · 개선 효과" description="발견한 구간이 실제로 조치되고 나아졌는지 보여줍니다" />
+        <CardBody className="pt-5">
+          {data ? <ImprovementPanel locations={locations} improvements={improvements} /> : <Skeleton className="h-48" />}
+        </CardBody>
+      </Card>
     </div>
   );
 }
