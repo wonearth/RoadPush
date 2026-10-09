@@ -48,3 +48,18 @@ body {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* 지도에서 구간을 고르면 요약 카드가 아래에서 올라온다 */
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@utility animate-sheet-up {
+  animation: sheet-up 0.2s ease-out;
+}

@@ -9,13 +9,15 @@ import { RiskMap } from "@/components/map/RiskMap";
 import { RiskLegend } from "@/components/risk/RiskLegend";
 import { inputClass } from "@/components/ui/Field";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META } from "@/constants/risk";
+import { OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META, STATUS_META, STATUS_ORDER } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { locationService } from "@/services";
-import type { LocationQuery, ObstacleType, RiskLevel } from "@/types";
+import type { LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
 
 type SortKey = NonNullable<LocationQuery["sort"]>;
+/** OPEN = 조치 완료 전 (담당자가 가장 자주 보는 목록) */
+type StatusFilter = "ALL" | "OPEN" | LocationStatus;
 
 function RiskMapPageContent() {
   const router = useRouter();
@@ -26,6 +28,7 @@ function RiskMapPageContent() {
   const [keyword, setKeyword] = useState("");
   const [obstacle, setObstacle] = useState<ObstacleType | "">("");
   const [sort, setSort] = useState<SortKey>("risk-desc");
+  const [status, setStatus] = useState<StatusFilter>("ALL");
 
   const { data: all = [], loading } = useAsync(() => locationService.list(), "locations");
 
@@ -40,6 +43,7 @@ function RiskMapPageContent() {
     return all
       .filter((l) => level === "ALL" || l.riskLevel === level)
       .filter((l) => !obstacle || l.obstacleTypes.includes(obstacle))
+      .filter((l) => status === "ALL" || (status === "OPEN" ? l.status !== "RESOLVED" : l.status === status))
       .filter((l) => !kw || `${l.name} ${l.address} ${l.area}`.toLowerCase().includes(kw))
       .sort((a, b) =>
         sort === "risk-asc"
@@ -48,7 +52,7 @@ function RiskMapPageContent() {
             ? b.analyzedAt.localeCompare(a.analyzedAt)
             : b.riskScore - a.riskScore,
       );
-  }, [all, level, obstacle, keyword, sort]);
+  }, [all, level, obstacle, status, keyword, sort]);
 
   const selected = all.find((l) => l.id === selectedId) ?? null;
   const select = (id: string | null) => router.replace(id ? `/map?selected=${id}` : "/map", { scroll: false });
@@ -107,19 +111,41 @@ function RiskMapPageContent() {
                 ))}
               </select>
             </label>
-            <label className="w-36">
-              <span className="sr-only">정렬</span>
-              <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={cn(inputClass, "py-2.5 text-sm")}>
-                <option value="risk-desc">위험도 높은순</option>
-                <option value="risk-asc">위험도 낮은순</option>
-                <option value="recent">최근 분석순</option>
+            <label className="flex-1">
+              <span className="sr-only">조치 상태 필터</span>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as StatusFilter)}
+                className={cn(inputClass, "py-2.5 text-sm")}
+              >
+                <option value="ALL">모든 상태</option>
+                <option value="OPEN">조치 전 전체</option>
+                {STATUS_ORDER.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_META[s].label}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
         </div>
-        <p className="px-1 pb-1 text-sm text-slate-500">
-          <span className="tabular font-bold text-slate-900">{filtered.length}</span>개 구간
-        </p>
+        <div className="flex items-center justify-between px-1 pb-1 text-sm text-slate-500">
+          <p>
+            <span className="tabular font-bold text-slate-900">{filtered.length}</span>개 구간
+          </p>
+          <label>
+            <span className="sr-only">정렬</span>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              className="rounded-lg bg-transparent py-1 pr-1 text-sm font-semibold text-slate-700 focus:outline-2 focus:outline-brand-500"
+            >
+              <option value="risk-desc">위험도 높은순</option>
+              <option value="risk-asc">위험도 낮은순</option>
+              <option value="recent">최근 분석순</option>
+            </select>
+          </label>
+        </div>
         <div className="max-h-[420px] flex-1 space-y-0.5 overflow-y-auto lg:max-h-none">
           {loading ? (
             <div className="space-y-2 p-4">
@@ -146,7 +172,7 @@ function RiskMapPageContent() {
           <RiskLegend compact />
         </div>
         {selected && (
-          <div className="absolute inset-x-4 bottom-4 z-10 sm:inset-x-auto sm:right-4">
+          <div className="animate-sheet-up fixed inset-x-3 bottom-3 z-40 sm:inset-x-auto sm:right-6 lg:absolute lg:right-4 lg:bottom-4 lg:z-10">
             <LocationSummaryCard location={selected} onClose={() => select(null)} />
           </div>
         )}
