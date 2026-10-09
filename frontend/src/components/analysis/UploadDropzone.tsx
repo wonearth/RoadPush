@@ -67,7 +67,8 @@ export function UploadDropzone({
           <UploadCloud className="size-5" />
         </span>
         <p className="mt-3 text-sm font-semibold text-slate-800">
-          도로·보행 이미지 또는 영상을 끌어다 놓거나 <span className="text-brand-600">파일 선택</span>
+          도로·보행 이미지 또는 영상을 <span className="hidden sm:inline">끌어다 놓거나 </span>
+          <span className="text-brand-600">파일 선택</span>
         </p>
         {!compact && (
           <p className="mt-1 text-xs text-slate-500">CCTV · 블랙박스 · 현장점검 촬영본 / 최대 {MAX_SIZE_MB}MB</p>

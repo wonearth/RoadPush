@@ -82,7 +82,8 @@ export function FollowUpAnalysis({
       <Button
         onClick={run}
         disabled={running}
-        variant={compact ? "secondary" : "primary"}
+        // 카메라 촬영이 주 동작일 때는 예시 장면 재분석을 보조 버튼으로 낮춘다
+        variant={compact || (camera && !file) ? "secondary" : "primary"}
         size={compact ? "sm" : "md"}
         icon={running ? <Spinner /> : <RefreshCw className="size-4" />}
         className={compact ? undefined : "w-full"}

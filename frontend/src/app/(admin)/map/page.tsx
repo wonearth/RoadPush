@@ -41,9 +41,10 @@ function RiskMapPageContent() {
 
   const counts = useMemo(() => {
     const c = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
-    all.filter((l) => l.status !== "CLOSED").forEach((l) => c[l.riskLevel]++);
+    // 위험등급 칩 숫자는 고른 조치상태 안에서 센다 (목록 개수와 맞춘다)
+    all.filter((l) => matchStatus(l.status, status)).forEach((l) => c[l.riskLevel]++);
     return c;
-  }, [all]);
+  }, [all, status]);
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
@@ -95,7 +96,7 @@ function RiskMapPageContent() {
                 >
                   {lv === "ALL" ? "전체" : RISK_META[lv].label}
                   <span className={cn("tabular", active ? "text-slate-300" : "text-slate-500")}>
-                    {lv === "ALL" ? all.length : counts[lv]}
+                    {lv === "ALL" ? RISK_LEVELS.reduce((sum, l) => sum + counts[l], 0) : counts[lv]}
                   </span>
                 </button>
               );
@@ -125,7 +126,7 @@ function RiskMapPageContent() {
                 onChange={(e) => setStatus(e.target.value as StatusFilter)}
                 className={cn(inputClass, "py-2.5 text-sm")}
               >
-                <option value="ALL">모든 상태 (종료 제외)</option>
+                <option value="ALL">종료 제외 전체</option>
                 <option value="OPEN">조치 전 전체</option>
                 {ALL_STATUSES.map((s) => (
                   <option key={s} value={s}>

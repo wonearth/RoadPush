@@ -126,16 +126,23 @@ export function RegisterLocationDialog({
             <p className="mt-0.5 text-[13px] text-amber-800">같은 곳이라면 새로 만들지 말고 기존 구간에 이번 분석을 추가해 주세요.</p>
             <ul className="mt-3 space-y-1.5">
               {nearby.map(({ location: l, meters }) => (
-                <li key={l.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-white px-3 py-2.5">
+                <li key={l.id} className="flex flex-col gap-2 rounded-lg bg-white px-3 py-2.5 sm:flex-row sm:items-center">
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                    <span className="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-slate-900">
                       {l.name} <RiskBadge level={l.riskLevel} /> <StatusBadge status={l.status} />
                     </span>
                     <span className="block truncate text-xs text-slate-500">
                       {meters}m 거리 · {l.address}
                     </span>
                   </span>
-                  <Button type="button" size="sm" variant="secondary" disabled={!!saving} onClick={() => addToExisting(l)}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={!!saving}
+                    onClick={() => addToExisting(l)}
+                    className="w-full sm:w-auto"
+                  >
                     {saving === l.id && <Spinner />}이 구간에 추가
                   </Button>
                 </li>

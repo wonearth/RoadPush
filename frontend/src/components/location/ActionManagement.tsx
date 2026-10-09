@@ -116,9 +116,11 @@ export function ActionManagement({
               aria-pressed={closed}
               className="flex w-full items-center gap-2 text-left text-[15px] font-semibold text-slate-700"
             >
-              <XCircle className="size-4 text-slate-400" />
-              조치 없이 종료
-              <span className="ml-auto text-xs font-medium text-slate-500">{closed ? "종료 취소" : "잘못 분석됐거나 조치가 필요 없을 때"}</span>
+              <XCircle className="size-4 shrink-0 text-slate-400" />
+              <span className="whitespace-nowrap">조치 없이 종료</span>
+              <span className="ml-auto text-right text-xs font-medium text-slate-500">
+                {closed ? "종료 취소" : <span className="hidden sm:inline">잘못 분석됐거나 조치가 필요 없을 때</span>}
+              </span>
             </button>
             {closed && (
               <div className="mt-3 grid gap-1.5 sm:grid-cols-3">

@@ -137,7 +137,14 @@ export default function LocationDetailPage() {
         <Card>
           <CardHeader
             title={
-              latest.phase === "FOLLOW_UP" ? "최근 분석 결과 (재분석)" : latest.phase === "REPEAT" ? "최근 분석 결과 (다시 발견)" : "AI 분석 결과"
+              <span className="inline-flex flex-wrap items-center gap-2">
+                {latest.phase === "INITIAL" ? "AI 분석 결과" : "최근 분석 결과"}
+                {latest.phase !== "INITIAL" && (
+                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-sm font-semibold whitespace-nowrap text-slate-600">
+                    {latest.phase === "FOLLOW_UP" ? "조치 후 재분석" : "다시 발견"}
+                  </span>
+                )}
+              </span>
             }
             description="원본 이미지와 보행공간 분석 결과를 비교합니다"
             action={
