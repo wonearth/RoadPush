@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { KAKAO_MAP_KEY } from "@/components/map/kakaoLoader";
 import { LocationPicker, type PickedLocation } from "@/components/map/LocationPicker";
+import { suggestLocationName } from "@/lib/format";
 import { locationService } from "@/services";
 import type { AnalysisResult, Location } from "@/types";
 import { Button } from "../ui/Button";
@@ -24,6 +25,8 @@ export function RegisterLocationDialog({
   onRegistered: (location: Location) => void;
 }) {
   const [name, setName] = useState("");
+  // 사용자가 직접 고치지 않았다면 위치가 바뀔 때마다 구간명을 다시 제안한다.
+  const [suggested, setSuggested] = useState("");
   const [address, setAddress] = useState("");
   const [picked, setPicked] = useState<PickedLocation | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,12 +66,21 @@ export function RegisterLocationDialog({
       description="분석 결과를 관리 대상 구간으로 등록하면 위험지도와 대시보드에 표시되고 현장조치를 관리할 수 있습니다."
     >
       <form onSubmit={submit} className="space-y-4">
-        <TextField label="구간명" placeholder="예: ○○동 A구간" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        <TextField
+          label="구간명"
+          placeholder={CAN_PICK_LOCATION ? "위치를 지정하면 자동으로 제안돼요" : "예: ○○동 A구간"}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          hint={name && name === suggested ? "위치 기준으로 자동 제안된 이름이에요. 고쳐 쓸 수 있어요." : undefined}
+        />
         {CAN_PICK_LOCATION && (
           <LocationPicker
             onChange={(value) => {
               setPicked(value);
               if (value.address) setAddress(value.address);
+              const next = suggestLocationName(value);
+              if (next && (!name.trim() || name === suggested)) setName(next);
+              setSuggested(next);
             }}
           />
         )}

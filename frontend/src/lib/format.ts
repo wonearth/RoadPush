@@ -44,3 +44,10 @@ export function shortAddress(address: string): string {
   while (i < parts.length - 1 && i < 2 && /(특별시|광역시|특별자치시|도|시|구|군|서울)$/.test(parts[i])) i++;
   return parts.slice(i).join(" ");
 }
+
+/** 위치 정보로 구간명을 제안한다. 예: "대현동 이화여대길 구간" */
+export function suggestLocationName(input: { address: string; area?: string }): string {
+  const road = input.address.split(/\s+/).find((t) => /^[가-힣0-9]+(로|길)$/.test(t) && !/^\d/.test(t));
+  const parts = [input.area, road].filter(Boolean);
+  return parts.length ? `${parts.join(" ")} 구간` : "";
+}
