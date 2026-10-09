@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { analysisService, storageService, type UploadedMedia } from "@/services";
 import type { AnalysisResult } from "@/types";
@@ -17,12 +17,15 @@ export function FollowUpAnalysis({
   baseline,
   onComplete,
   compact = false,
+  camera = false,
 }: {
   locationId: string;
   /** 최초 분석 결과 (조치 전) */
   baseline?: { riskScore: number; walkableRatio: number };
   onComplete: (result: AnalysisResult) => Promise<void>;
   compact?: boolean;
+  /** 휴대폰 카메라 촬영 버튼 표시 */
+  camera?: boolean;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [media, setMedia] = useState<UploadedMedia | null>(null);
@@ -67,6 +70,7 @@ export function FollowUpAnalysis({
         ) : (
           <UploadDropzone
             compact
+            camera={camera}
             disabled={running}
             onFile={async (f) => {
               setMedia(await storageService.uploadAnalysisMedia(f));
@@ -78,12 +82,13 @@ export function FollowUpAnalysis({
       <Button
         onClick={run}
         disabled={running}
-        variant={compact ? "secondary" : "primary"}
+        // 카메라 촬영이 주 동작일 때는 예시 장면 재분석을 보조 버튼으로 낮춘다
+        variant={compact || (camera && !file) ? "secondary" : "primary"}
         size={compact ? "sm" : "md"}
-        icon={running ? <Spinner /> : <RefreshCw className="size-4" />}
+        icon={running ? <Spinner /> : undefined}
         className={compact ? undefined : "w-full"}
       >
-        {running ? "재분석 중…" : file ? "업로드한 영상으로 재분석" : compact ? "재분석 다시 실행" : "조치 후 재분석 실행 (예시 장면)"}
+        {running ? "재분석 중…" : file ? "업로드한 파일로 재분석" : compact ? "재분석 다시 실행" : "조치 후 재분석 실행 (예시 장면)"}
       </Button>
     </div>
   );

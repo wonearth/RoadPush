@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Download, Search, SlidersHorizontal } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { LocationListItem } from "@/components/location/LocationListItem";
@@ -9,13 +9,23 @@ import { RiskMap } from "@/components/map/RiskMap";
 import { RiskLegend } from "@/components/risk/RiskLegend";
 import { inputClass } from "@/components/ui/Field";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META } from "@/constants/risk";
+import { ALL_STATUSES, OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META, STATUS_META, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
+import { downloadCsv, locationsToCsv } from "@/lib/exportCsv";
 import { locationService } from "@/services";
-import type { LocationQuery, ObstacleType, RiskLevel } from "@/types";
+import type { LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
 
 type SortKey = NonNullable<LocationQuery["sort"]>;
+/** OPEN = 조치 완료 전 (담당자가 가장 자주 보는 목록) */
+/** ALL 은 종료된 구간을 뺀 전체, OPEN 은 조치가 끝나지 않은 구간 */
+type StatusFilter = "ALL" | "OPEN" | LocationStatus;
+
+function matchStatus(s: LocationStatus, filter: StatusFilter) {
+  if (filter === "ALL") return s !== "CLOSED";
+  if (filter === "OPEN") return isOpenStatus(s);
+  return s === filter;
+}
 
 function RiskMapPageContent() {
   const router = useRouter();
@@ -26,20 +36,23 @@ function RiskMapPageContent() {
   const [keyword, setKeyword] = useState("");
   const [obstacle, setObstacle] = useState<ObstacleType | "">("");
   const [sort, setSort] = useState<SortKey>("risk-desc");
+  const [status, setStatus] = useState<StatusFilter>("ALL");
 
   const { data: all = [], loading } = useAsync(() => locationService.list(), "locations");
 
   const counts = useMemo(() => {
     const c = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
-    all.forEach((l) => c[l.riskLevel]++);
+    // 위험등급 칩 숫자는 고른 조치상태 안에서 센다 (목록 개수와 맞춘다)
+    all.filter((l) => matchStatus(l.status, status)).forEach((l) => c[l.riskLevel]++);
     return c;
-  }, [all]);
+  }, [all, status]);
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
     return all
       .filter((l) => level === "ALL" || l.riskLevel === level)
       .filter((l) => !obstacle || l.obstacleTypes.includes(obstacle))
+      .filter((l) => matchStatus(l.status, status))
       .filter((l) => !kw || `${l.name} ${l.address} ${l.area}`.toLowerCase().includes(kw))
       .sort((a, b) =>
         sort === "risk-asc"
@@ -48,9 +61,14 @@ function RiskMapPageContent() {
             ? b.analyzedAt.localeCompare(a.analyzedAt)
             : b.riskScore - a.riskScore,
       );
-  }, [all, level, obstacle, keyword, sort]);
+  }, [all, level, obstacle, status, keyword, sort]);
 
   const selected = all.find((l) => l.id === selectedId) ?? null;
+  // 지금 걸린 필터·정렬 그대로 내려받는다
+  const exportList = () => {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    downloadCsv(`RoadPush_위험구간_${today}.csv`, locationsToCsv(filtered));
+  };
   const select = (id: string | null) => router.replace(id ? `/map?selected=${id}` : "/map", { scroll: false });
 
   return (
@@ -84,7 +102,7 @@ function RiskMapPageContent() {
                 >
                   {lv === "ALL" ? "전체" : RISK_META[lv].label}
                   <span className={cn("tabular", active ? "text-slate-300" : "text-slate-500")}>
-                    {lv === "ALL" ? all.length : counts[lv]}
+                    {lv === "ALL" ? RISK_LEVELS.reduce((sum, l) => sum + counts[l], 0) : counts[lv]}
                   </span>
                 </button>
               );
@@ -107,19 +125,51 @@ function RiskMapPageContent() {
                 ))}
               </select>
             </label>
-            <label className="w-36">
+            <label className="flex-1">
+              <span className="sr-only">조치 상태 필터</span>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as StatusFilter)}
+                className={cn(inputClass, "py-2.5 text-sm")}
+              >
+                <option value="ALL">종료 제외 전체</option>
+                <option value="OPEN">조치 전 전체</option>
+                {ALL_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_META[s].label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-1 pb-1 text-sm text-slate-500">
+          <p>
+            <span className="tabular font-bold text-slate-900">{filtered.length}</span>개 구간
+          </p>
+          <div className="flex items-center gap-1">
+            <label>
               <span className="sr-only">정렬</span>
-              <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={cn(inputClass, "py-2.5 text-sm")}>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+                className="rounded-lg bg-transparent py-1 pr-1 text-sm font-semibold text-slate-700 focus:outline-2 focus:outline-brand-500"
+              >
                 <option value="risk-desc">위험도 높은순</option>
                 <option value="risk-asc">위험도 낮은순</option>
                 <option value="recent">최근 분석순</option>
               </select>
             </label>
+            <button
+              type="button"
+              onClick={exportList}
+              disabled={!filtered.length}
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <Download className="size-3.5" /> 엑셀
+            </button>
           </div>
         </div>
-        <p className="px-1 pb-1 text-sm text-slate-500">
-          <span className="tabular font-bold text-slate-900">{filtered.length}</span>개 구간
-        </p>
         <div className="max-h-[420px] flex-1 space-y-0.5 overflow-y-auto lg:max-h-none">
           {loading ? (
             <div className="space-y-2 p-4">
@@ -146,7 +196,7 @@ function RiskMapPageContent() {
           <RiskLegend compact />
         </div>
         {selected && (
-          <div className="absolute inset-x-4 bottom-4 z-10 sm:inset-x-auto sm:right-4">
+          <div className="animate-sheet-up fixed inset-x-3 bottom-3 z-40 sm:inset-x-auto sm:right-6 lg:absolute lg:right-4 lg:bottom-4 lg:z-10">
             <LocationSummaryCard location={selected} onClose={() => select(null)} />
           </div>
         )}

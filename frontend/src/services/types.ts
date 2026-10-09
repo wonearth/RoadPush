@@ -7,8 +7,10 @@ import type {
   AnalysisResult,
   CreateLocationInput,
   DashboardSummary,
+  Improvement,
   Location,
   LocationQuery,
+  NearbyFacility,
   MediaType,
   SignUpInput,
   UpdateActionInput,
@@ -39,7 +41,18 @@ export interface LocationService {
   getAnalysisHistory(locationId: string): Promise<AnalysisResult[]>;
   getActionLogs(locationId: string): Promise<ActionLog[]>;
   updateAction(locationId: string, input: UpdateActionInput, actor: string): Promise<Location>;
-  /** 데이터가 비어 있을 때 신촌·이대 예시 데이터를 넣는다. 넣은 구간 수를 반환 (이미 있으면 0) */
+  /** 조치 완료 후 재분석까지 마친 구간을 위험도가 많이 줄어든 순으로 반환한다 */
+  getImprovements(): Promise<Improvement[]>;
+  /**
+   * 같은 위치에서 새로 찍은 분석을 기존 구간에 추가한다.
+   * 조치 완료·종료된 구간인데 다시 위험이 발견되면 신규 발견으로 다시 연다.
+   */
+  addRepeatAnalysis(locationId: string, analysis: AnalysisResult, actor: string): Promise<Location>;
+  /** 주변 시설 검색 결과를 구간에 저장한다 (다음부터는 다시 찾지 않는다) */
+  saveNearbyFacilities(locationId: string, facilities: NearbyFacility[]): Promise<void>;
+  /** 관리번호가 없는 구간에 번호를 붙인다 (예시 구간 먼저, 분석 일시 순). 붙인 개수를 반환 */
+  assignMissingCodes(): Promise<number>;
+  /** 아직 없는 신촌·이대 예시 구간·이력을 넣는다. 넣은 문서 수를 반환 (실제 데이터만 쓰는 환경이면 0) */
   seedSampleData(): Promise<number>;
 }
 

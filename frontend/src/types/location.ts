@@ -1,4 +1,18 @@
-import type { ActionType, LocationStatus, ObstacleType, RiskLevel } from "./risk";
+import type { AnalysisResult } from "./analysis";
+import type { ActionType, CloseReason, LocationStatus, ObstacleType, RiskLevel } from "./risk";
+
+/** 우선순위 이유가 되는 주변 시설 종류 */
+export type FacilityKind =
+  | "SUBWAY" // 지하철역
+  | "CHILD" // 초등학교·유치원·어린이집 (어린이보호구역 가능성)
+  | "HOSPITAL"; // 병원
+
+export interface NearbyFacility {
+  kind: FacilityKind;
+  name: string;
+  /** 구간 좌표에서의 거리(m) */
+  meters: number;
+}
 
 /**
  * 분석된 보행구간. Firestore `locations` 컬렉션 문서에 대응한다.
@@ -6,6 +20,8 @@ import type { ActionType, LocationStatus, ObstacleType, RiskLevel } from "./risk
  */
 export interface Location {
   id: string;
+  /** 관리번호 (예: RP-2026-0007). 등록 순서대로 부여 */
+  code?: string;
   name: string;
   address: string;
   /** 생활권 구분 (예: 신촌, 이대, 대현동) */
@@ -29,7 +45,11 @@ export interface Location {
   /** AI 결과 이미지 URL (비어 있으면 원본 + overlay 로 렌더링) */
   resultImage: string;
   status: LocationStatus;
+  /** status 가 CLOSED 일 때의 종료 사유 */
+  closeReason?: CloseReason;
   plannedActions: ActionType[];
+  /** 주변 시설 (카카오 장소 검색, 처음 볼 때 한 번 찾아 저장). 없으면 아직 찾지 않은 것 */
+  nearbyFacilities?: NearbyFacility[];
   /** 예시 데이터 여부 — 실제 촬영·AI 분석 결과가 아닌 개발용/모의 데이터 */
   isSample?: boolean;
 }
@@ -40,6 +60,13 @@ export interface CreateLocationInput {
   area?: string;
   latitude?: number;
   longitude?: number;
+}
+
+/** 조치 완료 후 재분석까지 마친 구간의 조치 전·후 결과 */
+export interface Improvement {
+  location: Location;
+  before: AnalysisResult;
+  after: AnalysisResult;
 }
 
 export interface LocationQuery {

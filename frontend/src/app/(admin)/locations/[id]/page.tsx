@@ -1,39 +1,47 @@
 "use client";
 
-import { ArrowLeft, CalendarClock, ClipboardCheck, GitCompareArrows, MapPin, ScanSearch } from "lucide-react";
+import { ArrowLeft, CalendarClock, MapPin, ScanSearch } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { LayerToggles } from "@/components/analysis/LayerToggles";
 import { ActionManagement } from "@/components/location/ActionManagement";
+import { AdminMeta } from "@/components/location/AdminMeta";
 import { BeforeAfterComparison } from "@/components/location/BeforeAfterComparison";
 import { FollowUpAnalysis } from "@/components/location/FollowUpAnalysis";
+import { OccurrenceHistory } from "@/components/location/OccurrenceHistory";
+import { ReasonTags } from "@/components/location/ReasonTags";
+import { ResolveFlowDialog } from "@/components/location/ResolveFlowDialog";
 import { WorkflowProgress } from "@/components/location/WorkflowProgress";
 import { DEFAULT_LAYERS } from "@/components/media/AnalysisOverlayLayer";
 import { MediaFrame } from "@/components/media/MediaFrame";
 import { RiskBadge, StatusBadge } from "@/components/risk/RiskBadge";
 import { RiskBar } from "@/components/risk/RiskBar";
+import { PassabilityText } from "@/components/risk/PassabilityText";
 import { RiskMetrics } from "@/components/risk/RiskMetrics";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { MockBadge } from "@/components/ui/MockNotice";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { RISK_META, STATUS_META } from "@/constants/risk";
+import { CLOSE_REASON_META, RISK_META, STATUS_META, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/hooks/useAuth";
 import { describeRisk, formatDateTime } from "@/lib/format";
 import { locationService } from "@/services";
-import type { LocationStatus } from "@/types";
+import type { AnalysisResult, LocationStatus, UpdateActionInput } from "@/types";
 
-function workflowStage(status: LocationStatus, hasFollowUp: boolean) {
-  if (hasFollowUp) return 4;
-  return { NEW: 0, REVIEW_REQUIRED: 1, ACTION_PLANNED: 2, RESOLVED: 3 }[status];
+/** 조치상태를 상단 진행 단계로 바꾼다. 조치 완료 후 재분석까지 마쳤으면 모든 단계 완료(4). */
+function workflowStage(status: Exclude<LocationStatus, "CLOSED">, hasFollowUp: boolean) {
+  if (status === "RESOLVED" && hasFollowUp) return 4;
+  return { NEW: 0, ACTION_PLANNED: 1, RESOLVED: 2 }[status];
 }
 
 export default function LocationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [layers, setLayers] = useState(DEFAULT_LAYERS);
+  // 조치 완료로 저장하려는 내용 — 사진·재분석 흐름(ResolveFlowDialog)을 거쳐 저장한다
+  const [pendingResolve, setPendingResolve] = useState<UpdateActionInput | null>(null);
 
   const { data, loading, reload } = useAsync(
     () =>
@@ -65,12 +73,22 @@ export default function LocationDetailPage() {
 
   const initial = history.find((r) => r.phase === "INITIAL") ?? history[0];
   const latest = history.at(-1);
-  const followUp = history.length > 1 && latest?.phase === "FOLLOW_UP" ? latest : undefined;
+  // 조치 후 재분석 중 가장 최근 것 (같은 위치 반복 분석은 전후 비교에 쓰지 않는다)
+  const followUp = history.filter((r) => r.phase === "FOLLOW_UP").at(-1);
   const meta = RISK_META[location.riskLevel];
 
-  const saveAction = async (input: Parameters<typeof locationService.updateAction>[1]) => {
+  const saveAction = async (input: UpdateActionInput) => {
     await locationService.updateAction(location.id, input, user?.name ?? "데모 관리자");
     await reload();
+  };
+
+  const completeResolve = async (result: AnalysisResult | null) => {
+    if (!pendingResolve) return;
+    await locationService.updateAction(location.id, pendingResolve, user?.name ?? "데모 관리자");
+    if (result) await locationService.addFollowUpAnalysis(location.id, result);
+    setPendingResolve(null);
+    await reload();
+    if (result) document.getElementById("before-after")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -90,9 +108,17 @@ export default function LocationDetailPage() {
             <p className="mt-1 flex items-center gap-1 text-[15px] text-slate-500">
               <MapPin className="size-3.5" /> {location.address}
             </p>
+            <ReasonTags location={location} className="mt-2" />
+            <AdminMeta location={location} className="mt-3" />
             <p className="mt-3 text-base text-slate-700">{describeRisk(location)}</p>
             <div className="mt-4">
-              <WorkflowProgress current={workflowStage(location.status, Boolean(followUp))} />
+              {location.status === "CLOSED" ? (
+                <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                  {location.closeReason ? CLOSE_REASON_META[location.closeReason].label : "종료"} · 조치 없이 종료된 구간
+                </p>
+              ) : (
+                <WorkflowProgress current={workflowStage(location.status, Boolean(followUp))} />
+              )}
             </div>
           </div>
           <div className="rounded-2xl bg-slate-50 px-7 py-5 lg:min-w-64">
@@ -103,6 +129,7 @@ export default function LocationDetailPage() {
               <RiskBadge level={location.riskLevel} className="ml-1 text-lg" />
             </p>
             <RiskBar score={location.riskScore} level={location.riskLevel} className="mt-3 w-full bg-white" />
+            <PassabilityText value={location} detail className="mt-4 max-w-72 text-[15px]" />
           </div>
         </div>
       </Card>
@@ -111,8 +138,16 @@ export default function LocationDetailPage() {
       {latest && (
         <Card>
           <CardHeader
-            title={followUp ? "최근 분석 결과 (재분석)" : "AI 분석 결과"}
-            description="원본 이미지와 보행공간 분석 결과를 비교합니다"
+            title={
+              <span className="inline-flex flex-wrap items-center gap-2">
+                {latest.phase === "INITIAL" ? "AI 분석 결과" : "최근 분석 결과"}
+                {latest.phase !== "INITIAL" && (
+                  <span className="rounded border border-slate-300 px-1.5 py-px text-sm font-medium whitespace-nowrap text-slate-500">
+                    {latest.phase === "FOLLOW_UP" ? "조치 후 재분석" : "다시 발견"}
+                  </span>
+                )}
+              </span>
+            }
             action={
               <ButtonLink href={`/map?selected=${location.id}`} variant="secondary" size="sm" icon={<MapPin className="size-3.5" />}>
                 지도에서 보기
@@ -166,36 +201,41 @@ export default function LocationDetailPage() {
         </Card>
       )}
 
+      {history.length > 0 && <OccurrenceHistory history={history} />}
+
       {/* 현장조치 관리 */}
       <Card>
         <CardHeader
-          title={
-            <span className="inline-flex items-center gap-2">
-              <ClipboardCheck className="size-4 text-brand-600" /> 현장조치 관리
-            </span>
-          }
-          description="확인 → 조치 예정 → 조치 완료 순으로 상태를 관리하고 조치 내용을 기록합니다"
+          title="현장조치 관리"
         />
         <CardBody>
           <ActionManagement
-            key={`${location.status}-${location.plannedActions.join()}`}
+            key={`${location.status}-${location.closeReason}-${location.plannedActions.join()}`}
             location={location}
             logs={logs}
             recommendFrom={initial?.obstacleTypes ?? location.obstacleTypes}
             onSave={saveAction}
+            onResolve={setPendingResolve}
           />
         </CardBody>
       </Card>
 
+      {/* 열 때마다 새로 마운트해 이전 재분석 결과가 남지 않게 한다 */}
+      {pendingResolve && (
+        <ResolveFlowDialog
+          open
+          locationId={location.id}
+          before={location}
+          baseline={initial}
+          onClose={() => setPendingResolve(null)}
+          onSubmit={completeResolve}
+        />
+      )}
+
       {/* 조치 전·후 비교 */}
-      <Card>
+      <Card id="before-after" className="scroll-mt-4">
         <CardHeader
-          title={
-            <span className="inline-flex items-center gap-2">
-              <GitCompareArrows className="size-4 text-brand-600" /> 조치 전 / 조치 후 비교
-            </span>
-          }
-          description="현장조치 후 동일 구간을 재분석해 실제 개선효과를 확인합니다"
+          title="조치 전후 비교"
           action={
             followUp && (
               <FollowUpAnalysis
@@ -221,13 +261,14 @@ export default function LocationDetailPage() {
                 <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
                   현장조치를 완료한 뒤 같은 구간을 다시 촬영해 분석하면, 위험도와 유효 보행공간의 변화를 조치 전과 비교해 보여줍니다.
                 </p>
-                {location.status !== "RESOLVED" && (
+                {isOpenStatus(location.status) && (
                   <p className="mt-3 text-[13px] font-medium text-amber-700">
-                    현재 상태는 &lsquo;{STATUS_META[location.status].label}&rsquo;입니다. 조치 완료 후 재분석을 권장합니다.
+                    현재 상태: {STATUS_META[location.status].label}. 현장조치 관리에서 &lsquo;조치 완료&rsquo;를 선택하면 사진 촬영과 재분석으로 이어집니다.
                   </p>
                 )}
               </div>
               <FollowUpAnalysis
+                camera
                 locationId={location.id}
                 baseline={initial}
                 onComplete={async (r) => {

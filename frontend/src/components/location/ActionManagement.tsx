@@ -1,11 +1,19 @@
 "use client";
 
-import { Check, Save } from "lucide-react";
+import { Check, XCircle } from "lucide-react";
 import { useState } from "react";
-import { ACTION_META, ACTION_TYPES, STATUS_META, STATUS_ORDER, getRecommendedActions } from "@/constants/risk";
+import {
+  ACTION_META,
+  ACTION_TYPES,
+  CLOSE_REASONS,
+  CLOSE_REASON_META,
+  STATUS_META,
+  STATUS_ORDER,
+  getRecommendedActions,
+} from "@/constants/risk";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
-import type { ActionLog, ActionType, Location, LocationStatus, UpdateActionInput } from "@/types";
+import type { ActionLog, ActionType, CloseReason, Location, LocationStatus, UpdateActionInput } from "@/types";
 import { StatusBadge } from "../risk/RiskBadge";
 import { Button } from "../ui/Button";
 import { inputClass } from "../ui/Field";
@@ -16,27 +24,43 @@ export function ActionManagement({
   logs,
   recommendFrom,
   onSave,
+  onResolve,
 }: {
   location: Location;
   logs: ActionLog[];
   /** 권장 조치를 계산할 장애요인 (최초 분석 기준) */
   recommendFrom: Location["obstacleTypes"];
   onSave: (input: UpdateActionInput) => Promise<void>;
+  /** 조치 완료로 바꿀 때 바로 저장하지 않고 사진·재분석 흐름으로 넘긴다 */
+  onResolve?: (input: UpdateActionInput) => void;
 }) {
   const [status, setStatus] = useState<LocationStatus>(location.status);
+  const [closeReason, setCloseReason] = useState<CloseReason | undefined>(location.closeReason);
   const [actions, setActions] = useState<ActionType[]>(location.plannedActions);
   const [memo, setMemo] = useState("");
   const [saving, setSaving] = useState(false);
   const recommended = getRecommendedActions(recommendFrom);
-  const dirty = status !== location.status || actions.join() !== location.plannedActions.join() || memo.trim() !== "";
+  const closed = status === "CLOSED";
+  const dirty =
+    status !== location.status ||
+    (closed && closeReason !== location.closeReason) ||
+    actions.join() !== location.plannedActions.join() ||
+    memo.trim() !== "";
+  // 종료를 취소하면 원래 상태로, 원래부터 종료였다면 신규 발견으로 되돌린다
+  const reopenTo: LocationStatus = location.status === "CLOSED" ? "NEW" : location.status;
+  // 종료 상태에서는 흐름 단계 중 아무것도 선택되지 않는다
   const currentIndex = STATUS_ORDER.indexOf(status);
 
   const toggle = (a: ActionType) => setActions((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
 
+  const resolving = status === "RESOLVED" && location.status !== "RESOLVED" && !!onResolve;
+
   const save = async () => {
+    const input = { status, closeReason: closed ? closeReason : undefined, actionTypes: actions, memo };
+    if (resolving) return onResolve(input);
     setSaving(true);
     try {
-      await onSave({ status, actionTypes: actions, memo });
+      await onSave(input);
       setMemo("");
     } finally {
       setSaving(false);
@@ -49,7 +73,7 @@ export function ActionManagement({
         {/* 상태 stepper */}
         <div>
           <p className="mb-2.5 text-sm font-semibold text-slate-600">조치 상태</p>
-          <ol className="grid grid-cols-4 gap-1.5">
+          <ol className="grid grid-cols-3 gap-1.5">
             {STATUS_ORDER.map((s, i) => {
               const done = i < currentIndex;
               const active = i === currentIndex;
@@ -77,15 +101,51 @@ export function ActionManagement({
                     <span className={cn("text-[15px] font-semibold", active ? "text-brand-700" : "text-slate-700")}>
                       {STATUS_META[s].label}
                     </span>
+                    <span className="hidden text-xs text-slate-500 sm:block">{STATUS_META[s].desc}</span>
                   </button>
                 </li>
               );
             })}
           </ol>
+
+          {/* 조치 없이 종료 */}
+          <div className={cn("mt-2 rounded-xl px-3.5 py-3", closed ? "bg-slate-100 ring-2 ring-slate-400 ring-inset" : "bg-slate-50")}>
+            <button
+              type="button"
+              onClick={() => setStatus(closed ? reopenTo : "CLOSED")}
+              aria-pressed={closed}
+              className="flex w-full items-center gap-2 text-left text-[15px] font-semibold text-slate-700"
+            >
+              <XCircle className="size-4 shrink-0 text-slate-400" />
+              <span className="whitespace-nowrap">조치 없이 종료</span>
+              <span className="ml-auto text-right text-xs font-medium text-slate-500">
+                {closed ? "종료 취소" : <span className="hidden sm:inline">오탐 · 조치 불필요 · 중복</span>}
+              </span>
+            </button>
+            {closed && (
+              <div className="mt-3 grid gap-1.5 sm:grid-cols-3">
+                {CLOSE_REASONS.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setCloseReason(r)}
+                    aria-pressed={closeReason === r}
+                    className={cn(
+                      "rounded-lg px-3 py-2.5 text-left transition-colors",
+                      closeReason === r ? "bg-white ring-2 ring-brand-500 ring-inset" : "bg-white/60 hover:bg-white",
+                    )}
+                  >
+                    <span className="block text-sm font-semibold text-slate-800">{CLOSE_REASON_META[r].label}</span>
+                    <span className="block text-xs text-slate-500">{CLOSE_REASON_META[r].desc}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 조치 유형 */}
-        <div>
+        <div className={cn(closed && "hidden")}>
           <p className="mb-2.5 text-sm font-semibold text-slate-600">현장조치</p>
           <div className="grid grid-cols-2 gap-2">
             {ACTION_TYPES.map((a) => {
@@ -129,8 +189,8 @@ export function ActionManagement({
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={save} disabled={!dirty || saving} icon={saving ? <Spinner /> : <Save className="size-4" />}>
-            조치 내용 저장
+          <Button onClick={save} disabled={!dirty || saving || (closed && !closeReason)} icon={saving ? <Spinner /> : undefined}>
+            {resolving ? "조치 완료 처리" : "조치 내용 저장"}
           </Button>
         </div>
       </div>
@@ -145,6 +205,7 @@ export function ActionManagement({
                 <span className={cn("absolute top-1.5 -left-[21px] size-2.5 rounded-full ring-4 ring-white", STATUS_META[log.status].dot)} />
                 <div className="flex items-center gap-2">
                   <StatusBadge status={log.status} />
+                  {log.closeReason && <span className="text-[13px] font-medium text-slate-600">{CLOSE_REASON_META[log.closeReason].label}</span>}
                   <span className="tabular text-[11px] text-slate-400">{formatDateTime(log.createdAt)}</span>
                 </div>
                 {log.actionTypes.length > 0 && (

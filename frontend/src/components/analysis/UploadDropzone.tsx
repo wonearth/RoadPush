@@ -1,6 +1,6 @@
 "use client";
 
-import { FileImage, FileVideo, UploadCloud } from "lucide-react";
+import { Camera, FileImage, FileVideo, UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
@@ -11,12 +11,16 @@ export function UploadDropzone({
   onFile,
   compact = false,
   disabled = false,
+  camera = false,
 }: {
   onFile: (file: File) => void;
   compact?: boolean;
   disabled?: boolean;
+  /** 휴대폰에서 바로 카메라를 여는 버튼을 함께 보여준다 */
+  camera?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +67,8 @@ export function UploadDropzone({
           <UploadCloud className="size-5" />
         </span>
         <p className="mt-3 text-sm font-semibold text-slate-800">
-          도로·보행 이미지 또는 영상을 끌어다 놓거나 <span className="text-brand-600">파일 선택</span>
+          도로·보행 이미지 또는 영상을 <span className="hidden sm:inline">끌어다 놓거나 </span>
+          <span className="text-brand-600">파일 선택</span>
         </p>
         {!compact && (
           <p className="mt-1 text-xs text-slate-500">CCTV · 블랙박스 · 현장점검 촬영본 / 최대 {MAX_SIZE_MB}MB</p>
@@ -87,6 +92,29 @@ export function UploadDropzone({
           }}
         />
       </div>
+      {camera && (
+        <>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => cameraRef.current?.click()}
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-[15px] font-semibold text-white disabled:opacity-60 sm:hidden"
+          >
+            <Camera className="size-4" /> 카메라로 촬영
+          </button>
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              handle(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </>
+      )}
       {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
     </div>
   );

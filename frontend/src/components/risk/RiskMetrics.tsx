@@ -12,12 +12,12 @@ interface Metrics {
   obstacleTypes: ObstacleType[];
 }
 
-/** "왜 위험한가" — 남은 보행공간 · 공간 잠식 · 차도 이탈 · 주요 원인 */
+/** "판단 근거" — 남은 보행공간 · 공간 잠식 · 차도 이탈 · 주요 원인 */
 export function RiskMetrics({ metrics, className, extra }: { metrics: Metrics; className?: string; extra?: ReactNode }) {
   return (
     <dl className={cn("divide-y divide-slate-100", className)}>
       <div className="pb-4">
-        <dt className="text-xs font-medium text-slate-500">실제 남아 있는 유효 보행공간</dt>
+        <dt className="text-xs font-medium text-slate-500">유효 보행공간</dt>
         <dd className="mt-1">
           <span className="tabular text-2xl font-bold text-emerald-600">{Math.round(metrics.walkableRatio * 100)}%</span>
           <WalkableBar walkableRatio={metrics.walkableRatio} className="mt-2" />

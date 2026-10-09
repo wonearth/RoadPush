@@ -1,16 +1,23 @@
 import { X } from "lucide-react";
-import { OBSTACLE_META, RISK_META, STATUS_META } from "@/constants/risk";
+import type { ReactNode } from "react";
+import { OBSTACLE_META, PASSABILITY_META, RISK_META, STATUS_META, getPassability } from "@/constants/risk";
+import { departmentOf } from "@/lib/admin";
 import { formatDateTime, formatPercent, shortAddress } from "@/lib/format";
 import type { Location } from "@/types";
 import { RiskBadge } from "../risk/RiskBadge";
 import { ButtonLink } from "../ui/Button";
+import { DueText } from "./AdminMeta";
 
 /** 지도 marker 선택 시 보여주는 구간 요약 */
 export function LocationSummaryCard({ location, onClose }: { location: Location; onClose?: () => void }) {
-  const rows: [string, string][] = [
-    ["주요 원인", location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(" · ") || "주요 장애물 없음"],
-    ["유효 보행공간", `${formatPercent(location.walkableRatio)}${location.roadDetourRequired ? " · 차도 우회" : ""}`],
+  const rows: [string, ReactNode][] = [
+    ["관리번호", location.code ?? "—"],
+    ["주요 원인", location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(", ") || "주요 장애물 없음"],
+    ["통행 판단", PASSABILITY_META[getPassability(location)].label],
+    ["유효 보행공간", formatPercent(location.walkableRatio)],
     ["조치상태", STATUS_META[location.status].label],
+    ["담당 부서", departmentOf(location)],
+    ["처리기한", <DueText key="due" location={location} />],
     ["분석 일시", formatDateTime(location.analyzedAt)],
   ];
   return (

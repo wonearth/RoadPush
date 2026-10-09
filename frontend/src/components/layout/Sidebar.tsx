@@ -34,7 +34,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
       <div className="px-6 py-6 text-[13px] leading-relaxed text-slate-500">
-        <p>RoadPush MVP</p>
+        <p>RoadPush</p>
         <p>2026 AI 라이프 아이디어 챌린지</p>
       </div>
     </div>

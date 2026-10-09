@@ -1,10 +1,11 @@
-import type { ActionType, LocationStatus } from "./risk";
+import type { ActionType, CloseReason, LocationStatus } from "./risk";
 
 /** 현장조치 이력. Firestore `actions` 컬렉션 문서에 대응한다. */
 export interface ActionLog {
   id: string;
   locationId: string;
   status: LocationStatus;
+  closeReason?: CloseReason;
   actionTypes: ActionType[];
   memo: string;
   createdAt: string;
@@ -13,6 +14,7 @@ export interface ActionLog {
 
 export interface UpdateActionInput {
   status: LocationStatus;
+  closeReason?: CloseReason;
   actionTypes: ActionType[];
   memo: string;
 }

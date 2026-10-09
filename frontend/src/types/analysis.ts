@@ -32,7 +32,8 @@ export interface AnalysisOverlay {
 }
 
 export type MediaType = "image" | "video";
-export type AnalysisPhase = "INITIAL" | "FOLLOW_UP";
+/** INITIAL 최초 분석 · FOLLOW_UP 조치 후 재분석 · REPEAT 같은 위치에서 다시 찍은 분석 */
+export type AnalysisPhase = "INITIAL" | "FOLLOW_UP" | "REPEAT";
 
 /**
  * 1회 분석 결과. Firestore `analysisResults` 컬렉션 문서에 대응한다.

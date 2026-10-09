@@ -1,4 +1,4 @@
-import { OBSTACLE_META, RISK_META } from "@/constants/risk";
+import { OBSTACLE_META, PASSABILITY_META, RISK_META, getPassability } from "@/constants/risk";
 import { cn } from "@/lib/cn";
 import { formatPercent, shortAddress } from "@/lib/format";
 import type { Location } from "@/types";
@@ -13,7 +13,7 @@ export function LocationListItem({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const causes = location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(" · ") || "주요 장애물 없음";
+  const causes = location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(", ") || "주요 장애물 없음";
   return (
     <button
       type="button"
@@ -29,10 +29,15 @@ export function LocationListItem({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate font-bold text-slate-900">{location.name}</span>
-        <span className="mt-0.5 block truncate text-[13.5px] text-slate-500">{shortAddress(location.address)}</span>
+        <span className="mt-0.5 block truncate text-[13.5px] text-slate-500">
+          {location.code && <span className="tabular mr-1.5 text-slate-400">{location.code}</span>}
+          {shortAddress(location.address)}
+        </span>
         <span className="mt-1 block truncate text-[13px] text-slate-600">
-          {causes} · 보행공간 {formatPercent(location.walkableRatio)}
-          {location.roadDetourRequired && " · 차도 우회"}
+          {causes}
+          <span className="ml-2 text-slate-400">
+            보행공간 {formatPercent(location.walkableRatio)}, {PASSABILITY_META[getPassability(location)].label}
+          </span>
         </span>
       </span>
       <StatusBadge status={location.status} className="shrink-0" />

@@ -1,34 +1,64 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, RotateCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
-import { KpiCard } from "@/components/dashboard/KpiCard";
+import { ImprovementPanel } from "@/components/dashboard/ImprovementPanel";
+import { KpiCard, KpiStrip } from "@/components/dashboard/KpiCard";
 import { PriorityList } from "@/components/dashboard/PriorityList";
 import { RiskMap } from "@/components/map/RiskMap";
-import { StatusBadge } from "@/components/risk/RiskBadge";
 import { RiskDistribution } from "@/components/risk/RiskDistribution";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { RISK_META, getRiskLevel } from "@/constants/risk";
+import { RISK_META, getRiskLevel, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
+import { cn } from "@/lib/cn";
 import { formatDateTime, shortAddress } from "@/lib/format";
 import { locationService } from "@/services";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { data, loading, reload } = useAsync(
-    () => Promise.all([locationService.getDashboardSummary(), locationService.list({ sort: "risk-desc" })]),
+    () =>
+      Promise.all([
+        locationService.getDashboardSummary(),
+        locationService.list({ sort: "risk-desc" }),
+        locationService.getImprovements(),
+        // 화면에 표시하는 데이터 기준 시각
+        Promise.resolve(new Date().toISOString()),
+      ]),
     "dashboard",
   );
-  const [summary, locations = []] = data ?? [];
-  const priority = locations.filter((l) => l.status !== "RESOLVED" && l.riskLevel !== "SAFE").slice(0, 6);
-  const recent = [...locations].sort((a, b) => b.analyzedAt.localeCompare(a.analyzedAt)).slice(0, 4);
+  const [summary, locations = [], improvements = [], loadedAt] = data ?? [];
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  };
+
+  // 한 번만: 예시 데이터를 쓰는 환경이면 새로 추가된 예시 구간·이력을 채우고, 관리번호가 없는 구간에 번호를 붙인다
+  const synced = useRef(false);
+  useEffect(() => {
+    if (synced.current || !data) return;
+    synced.current = true;
+    const seed = locations.some((l) => l.isSample) ? locationService.seedSampleData() : Promise.resolve(0);
+    seed
+      .then(async (n) => {
+        if (n + (await locationService.assignMissingCodes()) > 0) reload();
+      })
+      // 다른 탭에서 동시에 채우면 이력 문서 덮어쓰기가 규칙에 막혀 실패할 수 있다 — 화면에는 영향 없으니 무시한다
+      .catch(() => {});
+  }, [data, locations, reload]);
+  // 종료된 구간(잘못 분석됨·중복 등)은 대시보드에서 뺀다
+  const active = locations.filter((l) => l.status !== "CLOSED");
+  const priority = active.filter((l) => isOpenStatus(l.status) && l.riskLevel !== "SAFE").slice(0, 6);
   const avgLevel = summary ? getRiskLevel(summary.averageRiskScore) : "SAFE";
   const top = priority[0];
 
-  if (summary && summary.totalCount === 0) {
+  if (summary && locations.length === 0) {
     return (
       <div className="px-4 pt-5 pb-10 sm:px-8">
         <EmptyDashboard onSeeded={reload} />
@@ -38,6 +68,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5 px-4 pt-5 pb-10 sm:px-8">
+      <div className="-mb-2 flex items-center justify-end gap-2 text-sm text-slate-500">
+        {loadedAt && <span className="tabular">{formatDateTime(loadedAt)} 기준</span>}
+        <button
+          type="button"
+          onClick={refresh}
+          disabled={refreshing}
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-medium text-slate-600 hover:bg-white disabled:opacity-50"
+        >
+          <RotateCw className={cn("size-3.5", refreshing && "animate-spin")} /> 새로고침
+        </button>
+      </div>
       {/* 오늘의 최우선 점검 구간 */}
       {top && (
         <div className="flex flex-col gap-2 rounded-2xl bg-white px-5 py-4 sm:flex-row sm:items-center sm:gap-4">
@@ -48,8 +89,8 @@ export default function DashboardPage() {
               {top.name} · {top.riskScore}점 {RISK_META[top.riskLevel].label}
             </span>
             <span className="text-slate-600">
-              {shortAddress(top.address)} · 유효 보행공간 {Math.round(top.walkableRatio * 100)}%
-              {top.roadDetourRequired && " · 차도 우회 발생"}
+              {shortAddress(top.address)}, 유효 보행공간 {Math.round(top.walkableRatio * 100)}%
+              {top.roadDetourRequired && ", 차도 우회 발생"}
             </span>
           </p>
           <Link href={`/locations/${top.id}`} className="inline-flex items-center gap-1 text-[15px] font-bold text-brand-600 hover:text-brand-700">
@@ -58,36 +99,48 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* KPI */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {/* 요약 지표 */}
+      <KpiStrip>
         {summary ? (
           <>
-            <KpiCard label="전체 분석 구간" value={summary.totalCount} unit="개" hint={`${new Set(locations.map((l) => l.area)).size}개 생활권`} />
-            <KpiCard label="발견된 단절구간" value={summary.disconnectedCount} unit="개" hint="위험도 26점 이상" />
+            <KpiCard
+              label="전체 분석 구간"
+              value={summary.totalCount}
+              unit="개"
+              hint={`${new Set(active.map((l) => l.area)).size}개 생활권`}
+              info="AI 분석 후 관리 대상으로 등록된 보행구간 수 (조치 없이 종료된 구간 제외)"
+            />
+            <KpiCard
+              label="발견된 단절구간"
+              value={summary.disconnectedCount}
+              unit="개"
+              hint="위험도 26점 이상"
+              info="위험도 26점 이상(주의·경고·위험) 구간. 장애물로 보행공간이 좁아지거나 끊긴 상태"
+            />
             <KpiCard
               label="고위험 구간"
               value={<span className={RISK_META.DANGER.text}>{summary.highRiskCount}</span>}
               unit="개"
               hint="위험도 76점 이상"
+              info="위험도 76점 이상 구간. 보행자가 차도로 내려가야 하는 수준으로 최우선 점검 대상"
             />
             <KpiCard
               label="평균 단절 위험도"
               value={<span className={RISK_META[avgLevel].text}>{summary.averageRiskScore}</span>}
-              unit={`/ 100 · ${RISK_META[avgLevel].label}`}
-              hint="전체 구간 평균"
+              unit={`/ 100 ${RISK_META[avgLevel].label}`}
+              info="전체 구간 위험도 평균. 0~25 안전, 26~50 주의, 51~75 경고, 76~100 위험"
             />
           </>
         ) : (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[132px] rounded-2xl" />)
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[88px] rounded-none" />)
         )}
-      </div>
+      </KpiStrip>
 
       <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* 우선점검 필요 구간 */}
         <Card className="min-w-0">
           <CardHeader
             title="우선점검 필요 구간"
-            description="조치가 완료되지 않은 구간을 위험도 높은 순으로 표시합니다"
             action={<TextLink href="/map">전체 보기</TextLink>}
           />
           <div className="px-6 pt-4 pb-3">
@@ -115,7 +168,7 @@ export default function DashboardPage() {
                 className="block w-full overflow-hidden rounded-xl"
                 aria-label="위험지도로 이동"
               >
-                <RiskMap locations={locations} interactive={false} className="aspect-[16/11] w-full" />
+                <RiskMap locations={active} interactive={false} className="aspect-[16/11] w-full" />
               </button>
             </CardBody>
           </Card>
@@ -129,23 +182,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 최근 분석 구간 */}
+      {/* 조치 현황 및 개선 효과 */}
       <Card>
-        <CardHeader title="최근 분석 구간" action={<TextLink href="/analysis">새 분석</TextLink>} />
-        <CardBody className="grid gap-3 pt-4 sm:grid-cols-2 xl:grid-cols-4">
-          {recent.map((loc) => (
-            <Link key={loc.id} href={`/locations/${loc.id}`} className="rounded-xl bg-slate-50 p-4 transition hover:bg-slate-100">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="truncate font-bold text-slate-900">{loc.name}</span>
-                <span className={`tabular text-xl font-extrabold ${RISK_META[loc.riskLevel].text}`}>{loc.riskScore}</span>
-              </div>
-              <p className="mt-0.5 truncate text-[13.5px] text-slate-500">{shortAddress(loc.address)}</p>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-[13px] text-slate-500">{formatDateTime(loc.analyzedAt)}</span>
-                <StatusBadge status={loc.status} />
-              </div>
-            </Link>
-          ))}
+        <CardHeader title="조치 현황 및 개선 효과" />
+        <CardBody className="pt-5">
+          {data ? <ImprovementPanel locations={locations} improvements={improvements} /> : <Skeleton className="h-48" />}
         </CardBody>
       </Card>
     </div>
