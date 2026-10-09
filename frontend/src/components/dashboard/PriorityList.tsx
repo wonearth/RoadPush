@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { OBSTACLE_META, PASSABILITY_META, RISK_META, getPassability } from "@/constants/risk";
+import { departmentOf } from "@/lib/admin";
 import { formatPercent, shortAddress } from "@/lib/format";
 import type { Location } from "@/types";
+import { DueText } from "../location/AdminMeta";
 import { ReasonTags } from "../location/ReasonTags";
 import { RiskBadge, StatusBadge } from "../risk/RiskBadge";
 
@@ -9,7 +11,7 @@ import { RiskBadge, StatusBadge } from "../risk/RiskBadge";
 export function PriorityList({ locations }: { locations: Location[] }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[680px] text-left text-[15px]">
+      <table className="w-full min-w-[880px] text-left text-[15px]">
         <thead>
           <tr className="bg-slate-50 text-sm text-slate-600">
             <th className="w-12 rounded-l-lg py-3 pl-4 font-semibold">순위</th>
@@ -17,6 +19,8 @@ export function PriorityList({ locations }: { locations: Location[] }) {
             <th className="w-24 py-3 font-semibold">위험도</th>
             <th className="py-3 font-semibold">주요 원인</th>
             <th className="w-44 py-3 font-semibold">보행공간 / 통행 판단</th>
+            <th className="w-28 py-3 font-semibold">담당</th>
+            <th className="w-32 py-3 font-semibold">처리기한</th>
             <th className="w-[88px] rounded-r-lg py-3 pr-4 font-semibold">조치상태</th>
           </tr>
         </thead>
@@ -28,7 +32,10 @@ export function PriorityList({ locations }: { locations: Location[] }) {
                 <Link href={`/locations/${loc.id}`} className="font-bold whitespace-nowrap text-slate-900 after:absolute after:inset-0">
                   {loc.name}
                 </Link>
-                <p className="mt-0.5 max-w-56 truncate text-[13.5px] text-slate-500">{shortAddress(loc.address)}</p>
+                <p className="mt-0.5 max-w-56 truncate text-[13.5px] text-slate-500">
+                  {loc.code && <span className="tabular mr-1.5 text-slate-400">{loc.code}</span>}
+                  {shortAddress(loc.address)}
+                </p>
                 <ReasonTags location={loc} max={2} className="mt-1.5" />
               </td>
               <td className="py-4 pr-4 whitespace-nowrap">
@@ -43,6 +50,10 @@ export function PriorityList({ locations }: { locations: Location[] }) {
                 <span className="ml-2 text-[13.5px] font-semibold text-slate-600">
                   {PASSABILITY_META[getPassability(loc)].label}
                 </span>
+              </td>
+              <td className="py-4 pr-4 whitespace-nowrap text-slate-700">{departmentOf(loc)}</td>
+              <td className="py-4 pr-4">
+                <DueText location={loc} />
               </td>
               <td className="py-4 pr-4">
                 <StatusBadge status={loc.status} />

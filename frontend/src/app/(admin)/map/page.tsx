@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Download, Search, SlidersHorizontal } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { LocationListItem } from "@/components/location/LocationListItem";
@@ -12,6 +12,7 @@ import { EmptyState, Skeleton } from "@/components/ui/States";
 import { ALL_STATUSES, OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META, STATUS_META, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
+import { downloadCsv, locationsToCsv } from "@/lib/exportCsv";
 import { locationService } from "@/services";
 import type { LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
 
@@ -63,6 +64,11 @@ function RiskMapPageContent() {
   }, [all, level, obstacle, status, keyword, sort]);
 
   const selected = all.find((l) => l.id === selectedId) ?? null;
+  // 지금 걸린 필터·정렬 그대로 내려받는다
+  const exportList = () => {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    downloadCsv(`RoadPush_위험구간_${today}.csv`, locationsToCsv(filtered));
+  };
   const select = (id: string | null) => router.replace(id ? `/map?selected=${id}` : "/map", { scroll: false });
 
   return (
@@ -141,18 +147,28 @@ function RiskMapPageContent() {
           <p>
             <span className="tabular font-bold text-slate-900">{filtered.length}</span>개 구간
           </p>
-          <label>
-            <span className="sr-only">정렬</span>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="rounded-lg bg-transparent py-1 pr-1 text-sm font-semibold text-slate-700 focus:outline-2 focus:outline-brand-500"
+          <div className="flex items-center gap-1">
+            <label>
+              <span className="sr-only">정렬</span>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+                className="rounded-lg bg-transparent py-1 pr-1 text-sm font-semibold text-slate-700 focus:outline-2 focus:outline-brand-500"
+              >
+                <option value="risk-desc">위험도 높은순</option>
+                <option value="risk-asc">위험도 낮은순</option>
+                <option value="recent">최근 분석순</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={exportList}
+              disabled={!filtered.length}
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
-              <option value="risk-desc">위험도 높은순</option>
-              <option value="risk-asc">위험도 낮은순</option>
-              <option value="recent">최근 분석순</option>
-            </select>
-          </label>
+              <Download className="size-3.5" /> 엑셀
+            </button>
+          </div>
         </div>
         <div className="max-h-[420px] flex-1 space-y-0.5 overflow-y-auto lg:max-h-none">
           {loading ? (

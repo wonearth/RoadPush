@@ -20,6 +20,8 @@ export interface NearbyFacility {
  */
 export interface Location {
   id: string;
+  /** 관리번호 (예: RP-2026-0007). 등록 순서대로 부여 */
+  code?: string;
   name: string;
   address: string;
   /** 생활권 구분 (예: 신촌, 이대, 대현동) */

@@ -20,6 +20,7 @@ import {
   type DocumentData,
 } from "firebase/firestore";
 import { normalizeStatus } from "@/constants/risk";
+import { nextCodes } from "@/lib/admin";
 import { firestore } from "@/lib/firebase";
 import { MOCK_ACTION_LOGS, MOCK_ANALYSIS_RESULTS, MOCK_LOCATIONS } from "@/mocks/mockLocations";
 import type { LocationService } from "@/services/types";
@@ -67,9 +68,11 @@ export const firestoreLocationService: LocationService = {
     const locationRef = doc(locationsCol());
     const resultRef = doc(resultsCol());
     const fallback = randomAreaCoordinate();
+    const [code] = nextCodes(await fetchAll(), 1);
     const location = applyAnalysisToLocation(
       {
         id: locationRef.id,
+        code,
         name: input.name.trim(),
         address: input.address.trim(),
         area: input.area?.trim() || "기타",
@@ -129,6 +132,19 @@ export const firestoreLocationService: LocationService = {
     }
     await batch.commit();
     return updated;
+  },
+
+  async assignMissingCodes() {
+    const all = await fetchAll();
+    const missing = all
+      .filter((l) => !l.code)
+      .sort((a, b) => Number(!a.isSample) - Number(!b.isSample) || a.analyzedAt.localeCompare(b.analyzedAt));
+    if (!missing.length) return 0;
+    const codes = nextCodes(all, missing.length);
+    const batch = writeBatch(firestore());
+    missing.forEach((l, i) => batch.update(doc(locationsCol(), l.id), { code: codes[i] }));
+    await batch.commit();
+    return missing.length;
   },
 
   async saveNearbyFacilities(locationId, facilities) {

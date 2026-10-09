@@ -29,7 +29,10 @@ export function LocationListItem({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate font-bold text-slate-900">{location.name}</span>
-        <span className="mt-0.5 block truncate text-[13.5px] text-slate-500">{shortAddress(location.address)}</span>
+        <span className="mt-0.5 block truncate text-[13.5px] text-slate-500">
+          {location.code && <span className="tabular mr-1.5 text-slate-400">{location.code}</span>}
+          {shortAddress(location.address)}
+        </span>
         <span className="mt-1 block truncate text-[13px] text-slate-600">
           {causes}
           <span className="ml-2 text-slate-400">

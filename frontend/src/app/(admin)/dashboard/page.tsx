@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, RotateCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { ImprovementPanel } from "@/components/dashboard/ImprovementPanel";
 import { KpiCard } from "@/components/dashboard/KpiCard";
@@ -14,7 +14,8 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState, Skeleton } from "@/components/ui/States";
 import { RISK_META, getRiskLevel, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
-import { shortAddress } from "@/lib/format";
+import { cn } from "@/lib/cn";
+import { formatDateTime, shortAddress } from "@/lib/format";
 import { locationService } from "@/services";
 
 export default function DashboardPage() {
@@ -25,24 +26,32 @@ export default function DashboardPage() {
         locationService.getDashboardSummary(),
         locationService.list({ sort: "risk-desc" }),
         locationService.getImprovements(),
+        // 화면에 표시하는 데이터 기준 시각
+        Promise.resolve(new Date().toISOString()),
       ]),
     "dashboard",
   );
-  const [summary, locations = [], improvements = []] = data ?? [];
+  const [summary, locations = [], improvements = [], loadedAt] = data ?? [];
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  };
 
-  // 예시 데이터를 쓰는 환경이면, 새로 추가된 예시 구간(조치 완료 사례 등)을 한 번 채워 넣는다
+  // 한 번만: 예시 데이터를 쓰는 환경이면 새로 추가된 예시 구간·이력을 채우고, 관리번호가 없는 구간에 번호를 붙인다
   const synced = useRef(false);
   useEffect(() => {
-    if (synced.current || !locations.some((l) => l.isSample)) return;
+    if (synced.current || !data) return;
     synced.current = true;
-    // 다른 탭에서 동시에 채우면 이력 문서 덮어쓰기가 규칙에 막혀 실패할 수 있다 — 화면에는 영향 없으니 무시한다
-    locationService
-      .seedSampleData()
-      .then((n) => {
-        if (n > 0) reload();
+    const seed = locations.some((l) => l.isSample) ? locationService.seedSampleData() : Promise.resolve(0);
+    seed
+      .then(async (n) => {
+        if (n + (await locationService.assignMissingCodes()) > 0) reload();
       })
+      // 다른 탭에서 동시에 채우면 이력 문서 덮어쓰기가 규칙에 막혀 실패할 수 있다 — 화면에는 영향 없으니 무시한다
       .catch(() => {});
-  }, [locations, reload]);
+  }, [data, locations, reload]);
   // 종료된 구간(잘못 분석됨·중복 등)은 대시보드에서 뺀다
   const active = locations.filter((l) => l.status !== "CLOSED");
   const priority = active.filter((l) => isOpenStatus(l.status) && l.riskLevel !== "SAFE").slice(0, 6);
@@ -59,6 +68,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5 px-4 pt-5 pb-10 sm:px-8">
+      <div className="-mb-2 flex items-center justify-end gap-2 text-sm text-slate-500">
+        {loadedAt && <span className="tabular">{formatDateTime(loadedAt)} 기준</span>}
+        <button
+          type="button"
+          onClick={refresh}
+          disabled={refreshing}
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-medium text-slate-600 hover:bg-white disabled:opacity-50"
+        >
+          <RotateCw className={cn("size-3.5", refreshing && "animate-spin")} /> 새로고침
+        </button>
+      </div>
       {/* 오늘의 최우선 점검 구간 */}
       {top && (
         <div className="flex flex-col gap-2 rounded-2xl bg-white px-5 py-4 sm:flex-row sm:items-center sm:gap-4">
