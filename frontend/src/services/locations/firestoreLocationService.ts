@@ -9,13 +9,16 @@
  */
 import {
   collection,
+  deleteField,
   doc,
   getDoc,
   getDocs,
   query,
   where,
   writeBatch,
+  type DocumentData,
 } from "firebase/firestore";
+import { normalizeStatus } from "@/constants/risk";
 import { firestore } from "@/lib/firebase";
 import { MOCK_ACTION_LOGS, MOCK_ANALYSIS_RESULTS, MOCK_LOCATIONS } from "@/mocks/mockLocations";
 import type { LocationService } from "@/services/types";
@@ -27,15 +30,20 @@ const locationsCol = () => collection(firestore(), "locations");
 const resultsCol = () => collection(firestore(), "analysisResults");
 const actionsCol = () => collection(firestore(), "actions");
 
+/** 저장된 문서를 Location 으로 바꾼다. 예전 상태값("확인 필요")도 현재 체계로 맞춘다. */
+function toLocation(id: string, data: DocumentData): Location {
+  return { id, ...(data as Omit<Location, "id">), status: normalizeStatus(data.status) };
+}
+
 async function fetchAll(): Promise<Location[]> {
   const snap = await getDocs(locationsCol());
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Location, "id">) }));
+  return snap.docs.map((d) => toLocation(d.id, d.data()));
 }
 
 async function fetchLocation(id: string): Promise<Location> {
   const snap = await getDoc(doc(locationsCol(), id));
   if (!snap.exists()) throw new Error("구간을 찾을 수 없습니다.");
-  return { id: snap.id, ...(snap.data() as Omit<Location, "id">) };
+  return toLocation(snap.id, snap.data());
 }
 
 const withoutId = <T extends { id: string }>({ id: _id, ...rest }: T) => (void _id, rest);
@@ -47,7 +55,7 @@ export const firestoreLocationService: LocationService = {
 
   async get(id) {
     const snap = await getDoc(doc(locationsCol(), id));
-    return snap.exists() ? { id: snap.id, ...(snap.data() as Omit<Location, "id">) } : null;
+    return snap.exists() ? toLocation(snap.id, snap.data()) : null;
   },
 
   async getDashboardSummary() {
@@ -107,7 +115,7 @@ export const firestoreLocationService: LocationService = {
   async getActionLogs(locationId) {
     const snap = await getDocs(query(actionsCol(), where("locationId", "==", locationId)));
     return snap.docs
-      .map((d) => ({ id: d.id, ...(d.data() as Omit<ActionLog, "id">) }))
+      .map((d) => ({ id: d.id, ...(d.data() as Omit<ActionLog, "id">), status: normalizeStatus(d.data().status) }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
 
@@ -115,18 +123,26 @@ export const firestoreLocationService: LocationService = {
     const updated: Location = {
       ...(await fetchLocation(locationId)),
       status: input.status,
+      closeReason: input.closeReason,
       plannedActions: input.actionTypes,
     };
+    // Firestore 는 undefined 필드를 저장하지 못하므로 종료 사유는 있을 때만 넣는다
+    const reason = input.closeReason ? { closeReason: input.closeReason } : {};
     const log: Omit<ActionLog, "id"> = {
       locationId,
       status: input.status,
+      ...reason,
       actionTypes: input.actionTypes,
       memo: input.memo.trim(),
       createdAt: new Date().toISOString(),
       createdBy: actor,
     };
     const batch = writeBatch(firestore());
-    batch.update(doc(locationsCol(), locationId), { status: updated.status, plannedActions: updated.plannedActions });
+    batch.update(doc(locationsCol(), locationId), {
+      status: updated.status,
+      closeReason: input.closeReason ?? deleteField(),
+      plannedActions: updated.plannedActions,
+    });
     batch.set(doc(actionsCol()), log);
     await batch.commit();
     return updated;

@@ -1,4 +1,4 @@
-import type { ActionType, LocationStatus, ObstacleType, RiskLevel } from "./risk";
+import type { ActionType, CloseReason, LocationStatus, ObstacleType, RiskLevel } from "./risk";
 
 /**
  * 분석된 보행구간. Firestore `locations` 컬렉션 문서에 대응한다.
@@ -29,6 +29,8 @@ export interface Location {
   /** AI 결과 이미지 URL (비어 있으면 원본 + overlay 로 렌더링) */
   resultImage: string;
   status: LocationStatus;
+  /** status 가 CLOSED 일 때의 종료 사유 */
+  closeReason?: CloseReason;
   plannedActions: ActionType[];
   /** 예시 데이터 여부 — 실제 촬영·AI 분석 결과가 아닌 개발용/모의 데이터 */
   isSample?: boolean;

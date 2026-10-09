@@ -9,7 +9,7 @@ import { RiskMap } from "@/components/map/RiskMap";
 import { RiskLegend } from "@/components/risk/RiskLegend";
 import { inputClass } from "@/components/ui/Field";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META, STATUS_META, STATUS_ORDER } from "@/constants/risk";
+import { ALL_STATUSES, OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META, STATUS_META, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { locationService } from "@/services";
@@ -17,7 +17,14 @@ import type { LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/t
 
 type SortKey = NonNullable<LocationQuery["sort"]>;
 /** OPEN = 조치 완료 전 (담당자가 가장 자주 보는 목록) */
+/** ALL 은 종료된 구간을 뺀 전체, OPEN 은 조치가 끝나지 않은 구간 */
 type StatusFilter = "ALL" | "OPEN" | LocationStatus;
+
+function matchStatus(s: LocationStatus, filter: StatusFilter) {
+  if (filter === "ALL") return s !== "CLOSED";
+  if (filter === "OPEN") return isOpenStatus(s);
+  return s === filter;
+}
 
 function RiskMapPageContent() {
   const router = useRouter();
@@ -34,7 +41,7 @@ function RiskMapPageContent() {
 
   const counts = useMemo(() => {
     const c = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
-    all.forEach((l) => c[l.riskLevel]++);
+    all.filter((l) => l.status !== "CLOSED").forEach((l) => c[l.riskLevel]++);
     return c;
   }, [all]);
 
@@ -43,7 +50,7 @@ function RiskMapPageContent() {
     return all
       .filter((l) => level === "ALL" || l.riskLevel === level)
       .filter((l) => !obstacle || l.obstacleTypes.includes(obstacle))
-      .filter((l) => status === "ALL" || (status === "OPEN" ? l.status !== "RESOLVED" : l.status === status))
+      .filter((l) => matchStatus(l.status, status))
       .filter((l) => !kw || `${l.name} ${l.address} ${l.area}`.toLowerCase().includes(kw))
       .sort((a, b) =>
         sort === "risk-asc"
@@ -118,9 +125,9 @@ function RiskMapPageContent() {
                 onChange={(e) => setStatus(e.target.value as StatusFilter)}
                 className={cn(inputClass, "py-2.5 text-sm")}
               >
-                <option value="ALL">모든 상태</option>
+                <option value="ALL">모든 상태 (종료 제외)</option>
                 <option value="OPEN">조치 전 전체</option>
-                {STATUS_ORDER.map((s) => (
+                {ALL_STATUSES.map((s) => (
                   <option key={s} value={s}>
                     {STATUS_META[s].label}
                   </option>

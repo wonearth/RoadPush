@@ -38,7 +38,7 @@ const SEEDS: MockSeed[] = [
     area: "신촌",
     latitude: 37.5561,
     longitude: 126.9373,
-    status: "REVIEW_REQUIRED",
+    status: "NEW",
     plannedActions: [],
     initial: {
       riskScore: 82,
@@ -113,7 +113,7 @@ const SEEDS: MockSeed[] = [
     area: "대현동",
     latitude: 37.5589,
     longitude: 126.9428,
-    status: "REVIEW_REQUIRED",
+    status: "NEW",
     plannedActions: [],
     initial: {
       riskScore: 58,
@@ -181,7 +181,7 @@ const SEEDS: MockSeed[] = [
     area: "이대",
     latitude: 37.5563,
     longitude: 126.9441,
-    status: "REVIEW_REQUIRED",
+    status: "NEW",
     plannedActions: [],
     initial: {
       riskScore: 34,

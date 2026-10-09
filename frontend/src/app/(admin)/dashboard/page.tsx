@@ -10,7 +10,7 @@ import { RiskMap } from "@/components/map/RiskMap";
 import { RiskDistribution } from "@/components/risk/RiskDistribution";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { RISK_META, getRiskLevel } from "@/constants/risk";
+import { RISK_META, getRiskLevel, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { shortAddress } from "@/lib/format";
 import { locationService } from "@/services";
@@ -22,11 +22,13 @@ export default function DashboardPage() {
     "dashboard",
   );
   const [summary, locations = []] = data ?? [];
-  const priority = locations.filter((l) => l.status !== "RESOLVED" && l.riskLevel !== "SAFE").slice(0, 6);
+  // 종료된 구간(잘못 분석됨·중복 등)은 대시보드에서 뺀다
+  const active = locations.filter((l) => l.status !== "CLOSED");
+  const priority = active.filter((l) => isOpenStatus(l.status) && l.riskLevel !== "SAFE").slice(0, 6);
   const avgLevel = summary ? getRiskLevel(summary.averageRiskScore) : "SAFE";
   const top = priority[0];
 
-  if (summary && summary.totalCount === 0) {
+  if (summary && locations.length === 0) {
     return (
       <div className="px-4 pt-5 pb-10 sm:px-8">
         <EmptyDashboard onSeeded={reload} />
@@ -64,7 +66,7 @@ export default function DashboardPage() {
               label="전체 분석 구간"
               value={summary.totalCount}
               unit="개"
-              hint={`${new Set(locations.map((l) => l.area)).size}개 생활권`}
+              hint={`${new Set(active.map((l) => l.area)).size}개 생활권`}
               info="AI 분석을 거쳐 관리 대상으로 등록된 보행구간 수예요."
             />
             <KpiCard
@@ -127,7 +129,7 @@ export default function DashboardPage() {
                 className="block w-full overflow-hidden rounded-xl"
                 aria-label="위험지도로 이동"
               >
-                <RiskMap locations={locations} interactive={false} className="aspect-[16/11] w-full" />
+                <RiskMap locations={active} interactive={false} className="aspect-[16/11] w-full" />
               </button>
             </CardBody>
           </Card>

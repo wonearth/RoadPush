@@ -1,9 +1,9 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-export const WORKFLOW_STEPS = ["발견", "확인", "현장조치", "재분석", "개선효과 확인"];
+export const WORKFLOW_STEPS = ["발견", "조치 예정", "조치 완료", "개선 확인"];
 
-/** 발견 → 확인 → 현장조치 → 재분석 → 개선효과 확인 관리 단계 표시 */
+/** 발견 → 조치 예정 → 조치 완료 → 개선 확인 관리 단계 표시 (current 가 단계 수 이상이면 모두 완료) */
 export function WorkflowProgress({ current }: { current: number }) {
   return (
     <ol className="flex flex-wrap items-center gap-x-1 gap-y-2">

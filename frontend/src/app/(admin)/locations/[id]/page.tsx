@@ -19,16 +19,17 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { MockBadge } from "@/components/ui/MockNotice";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { RISK_META, STATUS_META } from "@/constants/risk";
+import { CLOSE_REASON_META, RISK_META, STATUS_META, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/hooks/useAuth";
 import { describeRisk, formatDateTime } from "@/lib/format";
 import { locationService } from "@/services";
 import type { LocationStatus } from "@/types";
 
-function workflowStage(status: LocationStatus, hasFollowUp: boolean) {
+/** 조치상태를 상단 진행 단계로 바꾼다. 재분석까지 마쳤으면 모든 단계 완료(4). */
+function workflowStage(status: Exclude<LocationStatus, "CLOSED">, hasFollowUp: boolean) {
   if (hasFollowUp) return 4;
-  return { NEW: 0, REVIEW_REQUIRED: 1, ACTION_PLANNED: 2, RESOLVED: 3 }[status];
+  return { NEW: 0, ACTION_PLANNED: 1, RESOLVED: 2 }[status];
 }
 
 export default function LocationDetailPage() {
@@ -93,7 +94,13 @@ export default function LocationDetailPage() {
             </p>
             <p className="mt-3 text-base text-slate-700">{describeRisk(location)}</p>
             <div className="mt-4">
-              <WorkflowProgress current={workflowStage(location.status, Boolean(followUp))} />
+              {location.status === "CLOSED" ? (
+                <p className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                  {location.closeReason ? CLOSE_REASON_META[location.closeReason].label : "종료"} · 조치 없이 종료된 구간
+                </p>
+              ) : (
+                <WorkflowProgress current={workflowStage(location.status, Boolean(followUp))} />
+              )}
             </div>
           </div>
           <div className="rounded-2xl bg-slate-50 px-7 py-5 lg:min-w-64">
@@ -176,11 +183,11 @@ export default function LocationDetailPage() {
               <ClipboardCheck className="size-4 text-brand-600" /> 현장조치 관리
             </span>
           }
-          description="확인 → 조치 예정 → 조치 완료 순으로 상태를 관리하고 조치 내용을 기록합니다"
+          description="신규 발견 → 조치 예정 → 조치 완료 순으로 관리하고, 조치가 필요 없으면 종료합니다"
         />
         <CardBody>
           <ActionManagement
-            key={`${location.status}-${location.plannedActions.join()}`}
+            key={`${location.status}-${location.closeReason}-${location.plannedActions.join()}`}
             location={location}
             logs={logs}
             recommendFrom={initial?.obstacleTypes ?? location.obstacleTypes}
@@ -223,7 +230,7 @@ export default function LocationDetailPage() {
                 <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
                   현장조치를 완료한 뒤 같은 구간을 다시 촬영해 분석하면, 위험도와 유효 보행공간의 변화를 조치 전과 비교해 보여줍니다.
                 </p>
-                {location.status !== "RESOLVED" && (
+                {isOpenStatus(location.status) && (
                   <p className="mt-3 text-[13px] font-medium text-amber-700">
                     현재 상태는 &lsquo;{STATUS_META[location.status].label}&rsquo;입니다. 조치 완료 후 재분석을 권장합니다.
                   </p>

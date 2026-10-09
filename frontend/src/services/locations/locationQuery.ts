@@ -16,7 +16,9 @@ export function applyLocationQuery(items: Location[], query: LocationQuery = {})
   });
 }
 
-export function summarizeLocations(locations: Location[]): DashboardSummary {
+/** 대시보드 요약 — 조치 없이 종료된 구간(CLOSED)은 집계에서 뺀다. */
+export function summarizeLocations(all: Location[]): DashboardSummary {
+  const locations = all.filter((l) => l.status !== "CLOSED");
   const distribution = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
   locations.forEach((l) => distribution[l.riskLevel]++);
   const total = locations.length;
