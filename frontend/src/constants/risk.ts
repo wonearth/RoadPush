@@ -1,4 +1,4 @@
-import type { ActionType, CloseReason, LocationStatus, ObstacleType, RiskLevel } from "@/types";
+import type { ActionType, CloseReason, LocationStatus, NearbyFacility, ObstacleType, RiskLevel } from "@/types";
 
 /**
  * 위험도 단계 기준과 색상의 단일 출처(single source of truth).
@@ -171,4 +171,19 @@ export const PASSABILITY_META: Record<Passability, { label: string; detail: stri
 export function getPassability(input: { riskScore: number; roadDetourRequired: boolean }): Passability {
   if (input.roadDetourRequired) return "DETOUR";
   return input.riskScore <= RISK_META.SAFE.max ? "CLEAR" : "NARROW";
+}
+
+/** 태그에 쓰는 짧은 시설명 — "이대역 2호선" → "이대역", "서울창천초등학교" → "서울창천초" */
+const shortFacilityName = (name: string) =>
+  name
+    .replace(/\s+\S*선$/, "")
+    .replace(/\s*초등학교$/, "초")
+    .replace(/^.*\s(\S+초)$/, "$1");
+
+/** 주변 시설 → 우선순위 이유 태그 문구 */
+export function facilityTag(f: NearbyFacility): string {
+  const name = shortFacilityName(f.name);
+  if (f.kind === "SUBWAY") return `${name} ${f.meters}m`;
+  if (f.kind === "CHILD") return `어린이보호구역 인접 가능 · ${name} ${f.meters}m`;
+  return `의료시설 인접 · ${name} ${f.meters}m`;
 }

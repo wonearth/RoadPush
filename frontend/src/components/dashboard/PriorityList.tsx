@@ -2,6 +2,7 @@ import Link from "next/link";
 import { OBSTACLE_META, PASSABILITY_META, RISK_META, getPassability } from "@/constants/risk";
 import { formatPercent, shortAddress } from "@/lib/format";
 import type { Location } from "@/types";
+import { ReasonTags } from "../location/ReasonTags";
 import { RiskBadge, StatusBadge } from "../risk/RiskBadge";
 
 /** 우선점검 필요 구간 — 위험도 높은 순 표 */
@@ -28,6 +29,7 @@ export function PriorityList({ locations }: { locations: Location[] }) {
                   {loc.name}
                 </Link>
                 <p className="mt-0.5 max-w-56 truncate text-[13.5px] text-slate-500">{shortAddress(loc.address)}</p>
+                <ReasonTags location={loc} max={2} className="mt-1.5" />
               </td>
               <td className="py-4 pr-4 whitespace-nowrap">
                 <span className={`tabular mr-1.5 text-xl font-extrabold ${RISK_META[loc.riskLevel].text}`}>{loc.riskScore}</span>

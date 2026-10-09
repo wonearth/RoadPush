@@ -9,6 +9,7 @@ import { ActionManagement } from "@/components/location/ActionManagement";
 import { BeforeAfterComparison } from "@/components/location/BeforeAfterComparison";
 import { FollowUpAnalysis } from "@/components/location/FollowUpAnalysis";
 import { OccurrenceHistory } from "@/components/location/OccurrenceHistory";
+import { ReasonTags } from "@/components/location/ReasonTags";
 import { ResolveFlowDialog } from "@/components/location/ResolveFlowDialog";
 import { WorkflowProgress } from "@/components/location/WorkflowProgress";
 import { DEFAULT_LAYERS } from "@/components/media/AnalysisOverlayLayer";
@@ -106,6 +107,7 @@ export default function LocationDetailPage() {
             <p className="mt-1 flex items-center gap-1 text-[15px] text-slate-500">
               <MapPin className="size-3.5" /> {location.address}
             </p>
+            <ReasonTags location={location} className="mt-2" />
             <p className="mt-3 text-base text-slate-700">{describeRisk(location)}</p>
             <div className="mt-4">
               {location.status === "CLOSED" ? (

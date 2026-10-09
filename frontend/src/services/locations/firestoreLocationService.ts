@@ -14,6 +14,7 @@ import {
   getDoc,
   getDocs,
   query,
+  updateDoc,
   where,
   writeBatch,
   type DocumentData,
@@ -128,6 +129,10 @@ export const firestoreLocationService: LocationService = {
     }
     await batch.commit();
     return updated;
+  },
+
+  async saveNearbyFacilities(locationId, facilities) {
+    await updateDoc(doc(locationsCol(), locationId), { nearbyFacilities: facilities });
   },
 
   async getAnalysisHistory(locationId) {
