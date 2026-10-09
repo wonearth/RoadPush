@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { OBSTACLE_META, RISK_META } from "@/constants/risk";
+import { OBSTACLE_META, PASSABILITY_META, RISK_META, getPassability } from "@/constants/risk";
 import { formatPercent, shortAddress } from "@/lib/format";
 import type { Location } from "@/types";
 import { RiskBadge, StatusBadge } from "../risk/RiskBadge";
@@ -15,7 +15,7 @@ export function PriorityList({ locations }: { locations: Location[] }) {
             <th className="py-3 font-semibold">구간</th>
             <th className="w-24 py-3 font-semibold">위험도</th>
             <th className="py-3 font-semibold">주요 원인</th>
-            <th className="w-36 py-3 font-semibold">유효 보행공간</th>
+            <th className="w-44 py-3 font-semibold">보행공간 · 통행 판단</th>
             <th className="w-[88px] rounded-r-lg py-3 pr-4 font-semibold">조치상태</th>
           </tr>
         </thead>
@@ -38,7 +38,9 @@ export function PriorityList({ locations }: { locations: Location[] }) {
               </td>
               <td className="py-4 pr-4 whitespace-nowrap">
                 <span className="tabular font-bold text-slate-900">{formatPercent(loc.walkableRatio)}</span>
-                {loc.roadDetourRequired && <span className="ml-2 text-[13.5px] font-semibold text-slate-600">차도 우회</span>}
+                <span className="ml-2 text-[13.5px] font-semibold text-slate-600">
+                  {PASSABILITY_META[getPassability(loc)].label}
+                </span>
               </td>
               <td className="py-4 pr-4">
                 <StatusBadge status={loc.status} />

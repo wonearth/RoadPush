@@ -139,3 +139,20 @@ export const ACTION_META: Record<ActionType, { label: string; resolves: Obstacle
 export function getRecommendedActions(obstacles: ObstacleType[]): ActionType[] {
   return ACTION_TYPES.filter((a) => obstacles.includes(ACTION_META[a].resolves));
 }
+
+/**
+ * 통행 판단 — 담당자가 바로 이해할 수 있는 한 줄 표현.
+ * 현장 판정표의 3단계(통행 원활 / 일부 잠식 / 차도 우회 필요)와 같은 기준을 쓴다.
+ */
+export type Passability = "CLEAR" | "NARROW" | "DETOUR";
+
+export const PASSABILITY_META: Record<Passability, { label: string; detail: string }> = {
+  CLEAR: { label: "통행 원활", detail: "보행공간이 끊기지 않고 이어집니다" },
+  NARROW: { label: "일부 잠식", detail: "보행 유효폭이 좁아져 휠체어·유모차 통행이 불편합니다" },
+  DETOUR: { label: "차도 우회 필요", detail: "보행 경로가 끊겨 차도로 내려가야 하며, 휠체어·유모차는 통과할 수 없습니다" },
+};
+
+export function getPassability(input: { riskScore: number; roadDetourRequired: boolean }): Passability {
+  if (input.roadDetourRequired) return "DETOUR";
+  return input.riskScore <= RISK_META.SAFE.max ? "CLEAR" : "NARROW";
+}

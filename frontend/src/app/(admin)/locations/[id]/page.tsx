@@ -13,6 +13,7 @@ import { DEFAULT_LAYERS } from "@/components/media/AnalysisOverlayLayer";
 import { MediaFrame } from "@/components/media/MediaFrame";
 import { RiskBadge, StatusBadge } from "@/components/risk/RiskBadge";
 import { RiskBar } from "@/components/risk/RiskBar";
+import { PassabilityText } from "@/components/risk/PassabilityText";
 import { RiskMetrics } from "@/components/risk/RiskMetrics";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -103,6 +104,7 @@ export default function LocationDetailPage() {
               <RiskBadge level={location.riskLevel} className="ml-1 text-lg" />
             </p>
             <RiskBar score={location.riskScore} level={location.riskLevel} className="mt-3 w-full bg-white" />
+            <PassabilityText value={location} detail className="mt-4 max-w-72 text-[15px]" />
           </div>
         </div>
       </Card>

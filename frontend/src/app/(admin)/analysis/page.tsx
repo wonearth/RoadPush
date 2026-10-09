@@ -11,6 +11,7 @@ import { DEFAULT_LAYERS } from "@/components/media/AnalysisOverlayLayer";
 import { MediaFrame } from "@/components/media/MediaFrame";
 import { RiskBadge } from "@/components/risk/RiskBadge";
 import { RiskGauge } from "@/components/risk/RiskGauge";
+import { PassabilityText } from "@/components/risk/PassabilityText";
 import { RiskMetrics } from "@/components/risk/RiskMetrics";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -201,9 +202,8 @@ export default function AnalysisPage() {
                       <RiskBadge level={result.riskLevel} className="px-2.5 py-1 text-sm" />
                       <span className="text-[13px] text-slate-500">{RISK_META[result.riskLevel].description}</span>
                     </div>
-                    <p className="mt-4 w-full rounded-lg bg-slate-50 px-4 py-3 text-[13px] leading-relaxed text-slate-700">
-                      {describeRisk(result)}
-                    </p>
+                    <PassabilityText value={result} detail className="mt-4 w-full rounded-xl bg-slate-50 px-4 py-3 text-center text-base" />
+                    <p className="mt-3 w-full text-center text-sm leading-relaxed text-slate-600">{describeRisk(result)}</p>
                   </CardBody>
                 </Card>
                 <Card>

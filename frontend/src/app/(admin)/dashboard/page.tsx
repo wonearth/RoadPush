@@ -7,13 +7,12 @@ import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { PriorityList } from "@/components/dashboard/PriorityList";
 import { RiskMap } from "@/components/map/RiskMap";
-import { StatusBadge } from "@/components/risk/RiskBadge";
 import { RiskDistribution } from "@/components/risk/RiskDistribution";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState, Skeleton } from "@/components/ui/States";
 import { RISK_META, getRiskLevel } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
-import { formatDateTime, shortAddress } from "@/lib/format";
+import { shortAddress } from "@/lib/format";
 import { locationService } from "@/services";
 
 export default function DashboardPage() {
@@ -24,7 +23,6 @@ export default function DashboardPage() {
   );
   const [summary, locations = []] = data ?? [];
   const priority = locations.filter((l) => l.status !== "RESOLVED" && l.riskLevel !== "SAFE").slice(0, 6);
-  const recent = [...locations].sort((a, b) => b.analyzedAt.localeCompare(a.analyzedAt)).slice(0, 4);
   const avgLevel = summary ? getRiskLevel(summary.averageRiskScore) : "SAFE";
   const top = priority[0];
 
@@ -62,19 +60,33 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {summary ? (
           <>
-            <KpiCard label="전체 분석 구간" value={summary.totalCount} unit="개" hint={`${new Set(locations.map((l) => l.area)).size}개 생활권`} />
-            <KpiCard label="발견된 단절구간" value={summary.disconnectedCount} unit="개" hint="위험도 26점 이상" />
+            <KpiCard
+              label="전체 분석 구간"
+              value={summary.totalCount}
+              unit="개"
+              hint={`${new Set(locations.map((l) => l.area)).size}개 생활권`}
+              info="AI 분석을 거쳐 관리 대상으로 등록된 보행구간 수예요."
+            />
+            <KpiCard
+              label="발견된 단절구간"
+              value={summary.disconnectedCount}
+              unit="개"
+              hint="위험도 26점 이상"
+              info="위험도 26점 이상(주의·경고·위험)으로, 장애물 때문에 보행공간이 좁아지거나 끊긴 구간이에요."
+            />
             <KpiCard
               label="고위험 구간"
               value={<span className={RISK_META.DANGER.text}>{summary.highRiskCount}</span>}
               unit="개"
               hint="위험도 76점 이상"
+              info="위험도 76점 이상으로, 보행자가 차도로 내려가야 하는 수준이에요. 가장 먼저 점검할 대상이에요."
             />
             <KpiCard
               label="평균 단절 위험도"
               value={<span className={RISK_META[avgLevel].text}>{summary.averageRiskScore}</span>}
               unit={`/ 100 · ${RISK_META[avgLevel].label}`}
               hint="전체 구간 평균"
+              info="등록된 모든 구간 위험도의 평균이에요. 0~25 안전 · 26~50 주의 · 51~75 경고 · 76~100 위험"
             />
           </>
         ) : (
@@ -129,25 +141,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 최근 분석 구간 */}
-      <Card>
-        <CardHeader title="최근 분석 구간" action={<TextLink href="/analysis">새 분석</TextLink>} />
-        <CardBody className="grid gap-3 pt-4 sm:grid-cols-2 xl:grid-cols-4">
-          {recent.map((loc) => (
-            <Link key={loc.id} href={`/locations/${loc.id}`} className="rounded-xl bg-slate-50 p-4 transition hover:bg-slate-100">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="truncate font-bold text-slate-900">{loc.name}</span>
-                <span className={`tabular text-xl font-extrabold ${RISK_META[loc.riskLevel].text}`}>{loc.riskScore}</span>
-              </div>
-              <p className="mt-0.5 truncate text-[13.5px] text-slate-500">{shortAddress(loc.address)}</p>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-[13px] text-slate-500">{formatDateTime(loc.analyzedAt)}</span>
-                <StatusBadge status={loc.status} />
-              </div>
-            </Link>
-          ))}
-        </CardBody>
-      </Card>
     </div>
   );
 }
