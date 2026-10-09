@@ -15,7 +15,7 @@ export function formatDate(iso: string): string {
   return formatDateTime(iso).slice(0, 10);
 }
 
-export function formatObstacles(types: ObstacleType[], separator = " + "): string {
+export function formatObstacles(types: ObstacleType[], separator = ", "): string {
   if (types.length === 0) return "주요 장애물 없음";
   return types.map((t) => OBSTACLE_META[t].label).join(separator);
 }

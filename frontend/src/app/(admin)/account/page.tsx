@@ -1,6 +1,5 @@
 "use client";
 
-import { KeyRound, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -47,7 +46,7 @@ function PasswordChangeForm() {
       <PasswordField label="새 비밀번호 확인" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
       {error && <p className="text-xs font-medium text-red-600">{error}</p>}
       {done && <p className="text-xs font-medium text-emerald-600">비밀번호가 변경되었습니다.</p>}
-      <Button type="submit" variant="secondary" disabled={saving || !current || !next} icon={saving ? <Spinner /> : <KeyRound className="size-4" />}>
+      <Button type="submit" variant="secondary" disabled={saving || !current || !next} icon={saving ? <Spinner /> : undefined}>
         비밀번호 변경
       </Button>
     </form>
@@ -116,7 +115,7 @@ export default function AccountPage() {
         title="로그인이 필요합니다"
         description="계정 설정은 로그인한 관리자만 이용할 수 있습니다."
         action={
-          <ButtonLink href="/login?next=/account" icon={<LogIn className="size-4" />}>
+          <ButtonLink href="/login?next=/account">
             로그인
           </ButtonLink>
         }

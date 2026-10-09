@@ -79,7 +79,7 @@ export function MediaFrame({
       )}
       {(isMockScene || (isResult && !useServerResult)) && (
         <span className="absolute right-2.5 bottom-2.5 rounded bg-white/85 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-          {isMockScene ? "개발용 예시 이미지" : "Mock 결과 · 실제 AI 출력 아님"}
+          {isMockScene ? "예시 이미지" : "예시 결과 · AI 연동 전"}
         </span>
       )}
     </figure>

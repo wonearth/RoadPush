@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Camera, GitCompareArrows, RotateCcw } from "lucide-react";
+import { ArrowRight, Camera, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { PASSABILITY_META, RISK_META, getPassability } from "@/constants/risk";
 import { formatPercent } from "@/lib/format";
@@ -75,7 +75,6 @@ export function ResolveFlowDialog({
       onClose={() => !saving && onClose()}
       size="lg"
       title="조치 완료 확인"
-      description="조치 후 현장 사진을 다시 분석해 실제로 나아졌는지 확인합니다"
     >
       <ol className="mb-4 flex items-center gap-2 text-xs font-semibold">
         {["사진 촬영", "재분석", "전후 비교"].map((label, i) => (
@@ -96,7 +95,7 @@ export function ResolveFlowDialog({
             <ScoreBox title="조치 후" value={result} />
           </div>
           <p className="rounded-xl bg-brand-50 px-4 py-3 text-[15px] font-medium text-brand-800">
-            {drop > 0 ? `위험도가 ${drop}점 낮아졌어요.` : drop < 0 ? `위험도가 ${-drop}점 높아졌어요. 현장을 다시 확인해 주세요.` : "위험도 변화가 없어요."}
+            {drop > 0 ? `위험도 ${drop}점 감소` : drop < 0 ? `위험도 ${-drop}점 증가 — 현장 재확인 필요` : "위험도 변화 없음"}
           </p>
           <button
             type="button"
@@ -110,7 +109,7 @@ export function ResolveFlowDialog({
       ) : (
         <div>
           <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-            <Camera className="size-4 text-brand-600" /> 조치한 곳을 같은 위치·방향에서 찍어 주세요
+            <Camera className="size-4 text-brand-600" /> 조치 전과 같은 위치·방향에서 촬영
           </p>
           <FollowUpAnalysis camera locationId={locationId} baseline={baseline} onComplete={async (r) => setResult(r)} />
         </div>
@@ -130,7 +129,7 @@ export function ResolveFlowDialog({
         <Button
           onClick={() => result && submit(result)}
           disabled={!result || !!saving}
-          icon={saving === "with" ? <Spinner /> : <GitCompareArrows className="size-4" />}
+          icon={saving === "with" ? <Spinner /> : undefined}
         >
           저장하고 전후 비교 보기
         </Button>

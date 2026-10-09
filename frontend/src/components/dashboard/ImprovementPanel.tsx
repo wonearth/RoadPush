@@ -19,7 +19,7 @@ function StatusBreakdown({ locations }: { locations: Location[] }) {
         <span className="tabular text-[38px] leading-none font-extrabold tracking-tight text-slate-900">
           {active ? Math.round((resolved / active) * 100) : 0}
         </span>
-        <span className="text-base text-slate-500">% · {resolved}/{active}곳</span>
+        <span className="text-base text-slate-500">% ({resolved}/{active}곳)</span>
       </p>
       <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-slate-100">
         {counts.map(({ s, n }) => n > 0 && <span key={s} className={STATUS_META[s].dot} style={{ width: `${(n / total) * 100}%` }} />)}
@@ -125,7 +125,7 @@ export function ImprovementPanel({ locations, improvements }: { locations: Locat
         </>
       ) : (
         <p className="self-center rounded-xl bg-slate-50 px-5 py-6 text-[15px] text-slate-500 lg:col-span-1 2xl:col-span-2">
-          아직 조치 후 재분석을 마친 구간이 없어요. 구간 상세에서 &lsquo;조치 완료&rsquo;를 고르면 현장 사진으로 개선 효과를 확인할 수 있어요.
+          조치 후 재분석을 마친 구간이 없습니다.
         </p>
       )}
     </div>

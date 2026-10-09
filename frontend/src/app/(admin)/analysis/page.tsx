@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ImagePlus, MapPinPlus, RotateCcw, ScanSearch, Sparkles, Trash2 } from "lucide-react";
+import { ArrowDown, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AnalysisProgress, ANALYSIS_STEPS } from "@/components/analysis/AnalysisProgress";
@@ -95,9 +95,8 @@ export default function AnalysisPage() {
       {phase === "idle" && (
         <Card>
           <CardHeader
-            title="분석할 도로·보행 영상 업로드"
-            description="보도·차도 영역과 보행 방해 요인을 분석해 실제로 걸을 수 있는 공간이 얼마나 남아 있는지 판단합니다."
-            action={<MockBadge label="Mock AI 분석" />}
+            title="영상·사진 업로드"
+            action={<MockBadge label="AI 연동 전 · 예시 분석" />}
           />
           <CardBody className="space-y-4">
             <UploadDropzone onFile={onFile} disabled={preparing} />
@@ -108,9 +107,9 @@ export default function AnalysisPage() {
             )}
             {error && <p className="text-xs font-medium text-red-600">{error}</p>}
             <div className="flex flex-col items-start justify-between gap-3 rounded-lg bg-slate-50 px-4 py-3 sm:flex-row sm:items-center">
-              <p className="text-[13px] text-slate-600">업로드할 영상이 없다면 개발용 예시 장면으로 분석 흐름을 체험할 수 있습니다.</p>
-              <Button variant="secondary" size="sm" icon={<Sparkles className="size-3.5" />} onClick={useSample}>
-                샘플 이미지로 체험
+              <p className="text-[13px] text-slate-600">촬영본이 없으면 예시 장면으로 분석할 수 있습니다.</p>
+              <Button variant="secondary" size="sm" onClick={useSample}>
+                예시 장면으로 분석
               </Button>
             </div>
           </CardBody>
@@ -124,7 +123,7 @@ export default function AnalysisPage() {
             <CardHeader
               title={phase === "done" ? "원본 및 AI 분석 결과" : "분석 대상"}
               description={
-                file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)}MB` : isSample ? "개발용 예시 장면" : undefined
+                file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)}MB` : isSample ? "예시 장면" : undefined
               }
               action={
                 phase !== "analyzing" && (
@@ -172,11 +171,11 @@ export default function AnalysisPage() {
           <div className="space-y-5 xl:col-span-5">
             {phase === "ready" && (
               <Card>
-                <CardHeader title="AI 분석 실행" description="분석은 다음 단계로 진행됩니다." />
+                <CardHeader title="AI 분석" />
                 <CardBody className="space-y-5">
                   <AnalysisProgress current={-1} />
                   {error && <p className="text-xs font-medium text-red-600">{error}</p>}
-                  <Button size="lg" className="w-full" icon={<ScanSearch className="size-4" />} onClick={runAnalysis}>
+                  <Button size="lg" className="w-full" onClick={runAnalysis}>
                     AI 분석 시작
                   </Button>
                 </CardBody>
@@ -185,7 +184,7 @@ export default function AnalysisPage() {
 
             {phase === "analyzing" && (
               <Card>
-                <CardHeader title="분석 중…" description="보행공간의 연속성과 단절 정도를 판단하고 있습니다." />
+                <CardHeader title="분석 중…" />
                 <CardBody>
                   <AnalysisProgress current={step} />
                 </CardBody>
@@ -195,7 +194,7 @@ export default function AnalysisPage() {
             {phase === "done" && result && (
               <>
                 <Card>
-                  <CardHeader title="보행공간 단절 위험도" action={<MockBadge label="Mock 결과" />} />
+                  <CardHeader title="보행공간 단절 위험도" action={<MockBadge label="예시 결과" />} />
                   <CardBody className="flex flex-col items-center pt-2">
                     <RiskGauge score={result.riskScore} level={result.riskLevel} />
                     <div className="mt-1 flex items-center gap-2">
@@ -207,20 +206,17 @@ export default function AnalysisPage() {
                   </CardBody>
                 </Card>
                 <Card>
-                  <CardHeader title="왜 이곳이 위험한가" />
+                  <CardHeader title="판단 근거" />
                   <CardBody className="pt-3 pb-1">
                     <RiskMetrics metrics={result} />
                   </CardBody>
                 </Card>
                 <Card className="border-brand-200 bg-brand-50/40 p-5">
-                  <p className="text-sm font-semibold text-slate-900">이 구간을 관리 대상으로 등록할까요?</p>
-                  <p className="mt-1 text-[13px] text-slate-600">
-                    등록하면 위험지도에 표시되고, 현장조치 → 재분석 → 개선효과 확인까지 관리할 수 있습니다.
-                  </p>
+                  <p className="text-[13px] text-slate-600">등록한 구간은 위험지도와 현장조치 관리 대상에 포함됩니다.</p>
                   <Button
                     size="lg"
                     className="mt-4 w-full"
-                    icon={<MapPinPlus className="size-4" />}
+                   
                     onClick={() => setRegisterOpen(true)}
                   >
                     위험구간으로 등록
@@ -238,21 +234,6 @@ export default function AnalysisPage() {
         </div>
       )}
 
-      {phase === "idle" && (
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            { icon: ImagePlus, title: "1. 영상 업로드", body: "CCTV, 블랙박스, 현장점검 촬영본을 올립니다." },
-            { icon: ScanSearch, title: "2. 보행공간 분석", body: "장애물 자체가 아니라, 남아 있는 유효 보행공간과 차도 이탈 필요성을 판단합니다." },
-            { icon: MapPinPlus, title: "3. 위험구간 등록", body: "위험지도에 등록하고 현장조치·재분석으로 개선효과를 확인합니다." },
-          ].map(({ icon: Icon, title, body }) => (
-            <div key={title} className="rounded-2xl bg-white p-6">
-              <Icon className="size-5 text-brand-600" />
-              <p className="mt-3 text-sm font-semibold text-slate-900">{title}</p>
-              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{body}</p>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Check, Save, XCircle } from "lucide-react";
+import { Check, XCircle } from "lucide-react";
 import { useState } from "react";
 import {
   ACTION_META,
@@ -119,7 +119,7 @@ export function ActionManagement({
               <XCircle className="size-4 shrink-0 text-slate-400" />
               <span className="whitespace-nowrap">조치 없이 종료</span>
               <span className="ml-auto text-right text-xs font-medium text-slate-500">
-                {closed ? "종료 취소" : <span className="hidden sm:inline">잘못 분석됐거나 조치가 필요 없을 때</span>}
+                {closed ? "종료 취소" : <span className="hidden sm:inline">오탐 · 조치 불필요 · 중복</span>}
               </span>
             </button>
             {closed && (
@@ -189,8 +189,8 @@ export function ActionManagement({
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={save} disabled={!dirty || saving || (closed && !closeReason)} icon={saving ? <Spinner /> : resolving ? <Camera className="size-4" /> : <Save className="size-4" />}>
-            {resolving ? "조치 완료 · 현장 사진으로 확인" : "조치 내용 저장"}
+          <Button onClick={save} disabled={!dirty || saving || (closed && !closeReason)} icon={saving ? <Spinner /> : undefined}>
+            {resolving ? "조치 완료 처리" : "조치 내용 저장"}
           </Button>
         </div>
       </div>

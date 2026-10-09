@@ -8,7 +8,7 @@ import { ButtonLink } from "../ui/Button";
 /** 지도 marker 선택 시 보여주는 구간 요약 */
 export function LocationSummaryCard({ location, onClose }: { location: Location; onClose?: () => void }) {
   const rows: [string, string][] = [
-    ["주요 원인", location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(" · ") || "주요 장애물 없음"],
+    ["주요 원인", location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(", ") || "주요 장애물 없음"],
     ["통행 판단", PASSABILITY_META[getPassability(location)].label],
     ["유효 보행공간", formatPercent(location.walkableRatio)],
     ["조치상태", STATUS_META[location.status].label],

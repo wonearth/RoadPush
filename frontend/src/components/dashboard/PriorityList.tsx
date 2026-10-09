@@ -16,7 +16,7 @@ export function PriorityList({ locations }: { locations: Location[] }) {
             <th className="py-3 font-semibold">구간</th>
             <th className="w-24 py-3 font-semibold">위험도</th>
             <th className="py-3 font-semibold">주요 원인</th>
-            <th className="w-44 py-3 font-semibold">보행공간 · 통행 판단</th>
+            <th className="w-44 py-3 font-semibold">보행공간 / 통행 판단</th>
             <th className="w-[88px] rounded-r-lg py-3 pr-4 font-semibold">조치상태</th>
           </tr>
         </thead>
@@ -36,7 +36,7 @@ export function PriorityList({ locations }: { locations: Location[] }) {
                 <RiskBadge level={loc.riskLevel} />
               </td>
               <td className="py-4 pr-4 whitespace-nowrap text-slate-800">
-                {loc.obstacleTypes.length ? loc.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(" · ") : "—"}
+                {loc.obstacleTypes.length ? loc.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(", ") : "—"}
               </td>
               <td className="py-4 pr-4 whitespace-nowrap">
                 <span className="tabular font-bold text-slate-900">{formatPercent(loc.walkableRatio)}</span>

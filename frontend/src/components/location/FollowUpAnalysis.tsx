@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { analysisService, storageService, type UploadedMedia } from "@/services";
 import type { AnalysisResult } from "@/types";
@@ -85,7 +85,7 @@ export function FollowUpAnalysis({
         // 카메라 촬영이 주 동작일 때는 예시 장면 재분석을 보조 버튼으로 낮춘다
         variant={compact || (camera && !file) ? "secondary" : "primary"}
         size={compact ? "sm" : "md"}
-        icon={running ? <Spinner /> : <RefreshCw className="size-4" />}
+        icon={running ? <Spinner /> : undefined}
         className={compact ? undefined : "w-full"}
       >
         {running ? "재분석 중…" : file ? "업로드한 파일로 재분석" : compact ? "재분석 다시 실행" : "조치 후 재분석 실행 (예시 장면)"}

@@ -121,7 +121,7 @@ export const firestoreLocationService: LocationService = {
         locationId,
         status: "NEW",
         actionTypes: [],
-        memo: "같은 위치에서 다시 발견되어 신규 발견으로 다시 열었어요",
+        memo: "같은 위치에서 재발견되어 신규 발견으로 재개",
         createdAt: new Date().toISOString(),
         createdBy: actor,
       };

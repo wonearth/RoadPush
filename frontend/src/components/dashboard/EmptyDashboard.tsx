@@ -1,6 +1,5 @@
 "use client";
 
-import { Database, ScanSearch } from "lucide-react";
 import { useState } from "react";
 import { locationService } from "@/services";
 import { Button, ButtonLink } from "../ui/Button";
@@ -33,10 +32,10 @@ export function EmptyDashboard({ onSeeded }: { onSeeded: () => Promise<void> }) 
         신촌·이대 일대 예시 데이터로 관리 흐름을 먼저 둘러볼 수 있습니다.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <ButtonLink href="/analysis" icon={<ScanSearch className="size-4" />}>
+        <ButtonLink href="/analysis">
           AI 분석 시작
         </ButtonLink>
-        <Button variant="secondary" onClick={seed} disabled={seeding} icon={seeding ? <Spinner /> : <Database className="size-4" />}>
+        <Button variant="secondary" onClick={seed} disabled={seeding} icon={seeding ? <Spinner /> : undefined}>
           예시 데이터 불러오기
         </Button>
       </div>

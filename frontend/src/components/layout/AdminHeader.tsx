@@ -1,6 +1,6 @@
 "use client";
 
-import { LogIn, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ButtonLink } from "../ui/Button";
@@ -31,7 +31,7 @@ export function AdminHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
         {user ? (
           <UserMenu user={user} onSignOut={signOut} />
         ) : (
-          <ButtonLink href="/login" variant="secondary" size="sm" icon={<LogIn className="size-3.5" />}>
+          <ButtonLink href="/login" variant="secondary" size="sm">
             로그인
           </ButtonLink>
         )}

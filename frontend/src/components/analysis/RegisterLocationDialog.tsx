@@ -97,15 +97,15 @@ export function RegisterLocationDialog({
       onClose={onClose}
       size={CAN_PICK_LOCATION ? "lg" : "md"}
       title="위험구간으로 등록"
-      description="분석 결과를 관리 대상 구간으로 등록하면 위험지도와 대시보드에 표시되고 현장조치를 관리할 수 있습니다."
+      description="등록한 구간은 위험지도와 현장조치 관리 대상에 포함됩니다."
     >
       <form onSubmit={submit} className="space-y-4">
         <TextField
           label="구간명"
-          placeholder={CAN_PICK_LOCATION ? "위치를 지정하면 자동으로 제안돼요" : "예: ○○동 A구간"}
+          placeholder={CAN_PICK_LOCATION ? "위치 지정 시 자동 입력" : "예: ○○동 A구간"}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          hint={name && name === suggested ? "위치 기준으로 자동 제안된 이름이에요. 고쳐 쓸 수 있어요." : undefined}
+          hint={name && name === suggested ? "위치 기준 자동 입력 · 수정 가능" : undefined}
         />
         {CAN_PICK_LOCATION && (
           <LocationPicker
@@ -121,9 +121,9 @@ export function RegisterLocationDialog({
         {nearby.length > 0 && (
           <div className="rounded-xl bg-amber-50 p-4">
             <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-900">
-              <MapPinned className="size-4" /> {NEARBY_METERS}m 안에 이미 등록된 구간이 있어요
+              <MapPinned className="size-4" /> 반경 {NEARBY_METERS}m 안에 등록된 구간이 있습니다
             </p>
-            <p className="mt-0.5 text-[13px] text-amber-800">같은 곳이라면 새로 만들지 말고 기존 구간에 이번 분석을 추가해 주세요.</p>
+            <p className="mt-0.5 text-[13px] text-amber-800">같은 장소라면 새로 등록하지 말고 기존 구간에 이번 분석을 추가합니다.</p>
             <ul className="mt-3 space-y-1.5">
               {nearby.map(({ location: l, meters }) => (
                 <li key={l.id} className="flex flex-col gap-2 rounded-lg bg-white px-3 py-2.5 sm:flex-row sm:items-center">
@@ -168,7 +168,7 @@ export function RegisterLocationDialog({
           </Button>
           <Button type="submit" variant={nearby.length ? "secondary" : "primary"} disabled={!!saving}>
             {saving === "new" && <Spinner />}
-            {nearby.length ? "다른 곳이에요, 새 구간으로 등록" : "등록하고 상세 보기"}
+            {nearby.length ? "새 구간으로 등록" : "등록하고 상세 보기"}
           </Button>
         </div>
       </form>

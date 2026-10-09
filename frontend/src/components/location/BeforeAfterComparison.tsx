@@ -114,11 +114,11 @@ export function BeforeAfterComparison({ before, after }: { before: AnalysisResul
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
-        <Snapshot title="Before · 조치 전" result={before} tone="before" />
+        <Snapshot title="조치 전" result={before} tone="before" />
         <div className="flex justify-center text-slate-300">
           <ArrowRight className="size-6 rotate-90 lg:rotate-0" />
         </div>
-        <Snapshot title="After · 조치 후 재분석" result={after} tone="after" />
+        <Snapshot title="조치 후 재분석" result={after} tone="after" />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <ChangeBar

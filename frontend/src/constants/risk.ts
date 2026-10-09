@@ -92,15 +92,15 @@ export const STATUS_ORDER: LocationStatus[] = ["NEW", "ACTION_PLANNED", "RESOLVE
 export const ALL_STATUSES: LocationStatus[] = [...STATUS_ORDER, "CLOSED"];
 
 export const STATUS_META: Record<LocationStatus, { label: string; badge: string; dot: string; desc: string }> = {
-  NEW: { label: "신규 발견", badge: "bg-slate-100 text-slate-700", dot: "bg-blue-500", desc: "AI가 찾았고 아직 확인 전" },
+  NEW: { label: "신규 발견", badge: "bg-slate-100 text-slate-700", dot: "bg-blue-500", desc: "담당자 확인 전" },
   ACTION_PLANNED: {
     label: "조치 예정",
     badge: "bg-slate-100 text-slate-700",
     dot: "bg-violet-500",
-    desc: "확인했고 현장조치 예정",
+    desc: "현장조치 예정",
   },
-  RESOLVED: { label: "조치 완료", badge: "bg-slate-100 text-slate-500", dot: "bg-slate-400", desc: "현장조치를 마침" },
-  CLOSED: { label: "종료", badge: "bg-slate-100 text-slate-400", dot: "bg-slate-300", desc: "조치 없이 닫음" },
+  RESOLVED: { label: "조치 완료", badge: "bg-slate-100 text-slate-500", dot: "bg-slate-400", desc: "현장조치 완료" },
+  CLOSED: { label: "종료", badge: "bg-slate-100 text-slate-400", dot: "bg-slate-300", desc: "조치 없이 종료" },
 };
 
 /** 조치가 아직 끝나지 않은(점검 대상) 상태인지 */
@@ -114,9 +114,9 @@ export function normalizeStatus(s: string): LocationStatus {
 export const CLOSE_REASONS: CloseReason[] = ["FALSE_POSITIVE", "NOT_NEEDED", "DUPLICATE"];
 
 export const CLOSE_REASON_META: Record<CloseReason, { label: string; desc: string }> = {
-  FALSE_POSITIVE: { label: "잘못 분석됨", desc: "AI가 장애물을 잘못 찾음" },
-  NOT_NEEDED: { label: "조치 불필요", desc: "현장 확인 결과 문제 없음" },
-  DUPLICATE: { label: "중복 구간", desc: "이미 등록된 구간과 같은 곳" },
+  FALSE_POSITIVE: { label: "잘못 분석됨", desc: "장애물 오탐지" },
+  NOT_NEEDED: { label: "조치 불필요", desc: "현장 확인 결과 이상 없음" },
+  DUPLICATE: { label: "중복 구간", desc: "기존 구간과 같은 장소" },
 };
 
 export const OBSTACLE_TYPES: ObstacleType[] = [

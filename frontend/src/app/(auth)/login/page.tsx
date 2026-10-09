@@ -42,7 +42,7 @@ function LoginForm() {
   return (
     <>
       <h2 className="text-2xl font-bold text-slate-900">관리자 로그인</h2>
-      <p className="mt-1.5 text-sm text-slate-500">보행공간 단절 위험구간을 확인하고 관리하세요.</p>
+      <p className="mt-1.5 text-sm text-slate-500">기관 담당자 계정으로 로그인합니다.</p>
 
       <form onSubmit={submit} className="mt-8 space-y-4" noValidate>
         <TextField

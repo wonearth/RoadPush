@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CalendarClock, ClipboardCheck, GitCompareArrows, MapPin, ScanSearch } from "lucide-react";
+import { ArrowLeft, CalendarClock, MapPin, ScanSearch } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -140,13 +140,12 @@ export default function LocationDetailPage() {
               <span className="inline-flex flex-wrap items-center gap-2">
                 {latest.phase === "INITIAL" ? "AI 분석 결과" : "최근 분석 결과"}
                 {latest.phase !== "INITIAL" && (
-                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-sm font-semibold whitespace-nowrap text-slate-600">
+                  <span className="rounded border border-slate-300 px-1.5 py-px text-sm font-medium whitespace-nowrap text-slate-500">
                     {latest.phase === "FOLLOW_UP" ? "조치 후 재분석" : "다시 발견"}
                   </span>
                 )}
               </span>
             }
-            description="원본 이미지와 보행공간 분석 결과를 비교합니다"
             action={
               <ButtonLink href={`/map?selected=${location.id}`} variant="secondary" size="sm" icon={<MapPin className="size-3.5" />}>
                 지도에서 보기
@@ -205,12 +204,7 @@ export default function LocationDetailPage() {
       {/* 현장조치 관리 */}
       <Card>
         <CardHeader
-          title={
-            <span className="inline-flex items-center gap-2">
-              <ClipboardCheck className="size-4 text-brand-600" /> 현장조치 관리
-            </span>
-          }
-          description="신규 발견 → 조치 예정 → 조치 완료 순으로 관리하고, 조치가 필요 없으면 종료합니다"
+          title="현장조치 관리"
         />
         <CardBody>
           <ActionManagement
@@ -239,12 +233,7 @@ export default function LocationDetailPage() {
       {/* 조치 전·후 비교 */}
       <Card id="before-after" className="scroll-mt-4">
         <CardHeader
-          title={
-            <span className="inline-flex items-center gap-2">
-              <GitCompareArrows className="size-4 text-brand-600" /> 조치 전 / 조치 후 비교
-            </span>
-          }
-          description="현장조치 후 동일 구간을 재분석해 실제 개선효과를 확인합니다"
+          title="조치 전후 비교"
           action={
             followUp && (
               <FollowUpAnalysis
@@ -272,7 +261,7 @@ export default function LocationDetailPage() {
                 </p>
                 {isOpenStatus(location.status) && (
                   <p className="mt-3 text-[13px] font-medium text-amber-700">
-                    현재 상태는 &lsquo;{STATUS_META[location.status].label}&rsquo;입니다. 현장조치 관리에서 &lsquo;조치 완료&rsquo;를 고르면 사진 촬영과 재분석이 바로 이어집니다.
+                    현재 상태: {STATUS_META[location.status].label}. 현장조치 관리에서 &lsquo;조치 완료&rsquo;를 선택하면 사진 촬영과 재분석으로 이어집니다.
                   </p>
                 )}
               </div>

@@ -1,4 +1,3 @@
-import { History } from "lucide-react";
 import { RISK_META } from "@/constants/risk";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
@@ -13,10 +12,10 @@ const PHASE_LABEL: Record<AnalysisPhase, string> = {
 };
 
 const KIND_META = {
-  HABITUAL: { label: "상습 발생", badge: "bg-red-50 text-[#d92d20]" },
-  REPEATED: { label: "반복 발생", badge: "bg-amber-50 text-[#c58a00]" },
-  ONCE: { label: "1회 발견", badge: "bg-slate-100 text-slate-600" },
-  NONE: { label: "최근 발견 없음", badge: "bg-slate-100 text-slate-500" },
+  HABITUAL: { label: "상습 발생", badge: "border-[#d92d20] text-[#d92d20]" },
+  REPEATED: { label: "반복 발생", badge: "border-[#c58a00] text-[#c58a00]" },
+  ONCE: { label: "1회 발견", badge: "border-slate-300 text-slate-500" },
+  NONE: { label: "최근 발견 없음", badge: "border-slate-300 text-slate-500" },
 } as const;
 
 /** 구간 상세 '발생 이력' — 일시적인 문제인지 상습적인 문제인지 보여준다. */
@@ -28,27 +27,26 @@ export function OccurrenceHistory({ history }: { history: AnalysisResult[] }) {
 
   const sentence =
     kind === "HABITUAL" || kind === "REPEATED"
-      ? `최근 ${OCCURRENCE_WINDOW_DAYS / 7}주 동안 ${recentCount}회 발견됐어요${slot ? ` · 주로 ${slot.label}(${slot.range})에 생겨요` : ""}.`
+      ? `최근 ${OCCURRENCE_WINDOW_DAYS / 7}주간 ${recentCount}회 발견${slot ? `, 주로 ${slot.label}(${slot.range}) 발생` : ""}`
       : kind === "ONCE"
-        ? "아직 한 번만 발견된 구간이에요. 같은 곳을 다시 찍어 이 구간에 추가하면 상습 여부를 알 수 있어요."
-        : "보행공간 단절이 발견된 기록이 없어요.";
+        ? "1회 발견. 같은 위치를 다시 분석하면 상습 여부를 판단합니다."
+        : "단절 발견 기록 없음";
 
   return (
     <Card>
       <CardHeader
         title={
           <span className="inline-flex items-center gap-2">
-            <History className="size-4 text-brand-600" /> 발생 이력
-            <span className={cn("rounded-md px-2 py-0.5 text-sm font-bold", KIND_META[kind].badge)}>{KIND_META[kind].label}</span>
+            발생 이력
+            <span className={cn("rounded border px-1.5 py-px text-sm font-semibold", KIND_META[kind].badge)}>{KIND_META[kind].label}</span>
           </span>
         }
-        description="같은 위치의 분석 기록으로 일시적인 문제인지 상습적인 문제인지 확인합니다"
       />
       <CardBody className="grid gap-6 pt-4 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <p className="text-base text-slate-800">{sentence}</p>
           {kind === "HABITUAL" && (
-            <p className="mt-1 text-sm text-slate-500">반복해서 생기는 곳이라 일회성 조치보다 정기 단속·시설 개선을 검토해 보세요.</p>
+            <p className="mt-1 text-sm text-slate-500">일회성 조치보다 정기 단속·시설 개선 검토를 권장합니다.</p>
           )}
           <div className="mt-5 grid grid-cols-4 gap-2">
             {TIME_SLOTS.map((s) => (

@@ -69,8 +69,8 @@ export default function DashboardPage() {
               {top.name} · {top.riskScore}점 {RISK_META[top.riskLevel].label}
             </span>
             <span className="text-slate-600">
-              {shortAddress(top.address)} · 유효 보행공간 {Math.round(top.walkableRatio * 100)}%
-              {top.roadDetourRequired && " · 차도 우회 발생"}
+              {shortAddress(top.address)}, 유효 보행공간 {Math.round(top.walkableRatio * 100)}%
+              {top.roadDetourRequired && ", 차도 우회 발생"}
             </span>
           </p>
           <Link href={`/locations/${top.id}`} className="inline-flex items-center gap-1 text-[15px] font-bold text-brand-600 hover:text-brand-700">
@@ -88,28 +88,28 @@ export default function DashboardPage() {
               value={summary.totalCount}
               unit="개"
               hint={`${new Set(active.map((l) => l.area)).size}개 생활권`}
-              info="AI 분석을 거쳐 관리 대상으로 등록된 보행구간 수예요."
+              info="AI 분석 후 관리 대상으로 등록된 보행구간 수 (조치 없이 종료된 구간 제외)"
             />
             <KpiCard
               label="발견된 단절구간"
               value={summary.disconnectedCount}
               unit="개"
               hint="위험도 26점 이상"
-              info="위험도 26점 이상(주의·경고·위험)으로, 장애물 때문에 보행공간이 좁아지거나 끊긴 구간이에요."
+              info="위험도 26점 이상(주의·경고·위험) 구간. 장애물로 보행공간이 좁아지거나 끊긴 상태"
             />
             <KpiCard
               label="고위험 구간"
               value={<span className={RISK_META.DANGER.text}>{summary.highRiskCount}</span>}
               unit="개"
               hint="위험도 76점 이상"
-              info="위험도 76점 이상으로, 보행자가 차도로 내려가야 하는 수준이에요. 가장 먼저 점검할 대상이에요."
+              info="위험도 76점 이상 구간. 보행자가 차도로 내려가야 하는 수준으로 최우선 점검 대상"
             />
             <KpiCard
               label="평균 단절 위험도"
               value={<span className={RISK_META[avgLevel].text}>{summary.averageRiskScore}</span>}
               unit={`/ 100 · ${RISK_META[avgLevel].label}`}
               hint="전체 구간 평균"
-              info="등록된 모든 구간 위험도의 평균이에요. 0~25 안전 · 26~50 주의 · 51~75 경고 · 76~100 위험"
+              info="전체 구간 위험도 평균. 0~25 안전, 26~50 주의, 51~75 경고, 76~100 위험"
             />
           </>
         ) : (
@@ -122,7 +122,6 @@ export default function DashboardPage() {
         <Card className="min-w-0">
           <CardHeader
             title="우선점검 필요 구간"
-            description="조치가 완료되지 않은 구간을 위험도 높은 순으로 표시합니다"
             action={<TextLink href="/map">전체 보기</TextLink>}
           />
           <div className="px-6 pt-4 pb-3">
@@ -164,9 +163,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 조치 현황 · 개선 효과 */}
+      {/* 조치 현황 및 개선 효과 */}
       <Card>
-        <CardHeader title="조치 현황 · 개선 효과" description="발견한 구간이 실제로 조치되고 나아졌는지 보여줍니다" />
+        <CardHeader title="조치 현황 및 개선 효과" />
         <CardBody className="pt-5">
           {data ? <ImprovementPanel locations={locations} improvements={improvements} /> : <Skeleton className="h-48" />}
         </CardBody>

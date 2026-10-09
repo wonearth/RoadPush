@@ -165,7 +165,7 @@ export function MockRiskMap({ locations, selectedId, onSelect, interactive = tru
         })}
       </svg>
       <span className="pointer-events-none absolute right-2 bottom-2 rounded bg-white/85 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
-        Mock 지도 · 실제 지도 API 연결 예정
+        예시 지도 (지도 API 미연결)
       </span>
     </div>
   );

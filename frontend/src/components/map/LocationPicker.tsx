@@ -146,7 +146,7 @@ export function LocationPicker({ onChange }: { onChange: (value: PickedLocation)
         <div ref={mapEl} className="absolute inset-0" />
         {!picked && (
           <p className="pointer-events-none absolute inset-x-0 bottom-2 z-10 mx-auto w-fit rounded-md bg-white/90 px-2.5 py-1 text-[11px] font-medium text-slate-600 shadow-sm">
-            검색하거나 지도를 클릭해 위치를 지정하세요
+            검색 또는 지도 클릭으로 위치 지정
           </p>
         )}
       </div>
