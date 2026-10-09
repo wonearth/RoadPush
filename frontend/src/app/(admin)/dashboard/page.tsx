@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { ImprovementPanel } from "@/components/dashboard/ImprovementPanel";
-import { KpiCard } from "@/components/dashboard/KpiCard";
+import { KpiCard, KpiStrip } from "@/components/dashboard/KpiCard";
 import { PriorityList } from "@/components/dashboard/PriorityList";
 import { RiskMap } from "@/components/map/RiskMap";
 import { RiskDistribution } from "@/components/risk/RiskDistribution";
@@ -99,8 +99,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* KPI */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {/* 요약 지표 */}
+      <KpiStrip>
         {summary ? (
           <>
             <KpiCard
@@ -127,15 +127,14 @@ export default function DashboardPage() {
             <KpiCard
               label="평균 단절 위험도"
               value={<span className={RISK_META[avgLevel].text}>{summary.averageRiskScore}</span>}
-              unit={`/ 100 · ${RISK_META[avgLevel].label}`}
-              hint="전체 구간 평균"
+              unit={`/ 100 ${RISK_META[avgLevel].label}`}
               info="전체 구간 위험도 평균. 0~25 안전, 26~50 주의, 51~75 경고, 76~100 위험"
             />
           </>
         ) : (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[132px] rounded-2xl" />)
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[88px] rounded-none" />)
         )}
-      </div>
+      </KpiStrip>
 
       <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* 우선점검 필요 구간 */}

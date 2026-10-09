@@ -14,7 +14,7 @@ export function PriorityList({ locations }: { locations: Location[] }) {
       <table className="w-full min-w-[880px] text-left text-[15px]">
         <thead>
           <tr className="bg-slate-50 text-sm text-slate-600">
-            <th className="w-12 rounded-l-lg py-3 pl-4 font-semibold">순위</th>
+            <th className="w-16 rounded-l-lg py-3 pl-4 font-semibold">순위</th>
             <th className="py-3 font-semibold">구간</th>
             <th className="w-24 py-3 font-semibold">위험도</th>
             <th className="py-3 font-semibold">주요 원인</th>
