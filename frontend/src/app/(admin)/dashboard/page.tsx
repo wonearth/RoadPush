@@ -35,9 +35,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (synced.current || !locations.some((l) => l.isSample)) return;
     synced.current = true;
-    locationService.seedSampleData().then((n) => {
-      if (n > 0) reload();
-    });
+    // 다른 탭에서 동시에 채우면 이력 문서 덮어쓰기가 규칙에 막혀 실패할 수 있다 — 화면에는 영향 없으니 무시한다
+    locationService
+      .seedSampleData()
+      .then((n) => {
+        if (n > 0) reload();
+      })
+      .catch(() => {});
   }, [locations, reload]);
   // 종료된 구간(잘못 분석됨·중복 등)은 대시보드에서 뺀다
   const active = locations.filter((l) => l.status !== "CLOSED");

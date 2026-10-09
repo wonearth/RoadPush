@@ -42,6 +42,11 @@ export interface LocationService {
   updateAction(locationId: string, input: UpdateActionInput, actor: string): Promise<Location>;
   /** 조치 완료 후 재분석까지 마친 구간을 위험도가 많이 줄어든 순으로 반환한다 */
   getImprovements(): Promise<Improvement[]>;
+  /**
+   * 같은 위치에서 새로 찍은 분석을 기존 구간에 추가한다.
+   * 조치 완료·종료된 구간인데 다시 위험이 발견되면 신규 발견으로 다시 연다.
+   */
+  addRepeatAnalysis(locationId: string, analysis: AnalysisResult, actor: string): Promise<Location>;
   /** 아직 없는 신촌·이대 예시 구간을 넣는다. 넣은 구간 수를 반환 (실제 데이터만 쓰는 환경이면 0) */
   seedSampleData(): Promise<number>;
 }

@@ -70,7 +70,8 @@ export default function LocationDetailPage() {
 
   const initial = history.find((r) => r.phase === "INITIAL") ?? history[0];
   const latest = history.at(-1);
-  const followUp = history.length > 1 && latest?.phase === "FOLLOW_UP" ? latest : undefined;
+  // 조치 후 재분석 중 가장 최근 것 (같은 위치 반복 분석은 전후 비교에 쓰지 않는다)
+  const followUp = history.filter((r) => r.phase === "FOLLOW_UP").at(-1);
   const meta = RISK_META[location.riskLevel];
 
   const saveAction = async (input: UpdateActionInput) => {
@@ -132,7 +133,9 @@ export default function LocationDetailPage() {
       {latest && (
         <Card>
           <CardHeader
-            title={followUp ? "최근 분석 결과 (재분석)" : "AI 분석 결과"}
+            title={
+              latest.phase === "FOLLOW_UP" ? "최근 분석 결과 (재분석)" : latest.phase === "REPEAT" ? "최근 분석 결과 (다시 발견)" : "AI 분석 결과"
+            }
             description="원본 이미지와 보행공간 분석 결과를 비교합니다"
             action={
               <ButtonLink href={`/map?selected=${location.id}`} variant="secondary" size="sm" icon={<MapPin className="size-3.5" />}>
@@ -209,14 +212,17 @@ export default function LocationDetailPage() {
         </CardBody>
       </Card>
 
-      <ResolveFlowDialog
-        open={!!pendingResolve}
-        locationId={location.id}
-        before={location}
-        baseline={initial}
-        onClose={() => setPendingResolve(null)}
-        onSubmit={completeResolve}
-      />
+      {/* 열 때마다 새로 마운트해 이전 재분석 결과가 남지 않게 한다 */}
+      {pendingResolve && (
+        <ResolveFlowDialog
+          open
+          locationId={location.id}
+          before={location}
+          baseline={initial}
+          onClose={() => setPendingResolve(null)}
+          onSubmit={completeResolve}
+        />
+      )}
 
       {/* 조치 전·후 비교 */}
       <Card id="before-after" className="scroll-mt-4">

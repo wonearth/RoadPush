@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { MapPinned } from "lucide-react";
+import { useMemo, useState } from "react";
 import { KAKAO_MAP_KEY } from "@/components/map/kakaoLoader";
 import { LocationPicker, type PickedLocation } from "@/components/map/LocationPicker";
+import { RiskBadge, StatusBadge } from "@/components/risk/RiskBadge";
+import { useAuth } from "@/hooks/useAuth";
+import { useAsync } from "@/hooks/useAsync";
 import { suggestLocationName } from "@/lib/format";
+import { distanceMeters } from "@/lib/geo";
 import { locationService } from "@/services";
 import type { AnalysisResult, Location } from "@/types";
 import { Button } from "../ui/Button";
@@ -12,6 +17,8 @@ import { TextField } from "../ui/Field";
 import { Spinner } from "../ui/States";
 
 const CAN_PICK_LOCATION = Boolean(KAKAO_MAP_KEY);
+/** 이 거리 안에 기존 구간이 있으면 같은 곳일 수 있다고 보고 추가를 제안한다 */
+const NEARBY_METERS = 30;
 
 export function RegisterLocationDialog({
   open,
@@ -30,14 +37,41 @@ export function RegisterLocationDialog({
   const [address, setAddress] = useState("");
   const [picked, setPicked] = useState<PickedLocation | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { data: existing = [] } = useAsync(() => locationService.list(), "register-nearby");
+
+  // 지정한 위치 30m 안의 기존 구간 (종료된 구간은 뺀다), 가까운 순
+  const nearby = useMemo(
+    () =>
+      picked
+        ? existing
+            .filter((l) => l.status !== "CLOSED")
+            .map((l) => ({ location: l, meters: Math.round(distanceMeters(picked, l)) }))
+            .filter((n) => n.meters <= NEARBY_METERS)
+            .sort((a, b) => a.meters - b.meters)
+            .slice(0, 3)
+        : [],
+    [existing, picked],
+  );
+
+  const addToExisting = async (location: Location) => {
+    setSaving(location.id);
+    setError(null);
+    try {
+      onRegistered(await locationService.addRepeatAnalysis(location.id, analysis, user?.name ?? "데모 관리자"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "추가에 실패했습니다.");
+      setSaving(null);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return setError("구간명을 입력해 주세요.");
     if (CAN_PICK_LOCATION && !picked) return setError("검색하거나 지도를 클릭해 위치를 지정해 주세요.");
     if (!address.trim()) return setError("주소를 입력해 주세요.");
-    setSaving(true);
+    setSaving("new");
     setError(null);
     try {
       const location = await locationService.createFromAnalysis(
@@ -53,7 +87,7 @@ export function RegisterLocationDialog({
       onRegistered(location);
     } catch (err) {
       setError(err instanceof Error ? err.message : "등록에 실패했습니다.");
-      setSaving(false);
+      setSaving(null);
     }
   };
 
@@ -84,6 +118,31 @@ export function RegisterLocationDialog({
             }}
           />
         )}
+        {nearby.length > 0 && (
+          <div className="rounded-xl bg-amber-50 p-4">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-900">
+              <MapPinned className="size-4" /> {NEARBY_METERS}m 안에 이미 등록된 구간이 있어요
+            </p>
+            <p className="mt-0.5 text-[13px] text-amber-800">같은 곳이라면 새로 만들지 말고 기존 구간에 이번 분석을 추가해 주세요.</p>
+            <ul className="mt-3 space-y-1.5">
+              {nearby.map(({ location: l, meters }) => (
+                <li key={l.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-white px-3 py-2.5">
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                      {l.name} <RiskBadge level={l.riskLevel} /> <StatusBadge status={l.status} />
+                    </span>
+                    <span className="block truncate text-xs text-slate-500">
+                      {meters}m 거리 · {l.address}
+                    </span>
+                  </span>
+                  <Button type="button" size="sm" variant="secondary" disabled={!!saving} onClick={() => addToExisting(l)}>
+                    {saving === l.id && <Spinner />}이 구간에 추가
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <TextField
           label={CAN_PICK_LOCATION ? "주소 (자동 입력 · 수정 가능)" : "위치"}
           placeholder="예: 서울 서대문구 연세로 OO빌딩 앞 보도"
@@ -100,9 +159,9 @@ export function RegisterLocationDialog({
           <Button type="button" variant="secondary" onClick={onClose}>
             취소
           </Button>
-          <Button type="submit" disabled={saving}>
-            {saving && <Spinner />}
-            등록하고 상세 보기
+          <Button type="submit" variant={nearby.length ? "secondary" : "primary"} disabled={!!saving}>
+            {saving === "new" && <Spinner />}
+            {nearby.length ? "다른 곳이에요, 새 구간으로 등록" : "등록하고 상세 보기"}
           </Button>
         </div>
       </form>

@@ -104,6 +104,32 @@ export const firestoreLocationService: LocationService = {
     return updated;
   },
 
+  async addRepeatAnalysis(locationId, analysis, actor) {
+    const current = await fetchLocation(locationId);
+    const reopen = (current.status === "RESOLVED" || current.status === "CLOSED") && analysis.riskLevel !== "SAFE";
+    const next = applyAnalysisToLocation(current, analysis);
+    // 다시 열 때는 종료 사유를 지운다 (Firestore 는 undefined 필드를 저장하지 못하므로 키 자체를 뺀다)
+    const { closeReason: _closeReason, ...reopened } = next;
+    void _closeReason;
+    const updated: Location = reopen ? { ...reopened, status: "NEW" } : next;
+    const batch = writeBatch(firestore());
+    batch.set(doc(resultsCol()), toStoredAnalysis({ ...analysis, locationId, phase: "REPEAT" }));
+    batch.set(doc(locationsCol(), locationId), withoutId(updated));
+    if (reopen) {
+      const log: Omit<ActionLog, "id"> = {
+        locationId,
+        status: "NEW",
+        actionTypes: [],
+        memo: "같은 위치에서 다시 발견되어 신규 발견으로 다시 열었어요",
+        createdAt: new Date().toISOString(),
+        createdBy: actor,
+      };
+      batch.set(doc(actionsCol()), log);
+    }
+    await batch.commit();
+    return updated;
+  },
+
   async getAnalysisHistory(locationId) {
     // 단일 조건 쿼리 + 클라이언트 정렬 (복합 색인 불필요)
     const snap = await getDocs(query(resultsCol(), where("locationId", "==", locationId)));
