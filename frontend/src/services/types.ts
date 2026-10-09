@@ -47,7 +47,7 @@ export interface LocationService {
    * 조치 완료·종료된 구간인데 다시 위험이 발견되면 신규 발견으로 다시 연다.
    */
   addRepeatAnalysis(locationId: string, analysis: AnalysisResult, actor: string): Promise<Location>;
-  /** 아직 없는 신촌·이대 예시 구간을 넣는다. 넣은 구간 수를 반환 (실제 데이터만 쓰는 환경이면 0) */
+  /** 아직 없는 신촌·이대 예시 구간·이력을 넣는다. 넣은 문서 수를 반환 (실제 데이터만 쓰는 환경이면 0) */
   seedSampleData(): Promise<number>;
 }
 

@@ -4,7 +4,7 @@
  * 좌표·위험도·장애요인은 모두 임의로 작성된 값이다.
  */
 import { getRiskLevel } from "@/constants/risk";
-import type { ActionLog, AnalysisResult, CloseReason, Location, LocationStatus, ObstacleType } from "@/types";
+import type { ActionLog, AnalysisPhase, AnalysisResult, CloseReason, Location, LocationStatus, ObstacleType } from "@/types";
 import type { ActionType } from "@/types";
 import { generateMockOverlay } from "./mockOverlay";
 
@@ -29,6 +29,8 @@ interface MockSeed {
   initial: MockMetrics;
   /** 조치 후 재분석이 이미 수행된 구간 */
   followUp?: MockMetrics;
+  /** 같은 위치를 다시 찍어 또 발견된 기록 (상습 여부 예시) */
+  repeats?: MockMetrics[];
 }
 
 const SEEDS: MockSeed[] = [
@@ -106,6 +108,13 @@ const SEEDS: MockSeed[] = [
       obstacleTypes: ["STACKED_MATERIALS", "ILLEGAL_PARKING"],
       analyzedAt: "2026-09-30T18:05:00+09:00",
     },
+    // 저녁마다 반복되는 적치물·주정차 — 상습 발생 예시
+    repeats: [
+      { riskScore: 74, walkableRatio: 0.33, roadDetourRequired: true, obstacleTypes: ["STACKED_MATERIALS"], analyzedAt: "2026-10-01T19:20:00+09:00" },
+      { riskScore: 81, walkableRatio: 0.25, roadDetourRequired: true, obstacleTypes: ["STACKED_MATERIALS", "ILLEGAL_PARKING"], analyzedAt: "2026-10-03T18:40:00+09:00" },
+      { riskScore: 69, walkableRatio: 0.38, roadDetourRequired: true, obstacleTypes: ["STACKED_MATERIALS"], analyzedAt: "2026-10-05T20:10:00+09:00" },
+      { riskScore: 77, walkableRatio: 0.29, roadDetourRequired: true, obstacleTypes: ["STACKED_MATERIALS", "ILLEGAL_PARKING"], analyzedAt: "2026-10-07T19:05:00+09:00" },
+    ],
   },
   {
     id: "daehyeon-e",
@@ -123,6 +132,9 @@ const SEEDS: MockSeed[] = [
       obstacleTypes: ["ILLEGAL_PARKING"],
       analyzedAt: "2026-09-27T11:30:00+09:00",
     },
+    repeats: [
+      { riskScore: 55, walkableRatio: 0.52, roadDetourRequired: true, obstacleTypes: ["ILLEGAL_PARKING"], analyzedAt: "2026-10-04T12:10:00+09:00" },
+    ],
   },
   {
     id: "sinchon-f",
@@ -286,8 +298,8 @@ const SEEDS: MockSeed[] = [
   },
 ];
 
-function toResult(seed: MockSeed, metrics: MockMetrics, phase: "INITIAL" | "FOLLOW_UP"): AnalysisResult {
-  const suffix = phase === "INITIAL" ? "initial" : "followup";
+function toResult(seed: MockSeed, metrics: MockMetrics, phase: AnalysisPhase, index = 0): AnalysisResult {
+  const suffix = phase === "INITIAL" ? "initial" : phase === "FOLLOW_UP" ? "followup" : `repeat-${index + 1}`;
   const obstructionRatio = Math.round((1 - metrics.walkableRatio) * 100) / 100;
   return {
     id: `mock-result-${seed.id}-${suffix}`,
@@ -308,10 +320,13 @@ function toResult(seed: MockSeed, metrics: MockMetrics, phase: "INITIAL" | "FOLL
   };
 }
 
-export const MOCK_ANALYSIS_RESULTS: AnalysisResult[] = SEEDS.flatMap((s) => [
-  toResult(s, s.initial, "INITIAL"),
-  ...(s.followUp ? [toResult(s, s.followUp, "FOLLOW_UP")] : []),
-]);
+export const MOCK_ANALYSIS_RESULTS: AnalysisResult[] = SEEDS.flatMap((s) =>
+  [
+    toResult(s, s.initial, "INITIAL"),
+    ...(s.repeats ?? []).map((m, i) => toResult(s, m, "REPEAT", i)),
+    ...(s.followUp ? [toResult(s, s.followUp, "FOLLOW_UP")] : []),
+  ].sort((a, b) => a.analyzedAt.localeCompare(b.analyzedAt)),
+);
 
 export const MOCK_LOCATIONS: Location[] = SEEDS.map((s) => {
   const latest = MOCK_ANALYSIS_RESULTS.filter((r) => r.locationId === s.id).at(-1)!;

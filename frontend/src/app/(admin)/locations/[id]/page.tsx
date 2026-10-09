@@ -8,6 +8,7 @@ import { LayerToggles } from "@/components/analysis/LayerToggles";
 import { ActionManagement } from "@/components/location/ActionManagement";
 import { BeforeAfterComparison } from "@/components/location/BeforeAfterComparison";
 import { FollowUpAnalysis } from "@/components/location/FollowUpAnalysis";
+import { OccurrenceHistory } from "@/components/location/OccurrenceHistory";
 import { ResolveFlowDialog } from "@/components/location/ResolveFlowDialog";
 import { WorkflowProgress } from "@/components/location/WorkflowProgress";
 import { DEFAULT_LAYERS } from "@/components/media/AnalysisOverlayLayer";
@@ -189,6 +190,8 @@ export default function LocationDetailPage() {
           </CardBody>
         </Card>
       )}
+
+      {history.length > 0 && <OccurrenceHistory history={history} />}
 
       {/* 현장조치 관리 */}
       <Card>

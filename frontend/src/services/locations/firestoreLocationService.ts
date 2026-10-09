@@ -195,20 +195,48 @@ export const firestoreLocationService: LocationService = {
   },
 
   async seedSampleData() {
-    // 아직 없는 예시 구간만 추가한다 (이미 있는 구간은 담당자가 바꾼 상태를 그대로 둔다).
+    // 아직 없는 예시 구간·이력만 추가한다 (이미 있는 구간은 담당자가 바꾼 상태를 그대로 둔다).
     // 실제 데이터만 있고 예시 데이터를 쓰지 않는 환경이면 건드리지 않는다.
     const existing = await fetchAll();
     if (existing.length && !existing.some((l) => l.isSample)) return 0;
-    const ids = new Set(existing.map((l) => l.id));
-    const missing = new Set(MOCK_LOCATIONS.filter((l) => !ids.has(l.id)).map((l) => l.id));
-    if (!missing.size) return 0;
+    const byId = new Map(existing.map((l) => [l.id, l]));
+    const missing = new Set(MOCK_LOCATIONS.filter((l) => !byId.has(l.id)).map((l) => l.id));
+
+    // 이미 있는 예시 구간에 나중에 추가된 반복 발견 기록
+    const repeatCandidates = MOCK_ANALYSIS_RESULTS.filter(
+      (r) => r.phase === "REPEAT" && r.locationId && byId.get(r.locationId)?.isSample,
+    );
+    const repeatExists = await Promise.all(repeatCandidates.map((r) => getDoc(doc(resultsCol(), r.id))));
+    const newRepeats = repeatCandidates.filter((_, i) => !repeatExists[i].exists());
+    if (!missing.size && !newRepeats.length) return 0;
+
     const batch = writeBatch(firestore());
     MOCK_LOCATIONS.filter((l) => missing.has(l.id)).forEach((l) => batch.set(doc(locationsCol(), l.id), withoutId(l)));
     MOCK_ANALYSIS_RESULTS.filter((r) => r.locationId && missing.has(r.locationId)).forEach((r) =>
       batch.set(doc(resultsCol(), r.id), toStoredAnalysis(r)),
     );
     MOCK_ACTION_LOGS.filter((a) => missing.has(a.locationId)).forEach((a) => batch.set(doc(actionsCol(), a.id), withoutId(a)));
+    newRepeats.forEach((r) => batch.set(doc(resultsCol(), r.id), toStoredAnalysis(r)));
+    // 구간의 현재 수치를 가장 최근 예시 분석으로 맞춘다 (그 뒤에 실제 분석이 추가됐다면 그대로 둔다)
+    new Set(newRepeats.map((r) => r.locationId!)).forEach((id) => {
+      const sample = MOCK_LOCATIONS.find((l) => l.id === id)!;
+      if (byId.get(id)!.analyzedAt >= sample.analyzedAt) return;
+      const { riskScore, riskLevel, walkableRatio, obstructionRatio, roadDetourRequired, obstacleTypes, analyzedAt, beforeImage, resultImage } =
+        sample;
+      batch.update(doc(locationsCol(), id), {
+        riskScore,
+        riskLevel,
+        walkableRatio,
+        obstructionRatio,
+        roadDetourRequired,
+        obstacleTypes,
+        analyzedAt,
+        beforeImage,
+        resultImage,
+      });
+    });
     await batch.commit();
-    return missing.size;
+    return missing.size + newRepeats.length;
   },
+
 };
