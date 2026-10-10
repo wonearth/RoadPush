@@ -26,7 +26,6 @@ export function AdminHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-[22px] font-bold text-slate-900 sm:text-[26px]">{meta.title}</h1>
-          <p className="mt-1 hidden truncate text-[15px] text-slate-500 sm:block">{meta.description}</p>
         </div>
         {user ? (
           <UserMenu user={user} onSignOut={signOut} />

@@ -59,7 +59,7 @@ export function RegisterLocationDialog({
     setSaving(location.id);
     setError(null);
     try {
-      onRegistered(await locationService.addRepeatAnalysis(location.id, analysis, user?.name ?? "데모 관리자"));
+      onRegistered(await locationService.addRepeatAnalysis(location.id, analysis, user?.name ?? "담당자"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "추가에 실패했습니다.");
       setSaving(null);

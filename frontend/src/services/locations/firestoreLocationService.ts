@@ -22,7 +22,7 @@ import {
 import { normalizeStatus } from "@/constants/risk";
 import { nextCodes } from "@/lib/admin";
 import { firestore } from "@/lib/firebase";
-import { MOCK_ACTION_LOGS, MOCK_ANALYSIS_RESULTS, MOCK_LOCATIONS } from "@/mocks/mockLocations";
+import { LEGACY_SAMPLE_FIELDS, MOCK_ACTION_LOGS, MOCK_ANALYSIS_RESULTS, MOCK_LOCATIONS } from "@/mocks/mockLocations";
 import type { LocationService } from "@/services/types";
 import type { ActionLog, Location } from "@/types";
 import { fromStoredAnalysis, toStoredAnalysis, type StoredAnalysisResult } from "./firestoreMappers";
@@ -182,7 +182,16 @@ export const firestoreLocationService: LocationService = {
   async getActionLogs(locationId) {
     const snap = await getDocs(query(actionsCol(), where("locationId", "==", locationId)));
     return snap.docs
-      .map((d) => ({ id: d.id, ...(d.data() as Omit<ActionLog, "id">), status: normalizeStatus(d.data().status) }))
+      .map((d) => {
+        // 예시 조치 기록은 수정할 수 없는 문서라, 화면에는 정리된 예시 문구(메모·작성자)로 보여준다
+        const sample = MOCK_ACTION_LOGS.find((m) => m.id === d.id);
+        return {
+          id: d.id,
+          ...(d.data() as Omit<ActionLog, "id">),
+          ...(sample && { memo: sample.memo, createdBy: sample.createdBy }),
+          status: normalizeStatus(d.data().status),
+        };
+      })
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
 
@@ -229,7 +238,9 @@ export const firestoreLocationService: LocationService = {
     );
     const repeatExists = await Promise.all(repeatCandidates.map((r) => getDoc(doc(resultsCol(), r.id))));
     const newRepeats = repeatCandidates.filter((_, i) => !repeatExists[i].exists());
-    if (!missing.size && !newRepeats.length) return 0;
+    // 예전 이름(알파벳 순번) 그대로인 예시 구간 — 담당자가 이름을 고친 구간은 건드리지 않는다
+    const renames = existing.filter((l) => l.isSample && LEGACY_SAMPLE_FIELDS[l.id]?.name === l.name);
+    if (!missing.size && !newRepeats.length && !renames.length) return 0;
 
     const batch = writeBatch(firestore());
     MOCK_LOCATIONS.filter((l) => missing.has(l.id)).forEach((l) => batch.set(doc(locationsCol(), l.id), withoutId(l)));
@@ -256,8 +267,16 @@ export const firestoreLocationService: LocationService = {
         resultImage,
       });
     });
+    renames.forEach((l) => {
+      const sample = MOCK_LOCATIONS.find((m) => m.id === l.id)!;
+      const legacy = LEGACY_SAMPLE_FIELDS[l.id];
+      batch.update(doc(locationsCol(), l.id), {
+        name: sample.name,
+        ...(legacy.address === l.address && { address: sample.address }),
+      });
+    });
     await batch.commit();
-    return missing.size + newRepeats.length;
+    return missing.size + newRepeats.length + renames.length;
   },
 
 };

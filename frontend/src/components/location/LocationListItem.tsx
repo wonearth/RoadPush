@@ -1,6 +1,6 @@
 import { OBSTACLE_META, PASSABILITY_META, RISK_META, getPassability } from "@/constants/risk";
 import { cn } from "@/lib/cn";
-import { formatPercent, shortAddress } from "@/lib/format";
+import { formatPercent, subAddress } from "@/lib/format";
 import type { Location } from "@/types";
 import { StatusBadge } from "../risk/RiskBadge";
 
@@ -31,7 +31,7 @@ export function LocationListItem({
         <span className="block truncate font-bold text-slate-900">{location.name}</span>
         <span className="mt-0.5 block truncate text-[13.5px] text-slate-500">
           {location.code && <span className="tabular mr-1.5 text-slate-400">{location.code}</span>}
-          {shortAddress(location.address)}
+          {subAddress(location)}
         </span>
         <span className="mt-1 block truncate text-[13px] text-slate-600">
           {causes}

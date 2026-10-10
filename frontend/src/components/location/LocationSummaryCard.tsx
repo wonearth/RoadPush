@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import { OBSTACLE_META, PASSABILITY_META, RISK_META, STATUS_META, getPassability } from "@/constants/risk";
 import { departmentOf } from "@/lib/admin";
-import { formatDateTime, formatPercent, shortAddress } from "@/lib/format";
+import { formatDateTime, formatPercent, subAddress } from "@/lib/format";
 import type { Location } from "@/types";
 import { RiskBadge } from "../risk/RiskBadge";
 import { ButtonLink } from "../ui/Button";
@@ -25,7 +25,7 @@ export function LocationSummaryCard({ location, onClose }: { location: Location;
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-lg font-bold text-slate-900">{location.name}</p>
-          <p className="mt-0.5 truncate text-sm text-slate-500">{shortAddress(location.address)}</p>
+          {subAddress(location) && <p className="mt-0.5 truncate text-sm text-slate-500">{subAddress(location)}</p>}
         </div>
         {onClose && (
           <button type="button" onClick={onClose} className="-mt-1 -mr-1 rounded-lg p-1 text-slate-400 hover:bg-slate-100" aria-label="닫기">

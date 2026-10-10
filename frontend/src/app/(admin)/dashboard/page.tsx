@@ -15,7 +15,7 @@ import { EmptyState, Skeleton } from "@/components/ui/States";
 import { RISK_META, getRiskLevel, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
-import { formatDateTime, shortAddress } from "@/lib/format";
+import { formatDateTime, subAddress } from "@/lib/format";
 import { locationService } from "@/services";
 
 export default function DashboardPage() {
@@ -89,7 +89,7 @@ export default function DashboardPage() {
               {top.name} · {top.riskScore}점 {RISK_META[top.riskLevel].label}
             </span>
             <span className="text-slate-600">
-              {shortAddress(top.address)}, 유효 보행공간 {Math.round(top.walkableRatio * 100)}%
+              {subAddress(top) && `${subAddress(top)}, `}유효 보행공간 {Math.round(top.walkableRatio * 100)}%
               {top.roadDetourRequired && ", 차도 우회 발생"}
             </span>
           </p>

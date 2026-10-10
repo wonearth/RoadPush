@@ -36,7 +36,7 @@ interface MockSeed {
 const SEEDS: MockSeed[] = [
   {
     id: "sinchon-a",
-    name: "신촌 A구간",
+    name: "신촌역 3번 출구 앞",
     address: "서울 서대문구 연세로 신촌역 3번 출구 앞 보도",
     area: "신촌",
     latitude: 37.5561,
@@ -53,7 +53,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "ewha-b",
-    name: "이대 B구간",
+    name: "이대역 2번 출구 인근",
     address: "서울 서대문구 이화여대길 이대역 2번 출구 인근",
     area: "이대",
     latitude: 37.5574,
@@ -70,7 +70,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "ewha-c",
-    name: "이대 정문 C구간",
+    name: "이화여대 정문 앞",
     address: "서울 서대문구 이화여대길 이화여대 정문 앞 보도",
     area: "이대",
     latitude: 37.5602,
@@ -94,7 +94,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "sinchon-d",
-    name: "신촌 D구간",
+    name: "명물길 먹자골목 입구",
     address: "서울 서대문구 명물길 신촌 먹자골목 입구",
     area: "신촌",
     latitude: 37.5572,
@@ -118,7 +118,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "daehyeon-e",
-    name: "대현동 E구간",
+    name: "대현동 주택가 이면도로",
     address: "서울 서대문구 대현동 주택가 이면도로",
     area: "대현동",
     latitude: 37.5589,
@@ -138,7 +138,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "sinchon-f",
-    name: "신촌 F구간",
+    name: "신촌역 2번 출구 버스정류장",
     address: "서울 서대문구 신촌로 신촌역 2번 출구 버스정류장",
     area: "신촌",
     latitude: 37.5553,
@@ -155,7 +155,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "ewha-g",
-    name: "이대 G구간",
+    name: "이화여대5길 상점가",
     address: "서울 서대문구 이화여대5길 상점가",
     area: "이대",
     latitude: 37.5584,
@@ -172,7 +172,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "sinchon-h",
-    name: "신촌 H구간",
+    name: "연세로 차 없는 거리",
     address: "서울 서대문구 연세로 차 없는 거리 중앙",
     area: "신촌",
     latitude: 37.5587,
@@ -189,7 +189,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "ewha-i",
-    name: "이대 I구간",
+    name: "이대역 4번 출구 앞",
     address: "서울 서대문구 신촌로 이대역 4번 출구 앞",
     area: "이대",
     latitude: 37.5563,
@@ -207,7 +207,7 @@ const SEEDS: MockSeed[] = [
   // ── 조치 완료 + 재분석까지 마친 구간 (대시보드 개선 효과 예시) ──
   {
     id: "sinchon-j",
-    name: "신촌 J구간",
+    name: "현대백화점 신촌점 앞",
     address: "서울 서대문구 연세로 현대백화점 앞 보도",
     area: "신촌",
     latitude: 37.5565,
@@ -231,7 +231,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "daehyeon-k",
-    name: "대현동 K구간",
+    name: "대현동 신촌로 상가 앞",
     address: "서울 서대문구 신촌로 대현동 상가 앞 보도",
     area: "대현동",
     latitude: 37.5583,
@@ -255,7 +255,7 @@ const SEEDS: MockSeed[] = [
   },
   {
     id: "ewha-l",
-    name: "이대 L구간",
+    name: "이화여대 후문 방향",
     address: "서울 서대문구 이화여대길 이대 후문 방향 보도",
     area: "이대",
     latitude: 37.5619,
@@ -280,8 +280,8 @@ const SEEDS: MockSeed[] = [
   // ── 조치 없이 종료된 구간 (잘못 분석됨 예시) ──
   {
     id: "sinchon-m",
-    name: "신촌 M구간",
-    address: "서울 서대문구 명물길 신촌 먹자골목 입구",
+    name: "연세로7안길 음식점 앞",
+    address: "서울 서대문구 연세로7안길 음식점 앞 보도",
     area: "신촌",
     latitude: 37.5578,
     longitude: 126.9368,
@@ -359,54 +359,54 @@ export const MOCK_ACTION_LOGS: ActionLog[] = [
     locationId: "ewha-b",
     status: "ACTION_PLANNED",
     actionTypes: ["PM_RELOCATION"],
-    memo: "PM 운영사에 방치 기기 이동 요청 (개발용 예시)",
+    memo: "PM 운영사에 방치 기기 이동 요청",
     createdAt: "2026-09-29T09:00:00+09:00",
-    createdBy: "데모 관리자",
+    createdBy: "교통행정과 담당자",
   },
   {
     id: "mock-action-ewha-c-1",
     locationId: "ewha-c",
     status: "ACTION_PLANNED",
     actionTypes: ["CONSTRUCTION_CLEANUP", "MATERIAL_REMOVAL"],
-    memo: "공사 가림막 보도 침범 구간 정비 요청 (개발용 예시)",
+    memo: "공사 가림막 보도 침범 구간 정비 요청",
     createdAt: "2026-09-19T10:00:00+09:00",
-    createdBy: "데모 관리자",
+    createdBy: "건설관리과 담당자",
   },
   {
     id: "mock-action-ewha-c-2",
     locationId: "ewha-c",
     status: "RESOLVED",
     actionTypes: ["CONSTRUCTION_CLEANUP", "MATERIAL_REMOVAL"],
-    memo: "가림막 재설치 및 자재 이동 완료 (개발용 예시)",
+    memo: "가림막 재설치 및 자재 이동 완료",
     createdAt: "2026-09-25T17:30:00+09:00",
-    createdBy: "데모 관리자",
+    createdBy: "건설관리과 담당자",
   },
   {
     id: "mock-action-sinchon-j-1",
     locationId: "sinchon-j",
     status: "RESOLVED",
     actionTypes: ["PARKING_ENFORCEMENT"],
-    memo: "저녁 시간대 집중 단속 후 불법 주정차 해소 (개발용 예시)",
+    memo: "저녁 시간대 집중 단속 후 불법 주정차 해소",
     createdAt: "2026-09-22T17:00:00+09:00",
-    createdBy: "데모 관리자",
+    createdBy: "주차관리과 담당자",
   },
   {
     id: "mock-action-daehyeon-k-1",
     locationId: "daehyeon-k",
     status: "RESOLVED",
     actionTypes: ["MATERIAL_REMOVAL"],
-    memo: "상가 앞 적치물 자진 정리 안내 및 수거 완료 (개발용 예시)",
+    memo: "상가 앞 적치물 자진 정리 안내 및 수거 완료",
     createdAt: "2026-09-23T16:00:00+09:00",
-    createdBy: "데모 관리자",
+    createdBy: "건설관리과 담당자",
   },
   {
     id: "mock-action-ewha-l-1",
     locationId: "ewha-l",
     status: "RESOLVED",
     actionTypes: ["PM_RELOCATION"],
-    memo: "PM 운영사에 방치 기기 이동 요청, 일부 기기 남음 (개발용 예시)",
+    memo: "PM 운영사에 방치 기기 이동 요청, 일부 기기 남음",
     createdAt: "2026-09-26T15:00:00+09:00",
-    createdBy: "데모 관리자",
+    createdBy: "교통행정과 담당자",
   },
   {
     id: "mock-action-sinchon-m-1",
@@ -414,8 +414,25 @@ export const MOCK_ACTION_LOGS: ActionLog[] = [
     status: "CLOSED",
     closeReason: "FALSE_POSITIVE",
     actionTypes: [],
-    memo: "현장 확인 결과 영업 중 일시 적재로 확인, 상시 장애물 아님 (개발용 예시)",
+    memo: "현장 확인 결과 영업 중 일시 적재로 확인, 상시 장애물 아님",
     createdAt: "2026-09-28T11:00:00+09:00",
-    createdBy: "데모 관리자",
+    createdBy: "건설관리과 담당자",
   },
 ];
+
+/** 예전 예시 이름(알파벳 순번)·주소 — 이미 저장된 예시 구간을 새 이름으로 바꿀 때 쓴다 */
+export const LEGACY_SAMPLE_FIELDS: Record<string, { name: string; address?: string }> = {
+  "sinchon-a": { name: "신촌 A구간" },
+  "ewha-b": { name: "이대 B구간" },
+  "ewha-c": { name: "이대 정문 C구간" },
+  "sinchon-d": { name: "신촌 D구간" },
+  "daehyeon-e": { name: "대현동 E구간" },
+  "sinchon-f": { name: "신촌 F구간" },
+  "ewha-g": { name: "이대 G구간" },
+  "sinchon-h": { name: "신촌 H구간" },
+  "ewha-i": { name: "이대 I구간" },
+  "sinchon-j": { name: "신촌 J구간" },
+  "daehyeon-k": { name: "대현동 K구간" },
+  "ewha-l": { name: "이대 L구간" },
+  "sinchon-m": { name: "신촌 M구간", address: "서울 서대문구 명물길 신촌 먹자골목 입구" },
+};

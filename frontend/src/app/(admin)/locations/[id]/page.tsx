@@ -78,13 +78,13 @@ export default function LocationDetailPage() {
   const meta = RISK_META[location.riskLevel];
 
   const saveAction = async (input: UpdateActionInput) => {
-    await locationService.updateAction(location.id, input, user?.name ?? "데모 관리자");
+    await locationService.updateAction(location.id, input, user?.name ?? "담당자");
     await reload();
   };
 
   const completeResolve = async (result: AnalysisResult | null) => {
     if (!pendingResolve) return;
-    await locationService.updateAction(location.id, pendingResolve, user?.name ?? "데모 관리자");
+    await locationService.updateAction(location.id, pendingResolve, user?.name ?? "담당자");
     if (result) await locationService.addFollowUpAnalysis(location.id, result);
     setPendingResolve(null);
     await reload();

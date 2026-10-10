@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// 분석용 사진·영상. 로그인한 관리자만 올리고 볼 수 있다.
+// 분석 이력과 같은 감사 기록이므로 올린 파일은 수정·삭제할 수 없다.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /uploads/{uid}/{fileName} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 200 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('video/.*'));
+      allow update, delete: if false;
+    }
+  }
+}

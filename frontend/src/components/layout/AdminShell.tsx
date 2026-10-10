@@ -38,7 +38,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       )}
-      <div className="flex min-h-screen flex-col lg:pl-60">
+      {/* 넓은 모니터에서 표·사진이 지나치게 늘어나지 않도록 본문 폭을 제한한다 */}
+      <div className="flex min-h-screen max-w-[1720px] flex-col lg:pl-60">
         <AdminHeader onOpenMenu={() => setMenuOpen(true)} />
         <main className="flex-1">
           {!user ? (
