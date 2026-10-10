@@ -7,7 +7,6 @@ import { FirebaseError } from "firebase/app";
 import {
   EmailAuthProvider,
   createUserWithEmailAndPassword,
-  deleteUser,
   reauthenticateWithCredential,
   updatePassword,
   onAuthStateChanged as onFirebaseAuthStateChanged,
@@ -16,10 +15,10 @@ import {
   updateProfile,
   type User as FirebaseUser,
 } from "firebase/auth";
-import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
+import { deleteField, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { firebaseAuth, firestore } from "@/lib/firebase";
 import type { AuthService } from "@/services/types";
-import type { User } from "@/types";
+import type { DeactivationRequest, User } from "@/types";
 
 const ERROR_MESSAGES: Record<string, string> = {
   "auth/invalid-credential": "이메일 또는 비밀번호가 올바르지 않습니다.",
@@ -48,6 +47,7 @@ async function loadProfile(fbUser: FirebaseUser): Promise<User> {
     name: data?.name ?? fbUser.displayName ?? fbUser.email?.split("@")[0] ?? "관리자",
     organization: data?.organization ?? "",
     createdAt: data?.createdAt ?? fbUser.metadata.creationTime ?? new Date().toISOString(),
+    ...(data?.deactivationRequest && { deactivationRequest: data.deactivationRequest }),
   };
 }
 
@@ -115,15 +115,26 @@ export const firebaseAuthService: AuthService = {
     }
   },
 
-  async deleteAccount(password) {
+  async requestDeactivation(password, reason, memo) {
     try {
-      const user = await reauthenticate(password);
-      // 프로필 문서는 인증된 상태에서만 지울 수 있으므로 계정보다 먼저 삭제한다.
-      await deleteDoc(doc(firestore(), "users", user.uid));
-      await deleteUser(user);
+      const fbUser = await reauthenticate(password);
+      const request: DeactivationRequest = { reason, memo: memo.trim(), requestedAt: new Date().toISOString() };
+      await updateDoc(doc(firestore(), "users", fbUser.uid), { deactivationRequest: request });
+      const user = await loadProfile(fbUser);
+      emit(user);
+      return user;
     } catch (e) {
       throw toKoreanError(e);
     }
+  },
+
+  async cancelDeactivation() {
+    const fbUser = firebaseAuth().currentUser;
+    if (!fbUser) throw new Error("로그인이 필요합니다.");
+    await updateDoc(doc(firestore(), "users", fbUser.uid), { deactivationRequest: deleteField() });
+    const user = await loadProfile(fbUser);
+    emit(user);
+    return user;
   },
 };
 
