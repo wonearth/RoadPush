@@ -38,6 +38,12 @@ export function describeRisk(input: {
 }
 
 /** 목록용 짧은 주소: 앞의 시·도·구 단위를 빼고 도로명·장소만 남긴다. */
+/** 구간명 아래에 붙일 짧은 주소 — 구간명과 같은 내용이면 반복하지 않도록 빈 문자열 */
+export function subAddress(location: { name: string; address: string }): string {
+  const short = shortAddress(location.address);
+  return short === location.name || location.name.includes(short) ? "" : short;
+}
+
 export function shortAddress(address: string): string {
   const parts = address.trim().split(/\s+/);
   let i = 0;

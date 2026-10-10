@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { OBSTACLE_META, PASSABILITY_META, RISK_META, getPassability } from "@/constants/risk";
 import { departmentOf } from "@/lib/admin";
-import { formatPercent, shortAddress } from "@/lib/format";
+import { formatPercent, subAddress } from "@/lib/format";
 import type { Location } from "@/types";
 import { DueText } from "../location/AdminMeta";
 import { ReasonTags } from "../location/ReasonTags";
@@ -14,7 +14,7 @@ export function PriorityList({ locations }: { locations: Location[] }) {
       <table className="w-full min-w-[880px] text-left text-[15px]">
         <thead>
           <tr className="bg-slate-50 text-sm text-slate-600">
-            <th className="w-16 rounded-l-lg py-3 pl-4 font-semibold">순위</th>
+            <th className="w-16 rounded-l-lg py-3 pr-4 pl-4 font-semibold whitespace-nowrap">순위</th>
             <th className="py-3 font-semibold">구간</th>
             <th className="w-24 py-3 font-semibold">위험도</th>
             <th className="py-3 font-semibold">주요 원인</th>
@@ -27,14 +27,14 @@ export function PriorityList({ locations }: { locations: Location[] }) {
         <tbody>
           {locations.map((loc, i) => (
             <tr key={loc.id} className="group relative border-b border-slate-100 last:border-b-0 hover:bg-slate-50">
-              <td className="py-4 pl-4 text-slate-600">{i + 1}</td>
+              <td className="py-4 pr-4 pl-4 text-slate-600">{i + 1}</td>
               <td className="py-4 pr-4">
                 <Link href={`/locations/${loc.id}`} className="font-bold whitespace-nowrap text-slate-900 after:absolute after:inset-0">
                   {loc.name}
                 </Link>
                 <p className="mt-0.5 max-w-56 truncate text-[13.5px] text-slate-500">
                   {loc.code && <span className="tabular mr-1.5 text-slate-400">{loc.code}</span>}
-                  {shortAddress(loc.address)}
+                  {subAddress(loc)}
                 </p>
                 <ReasonTags location={loc} max={2} className="mt-1.5" />
               </td>
