@@ -1,4 +1,5 @@
 /** 행정 실무 표시 — 관리번호, 담당 부서, 처리기한 */
+import { ACTION_META } from "@/constants/risk";
 import type { Location, ObstacleType, RiskLevel } from "@/types";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -22,13 +23,20 @@ export const DEPARTMENT: Record<ObstacleType, string> = {
   ABANDONED_PM: "교통행정과",
 };
 
-export function departmentOf(location: Pick<Location, "obstacleTypes">): string {
-  const main = location.obstacleTypes[0];
+/**
+ * 담당 부서 — 현재 장애물 기준. 조치 후 재분석으로 장애물이 사라진 구간은
+ * 담당자가 기록한 조치 내용(예: 적치물 제거 → 건설관리과)으로 정한다.
+ */
+export function departmentOf(location: Pick<Location, "obstacleTypes" | "plannedActions">): string {
+  const main = location.obstacleTypes[0] ?? (location.plannedActions[0] && ACTION_META[location.plannedActions[0]].resolves);
   return main ? DEPARTMENT[main] : "도로과";
 }
 
 /** 위험등급별 처리기한(일) — 최근 발견일 기준 */
 export const DUE_DAYS: Partial<Record<RiskLevel, number>> = { DANGER: 3, WARNING: 7, CAUTION: 14 };
+
+/** 화면 표시와 같은 로컬 날짜 기준 일 번호 */
+const dayIndex = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY;
 
 export interface DueInfo {
   due: Date;
@@ -46,7 +54,8 @@ export function dueOf(
   const days = DUE_DAYS[location.riskLevel];
   if (!days || (location.status !== "NEW" && location.status !== "ACTION_PLANNED")) return null;
   const due = new Date(new Date(location.analyzedAt).getTime() + days * DAY);
-  const daysLeft = Math.ceil((due.getTime() - now.getTime()) / DAY);
+  // 시각이 아니라 날짜로 센다 (기한이 오늘이면 0 → "오늘까지")
+  const daysLeft = dayIndex(due) - dayIndex(now);
   const label = daysLeft > 0 ? `D-${daysLeft}` : daysLeft === 0 ? "오늘까지" : `${-daysLeft}일 경과`;
   return { due, daysLeft, label, overdue: daysLeft < 0 };
 }

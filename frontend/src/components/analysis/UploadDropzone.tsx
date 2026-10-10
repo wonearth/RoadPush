@@ -67,7 +67,7 @@ export function UploadDropzone({
           <UploadCloud className="size-5" />
         </span>
         <p className="mt-3 text-sm font-semibold text-slate-800">
-          도로·보행 이미지 또는 영상을 <span className="hidden sm:inline">끌어다 놓거나 </span>
+          도로·보행 이미지·영상 <span className="hidden sm:inline">끌어다 놓기 또는 </span>
           <span className="text-brand-600">파일 선택</span>
         </p>
         {!compact && (

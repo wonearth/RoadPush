@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CalendarClock, MapPin, ScanSearch } from "lucide-react";
+import { ArrowLeft, CalendarClock, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -23,7 +23,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { MockBadge } from "@/components/ui/MockNotice";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { CLOSE_REASON_META, RISK_META, STATUS_META, isOpenStatus } from "@/constants/risk";
+import { CLOSE_REASON_META, RISK_META, isOpenStatus } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/hooks/useAuth";
 import { describeRisk, formatDateTime } from "@/lib/format";
@@ -129,7 +129,7 @@ export default function LocationDetailPage() {
               <RiskBadge level={location.riskLevel} className="ml-1 text-lg" />
             </p>
             <RiskBar score={location.riskScore} level={location.riskLevel} className="mt-3 w-full bg-white" />
-            <PassabilityText value={location} detail className="mt-4 max-w-72 text-[15px]" />
+            <PassabilityText value={location} className="mt-4 text-[15px]" />
           </div>
         </div>
       </Card>
@@ -256,16 +256,12 @@ export default function LocationDetailPage() {
           ) : (
             <div className="grid gap-6 rounded-2xl bg-slate-50 p-6 lg:grid-cols-2">
               <div>
-                <ScanSearch className="size-6 text-slate-400" />
-                <p className="mt-3 text-sm font-semibold text-slate-900">아직 조치 후 재분석 결과가 없습니다</p>
-                <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
-                  현장조치를 완료한 뒤 같은 구간을 다시 촬영해 분석하면, 위험도와 유효 보행공간의 변화를 조치 전과 비교해 보여줍니다.
+                <p className="text-sm font-semibold text-slate-900">조치 후 재분석 결과 없음</p>
+                <p className="mt-1 text-[13px] text-slate-500">
+                  {isOpenStatus(location.status)
+                    ? "현장조치 관리에서 ‘조치 완료’ 처리 시 사진 촬영과 재분석으로 이어집니다."
+                    : "조치 후 같은 위치를 촬영해 재분석하면 전후 비교가 표시됩니다."}
                 </p>
-                {isOpenStatus(location.status) && (
-                  <p className="mt-3 text-[13px] font-medium text-amber-700">
-                    현재 상태: {STATUS_META[location.status].label}. 현장조치 관리에서 &lsquo;조치 완료&rsquo;를 선택하면 사진 촬영과 재분석으로 이어집니다.
-                  </p>
-                )}
               </div>
               <FollowUpAnalysis
                 camera

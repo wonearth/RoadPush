@@ -17,8 +17,6 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { MockBadge } from "@/components/ui/MockNotice";
 import { Spinner } from "@/components/ui/States";
-import { RISK_META } from "@/constants/risk";
-import { describeRisk } from "@/lib/format";
 import { MOCK_SAMPLE_OVERLAY, MOCK_SAMPLE_SCENE_URL } from "@/mocks/mockOverlay";
 import { analysisService, storageService, type UploadedMedia } from "@/services";
 import type { AnalysisResult } from "@/types";
@@ -197,12 +195,9 @@ export default function AnalysisPage() {
                   <CardHeader title="보행공간 단절 위험도" action={<MockBadge label="예시 결과" />} />
                   <CardBody className="flex flex-col items-center pt-2">
                     <RiskGauge score={result.riskScore} level={result.riskLevel} />
-                    <div className="mt-1 flex items-center gap-2">
-                      <RiskBadge level={result.riskLevel} className="px-2.5 py-1 text-sm" />
-                      <span className="text-[13px] text-slate-500">{RISK_META[result.riskLevel].description}</span>
-                    </div>
+                    <RiskBadge level={result.riskLevel} className="mt-1 px-2.5 py-1 text-sm" />
+                    {/* 통행 판단 한 곳에만 설명을 둔다 (원인·잠식률은 아래 판단 근거에 있다) */}
                     <PassabilityText value={result} detail className="mt-4 w-full rounded-xl bg-slate-50 px-4 py-3 text-center text-base" />
-                    <p className="mt-3 w-full text-center text-sm leading-relaxed text-slate-600">{describeRisk(result)}</p>
                   </CardBody>
                 </Card>
                 <Card>
