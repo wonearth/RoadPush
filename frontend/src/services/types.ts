@@ -6,6 +6,7 @@ import type {
   ActionLog,
   AnalysisResult,
   CreateLocationInput,
+  DeactivationReason,
   DashboardSummary,
   Improvement,
   Location,
@@ -26,8 +27,10 @@ export interface AuthService {
   signOut(): Promise<void>;
   /** 현재 비밀번호 확인 후 변경 */
   changePassword(currentPassword: string, newPassword: string): Promise<void>;
-  /** 비밀번호 확인 후 계정과 프로필을 삭제 (회원 탈퇴) */
-  deleteAccount(password: string): Promise<void>;
+  /** 비밀번호 확인 후 계정 해지를 신청한다 (기관 관리자 승인 후 비활성화, 계정은 삭제하지 않는다) */
+  requestDeactivation(password: string, reason: DeactivationReason, memo: string): Promise<User>;
+  /** 해지 신청을 취소한다 */
+  cancelDeactivation(): Promise<User>;
 }
 
 export interface LocationService {

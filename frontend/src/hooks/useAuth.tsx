@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { authService } from "@/services";
-import type { SignUpInput, User } from "@/types";
+import type { DeactivationReason, SignUpInput, User } from "@/types";
 
 interface AuthContextValue {
   user: User | null;
@@ -11,7 +11,8 @@ interface AuthContextValue {
   signUp: (input: SignUpInput) => Promise<User>;
   signOut: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  deleteAccount: (password: string) => Promise<void>;
+  requestDeactivation: (password: string, reason: DeactivationReason, memo: string) => Promise<User>;
+  cancelDeactivation: () => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -37,7 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp: (input) => authService.signUp(input),
       signOut: () => authService.signOut(),
       changePassword: (current, next) => authService.changePassword(current, next),
-      deleteAccount: (password) => authService.deleteAccount(password),
+      requestDeactivation: (password, reason, memo) => authService.requestDeactivation(password, reason, memo),
+      cancelDeactivation: () => authService.cancelDeactivation(),
     }),
     [user, loading],
   );
