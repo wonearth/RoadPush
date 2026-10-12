@@ -10,7 +10,8 @@ export function getPageMeta(pathname: string) {
   if (pathname.startsWith("/account")) {
     return { title: "계정 설정" };
   }
-  if (pathname.startsWith("/dev/")) {
+  // 개발 서버 전용 화면 — 배포 사이트에서는 404 이므로 제목도 드러내지 않는다
+  if (pathname.startsWith("/dev/") && process.env.NODE_ENV !== "production") {
     return { title: "현장 사진 일괄 등록" };
   }
   if (pathname.startsWith("/locations/")) {

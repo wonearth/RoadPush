@@ -68,13 +68,18 @@ function RiskMapPageContent() {
       .filter((l) => !obstacle || l.obstacleTypes.includes(obstacle))
       .filter((l) => matchStatus(l, status))
       .filter((l) => !kw || `${l.name} ${l.address} ${l.area}`.toLowerCase().includes(kw))
-      .sort((a, b) =>
-        sort === "risk-asc"
+      .sort((a, b) => {
+        // AI 분석 대기 구간은 점수가 없으므로 위험도 정렬에서는 항상 뒤에, 관리번호 순으로 둔다
+        const pa = isPendingAnalysis(a);
+        const pb = isPendingAnalysis(b);
+        if (sort !== "recent" && pa !== pb) return pa ? 1 : -1;
+        if (sort !== "recent" && pa && pb) return (a.code ?? "").localeCompare(b.code ?? "");
+        return sort === "risk-asc"
           ? a.riskScore - b.riskScore
           : sort === "recent"
             ? b.analyzedAt.localeCompare(a.analyzedAt)
-            : b.riskScore - a.riskScore,
-      );
+            : b.riskScore - a.riskScore;
+      });
   }, [all, level, obstacle, status, keyword, sort]);
 
   const selected = all.find((l) => l.id === selectedId) ?? null;
