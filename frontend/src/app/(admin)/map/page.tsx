@@ -1,10 +1,12 @@
 "use client";
 
-import { Download, Search, SlidersHorizontal } from "lucide-react";
+import { Camera, Download, Search, SlidersHorizontal } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { LocationListItem } from "@/components/location/LocationListItem";
 import { LocationSummaryCard } from "@/components/location/LocationSummaryCard";
+import { RegisterPhotosDialog } from "@/components/location/RegisterPhotosDialog";
+import { Button } from "@/components/ui/Button";
 import { RiskMap } from "@/components/map/RiskMap";
 import { RiskLegend } from "@/components/risk/RiskLegend";
 import { inputClass } from "@/components/ui/Field";
@@ -82,21 +84,30 @@ function RiskMapPageContent() {
     downloadCsv(`RoadPush_위험구간_${today}.csv`, locationsToCsv(filtered));
   };
   const select = (id: string | null) => router.replace(id ? `/map?selected=${id}` : "/map", { scroll: false });
+  const [registerOpen, setRegisterOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8 lg:h-[calc(100vh-7.75rem)] lg:flex-row sm:px-8">
+      {registerOpen && (
+        <RegisterPhotosDialog onClose={() => setRegisterOpen(false)} onRegistered={(loc) => router.push(`/locations/${loc.id}`)} />
+      )}
       {/* 목록 panel */}
       <aside className="flex min-h-0 flex-col rounded-2xl bg-white p-4 lg:w-[380px] lg:shrink-0">
         <div className="space-y-3 px-1 pb-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-            <input
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="구간명, 주소, 생활권 검색"
-              className={cn(inputClass, "pl-9")}
-              aria-label="위치 검색"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="구간명, 주소, 생활권 검색"
+                className={cn(inputClass, "pl-9")}
+                aria-label="위치 검색"
+              />
+            </div>
+            <Button onClick={() => setRegisterOpen(true)} icon={<Camera className="size-4" />} className="shrink-0">
+              사진 등록
+            </Button>
           </div>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="위험등급 필터">
             {(["ALL", ...RISK_LEVELS] as const).map((lv) => {

@@ -5,6 +5,7 @@ import { departmentOf } from "@/lib/admin";
 import { formatDateTime, formatPercent, subAddress } from "@/lib/format";
 import type { Location } from "@/types";
 import { PendingBadge, RiskBadge } from "../risk/RiskBadge";
+import { MockBadge } from "../ui/MockNotice";
 import { ButtonLink } from "../ui/Button";
 import { DueText } from "./AdminMeta";
 
@@ -31,7 +32,10 @@ export function LocationSummaryCard({ location, onClose }: { location: Location;
     <div className="w-full rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(25,31,40,0.14)] sm:w-80">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-lg font-bold text-slate-900">{location.name}</p>
+          <p className="text-lg font-bold text-slate-900">
+            {location.name}
+            {location.isSample && <MockBadge label="예시" className="ml-1.5 align-middle" />}
+          </p>
           {subAddress(location) && <p className="mt-0.5 truncate text-sm text-slate-500">{subAddress(location)}</p>}
         </div>
         {onClose && (

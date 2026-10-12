@@ -3,6 +3,7 @@ import { cn } from "@/lib/cn";
 import { formatPercent, subAddress } from "@/lib/format";
 import type { Location } from "@/types";
 import { PendingBadge, StatusBadge } from "../risk/RiskBadge";
+import { MockBadge } from "../ui/MockNotice";
 
 export function LocationListItem({
   location,
@@ -34,7 +35,10 @@ export function LocationListItem({
         {pending ? "—" : location.riskScore}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-bold text-slate-900">{location.name}</span>
+        <span className="flex items-center gap-1.5">
+          <span className="truncate font-bold text-slate-900">{location.name}</span>
+          {location.isSample && <MockBadge label="예시" className="shrink-0" />}
+        </span>
         <span className="mt-0.5 block truncate text-[13.5px] text-slate-500">
           {location.code && <span className="tabular mr-1.5 text-slate-400">{location.code}</span>}
           {subAddress(location)}

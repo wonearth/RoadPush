@@ -5,6 +5,7 @@ import { formatPercent, subAddress } from "@/lib/format";
 import type { Location } from "@/types";
 import { DueText } from "../location/AdminMeta";
 import { ReasonTags } from "../location/ReasonTags";
+import { MockBadge } from "../ui/MockNotice";
 import { RiskBadge, StatusBadge } from "../risk/RiskBadge";
 
 /** 우선점검 필요 구간 — 위험도 높은 순 표 */
@@ -32,6 +33,7 @@ export function PriorityList({ locations }: { locations: Location[] }) {
                 <Link href={`/locations/${loc.id}`} className="font-bold whitespace-nowrap text-slate-900 after:absolute after:inset-0">
                   {loc.name}
                 </Link>
+                {loc.isSample && <MockBadge label="예시" className="ml-1.5" />}
                 <p className="mt-0.5 max-w-56 truncate text-[13.5px] text-slate-500">
                   {loc.code && <span className="tabular mr-1.5 text-slate-400">{loc.code}</span>}
                   {subAddress(loc)}

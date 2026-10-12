@@ -92,7 +92,8 @@ export interface CreatePendingLocationInput {
   latitude: number;
   longitude: number;
   photos: LocationPhoto[];
-  importKey: string;
+  /** 일괄 등록 도구로 올릴 때만 붙인다 */
+  importKey?: string;
 }
 
 export interface LocationQuery {
