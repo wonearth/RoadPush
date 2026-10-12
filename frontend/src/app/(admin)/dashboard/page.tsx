@@ -12,7 +12,7 @@ import { RiskMap } from "@/components/map/RiskMap";
 import { RiskDistribution } from "@/components/risk/RiskDistribution";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { RISK_META, getRiskLevel, isOpenStatus } from "@/constants/risk";
+import { RISK_META, getRiskLevel, isOpenStatus, isPendingAnalysis } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { formatDateTime, subAddress } from "@/lib/format";
@@ -54,6 +54,9 @@ export default function DashboardPage() {
   }, [data, locations, reload]);
   // 종료된 구간(잘못 분석됨·중복 등)은 대시보드에서 뺀다
   const active = locations.filter((l) => l.status !== "CLOSED");
+  // 현장 사진만 있고 아직 점수가 없는 구간 — 지도에는 회색으로 보이고 통계에서는 빠진다
+  const pendingCount = locations.filter(isPendingAnalysis).length;
+  const scored = locations.filter((l) => !isPendingAnalysis(l));
   const priority = active.filter((l) => isOpenStatus(l.status) && l.riskLevel !== "SAFE").slice(0, 6);
   const avgLevel = summary ? getRiskLevel(summary.averageRiskScore) : "SAFE";
   const top = priority[0];
@@ -69,6 +72,11 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 px-4 pt-5 pb-10 sm:px-8">
       <div className="-mb-2 flex items-center justify-end gap-2 text-sm text-slate-500">
+        {pendingCount > 0 && (
+          <Link href="/map" className="mr-2 hover:text-slate-700">
+            AI 분석 대기 <b className="tabular font-semibold text-slate-700">{pendingCount}</b>곳
+          </Link>
+        )}
         {loadedAt && <span className="tabular">{formatDateTime(loadedAt)} 기준</span>}
         <button
           type="button"
@@ -107,7 +115,7 @@ export default function DashboardPage() {
               label="전체 분석 구간"
               value={summary.totalCount}
               unit="개"
-              hint={`${new Set(active.map((l) => l.area)).size}개 생활권`}
+              hint={`${new Set(active.filter((l) => !isPendingAnalysis(l)).map((l) => l.area)).size}개 생활권`}
               info="AI 분석 후 관리 대상으로 등록된 보행구간 수 (조치 없이 종료된 구간 제외)"
             />
             <KpiCard
@@ -186,7 +194,7 @@ export default function DashboardPage() {
       <Card>
         <CardHeader title="조치 현황 및 개선 효과" />
         <CardBody className="pt-5">
-          {data ? <ImprovementPanel locations={locations} improvements={improvements} /> : <Skeleton className="h-48" />}
+          {data ? <ImprovementPanel locations={scored} improvements={improvements} /> : <Skeleton className="h-48" />}
         </CardBody>
       </Card>
     </div>

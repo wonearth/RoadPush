@@ -6,7 +6,7 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
-import { RISK_META } from "@/constants/risk";
+import { PENDING_HEX, RISK_META, isPendingAnalysis } from "@/constants/risk";
 import { cn } from "@/lib/cn";
 import type { Location } from "@/types";
 import { loadKakaoMaps } from "./kakaoLoader";
@@ -17,8 +17,9 @@ const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 const DEFAULT_LEVEL = 9;
 
 function markerElement(loc: Location, selected: boolean, interactive: boolean, onClick?: () => void) {
-  const color = RISK_META[loc.riskLevel].hex;
-  const size = selected ? 42 : 32;
+  const pending = isPendingAnalysis(loc);
+  const color = pending ? PENDING_HEX : RISK_META[loc.riskLevel].hex;
+  const size = pending ? (selected ? 28 : 20) : selected ? 42 : 32;
   const el = document.createElement("div");
   el.style.cssText = "display:flex;flex-direction:column;align-items:center;transform:translateY(-4px);";
 
@@ -31,9 +32,10 @@ function markerElement(loc: Location, selected: boolean, interactive: boolean, o
   }
 
   const dot = document.createElement(interactive ? "button" : "div");
-  dot.textContent = String(loc.riskScore);
-  dot.setAttribute("aria-label", `${loc.name} 위험도 ${loc.riskScore}`);
-  dot.title = `${loc.name} · ${loc.riskScore}점 ${RISK_META[loc.riskLevel].label}`;
+  // AI 분석 대기 구간은 점수 대신 빈 회색 점으로 표시한다
+  dot.textContent = pending ? "" : String(loc.riskScore);
+  dot.setAttribute("aria-label", pending ? `${loc.name} AI 분석 대기` : `${loc.name} 위험도 ${loc.riskScore}`);
+  dot.title = pending ? `${loc.name} · AI 분석 대기` : `${loc.name} · ${loc.riskScore}점 ${RISK_META[loc.riskLevel].label}`;
   dot.style.cssText = [
     `width:${size}px`,
     `height:${size}px`,

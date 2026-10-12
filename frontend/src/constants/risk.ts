@@ -187,3 +187,8 @@ export function facilityTag(f: NearbyFacility): string {
   if (f.kind === "CHILD") return `어린이보호구역 인접 가능 · ${name} ${f.meters}m`;
   return `의료시설 인접 · ${name} ${f.meters}m`;
 }
+
+/** 현장 사진만 있고 아직 AI 점수가 없는 구간 */
+export const isPendingAnalysis = (l: { pendingAnalysis?: boolean }) => Boolean(l.pendingAnalysis);
+/** 지도·목록에서 AI 분석 대기 구간을 나타내는 회색 */
+export const PENDING_HEX = "#94a3b8";

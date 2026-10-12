@@ -12,6 +12,7 @@ import {
   deleteField,
   doc,
   getDoc,
+  setDoc,
   getDocs,
   query,
   updateDoc,
@@ -96,6 +97,38 @@ export const firestoreLocationService: LocationService = {
     batch.set(locationRef, withoutId(location));
     batch.set(resultRef, toStoredAnalysis({ ...analysis, locationId: locationRef.id, phase: "INITIAL" }));
     await batch.commit();
+    return location;
+  },
+
+  async createPendingLocation(input) {
+    const locationRef = doc(locationsCol());
+    const [code] = nextCodes(await fetchAll(), 1);
+    const takenAt = input.photos.map((p) => p.takenAt).sort().at(-1) ?? new Date().toISOString();
+    const location: Location = {
+      id: locationRef.id,
+      code,
+      name: input.name.trim(),
+      address: input.address.trim(),
+      area: input.area.trim() || "기타",
+      latitude: input.latitude,
+      longitude: input.longitude,
+      pendingAnalysis: true,
+      photos: input.photos,
+      importKey: input.importKey,
+      status: "NEW",
+      plannedActions: [],
+      // 점수 관련 값은 AI 분석 전이라 기본값으로 둔다 (화면에서는 pendingAnalysis 로 구분해 표시하지 않는다)
+      riskScore: 0,
+      riskLevel: "SAFE",
+      walkableRatio: 1,
+      obstructionRatio: 0,
+      roadDetourRequired: false,
+      obstacleTypes: [],
+      analyzedAt: takenAt,
+      beforeImage: input.photos[0]?.url ?? "",
+      resultImage: "",
+    };
+    await setDoc(locationRef, withoutId(location));
     return location;
   },
 

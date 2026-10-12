@@ -9,22 +9,34 @@ import { RiskMap } from "@/components/map/RiskMap";
 import { RiskLegend } from "@/components/risk/RiskLegend";
 import { inputClass } from "@/components/ui/Field";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { ALL_STATUSES, OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META, STATUS_META, isOpenStatus } from "@/constants/risk";
+import {
+  ALL_STATUSES,
+  OBSTACLE_META,
+  OBSTACLE_TYPES,
+  RISK_LEVELS,
+  RISK_META,
+  STATUS_META,
+  isOpenStatus,
+  isPendingAnalysis,
+} from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { downloadCsv, locationsToCsv } from "@/lib/exportCsv";
 import { locationService } from "@/services";
-import type { LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
+import type { Location, LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
 
 type SortKey = NonNullable<LocationQuery["sort"]>;
 /** OPEN = 조치 완료 전 (담당자가 가장 자주 보는 목록) */
-/** ALL 은 종료된 구간을 뺀 전체, OPEN 은 조치가 끝나지 않은 구간 */
-type StatusFilter = "ALL" | "OPEN" | LocationStatus;
+/** ALL 은 종료된 구간을 뺀 전체, OPEN 은 조치가 끝나지 않은 구간, PENDING 은 AI 분석 대기 구간 */
+type StatusFilter = "ALL" | "OPEN" | "PENDING" | LocationStatus;
 
-function matchStatus(s: LocationStatus, filter: StatusFilter) {
-  if (filter === "ALL") return s !== "CLOSED";
-  if (filter === "OPEN") return isOpenStatus(s);
-  return s === filter;
+function matchStatus(l: Location, filter: StatusFilter) {
+  if (filter === "ALL") return l.status !== "CLOSED";
+  if (filter === "PENDING") return isPendingAnalysis(l);
+  // 나머지 조치 상태는 점수가 있는 구간만 대상으로 한다
+  if (isPendingAnalysis(l)) return false;
+  if (filter === "OPEN") return isOpenStatus(l.status);
+  return l.status === filter;
 }
 
 function RiskMapPageContent() {
@@ -43,16 +55,16 @@ function RiskMapPageContent() {
   const counts = useMemo(() => {
     const c = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
     // 위험등급 칩 숫자는 고른 조치상태 안에서 센다 (목록 개수와 맞춘다)
-    all.filter((l) => matchStatus(l.status, status)).forEach((l) => c[l.riskLevel]++);
+    all.filter((l) => matchStatus(l, status) && !isPendingAnalysis(l)).forEach((l) => c[l.riskLevel]++);
     return c;
   }, [all, status]);
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
     return all
-      .filter((l) => level === "ALL" || l.riskLevel === level)
+      .filter((l) => level === "ALL" || (!isPendingAnalysis(l) && l.riskLevel === level))
       .filter((l) => !obstacle || l.obstacleTypes.includes(obstacle))
-      .filter((l) => matchStatus(l.status, status))
+      .filter((l) => matchStatus(l, status))
       .filter((l) => !kw || `${l.name} ${l.address} ${l.area}`.toLowerCase().includes(kw))
       .sort((a, b) =>
         sort === "risk-asc"
@@ -102,7 +114,7 @@ function RiskMapPageContent() {
                 >
                   {lv === "ALL" ? "전체" : RISK_META[lv].label}
                   <span className={cn("tabular", active ? "text-slate-300" : "text-slate-500")}>
-                    {lv === "ALL" ? RISK_LEVELS.reduce((sum, l) => sum + counts[l], 0) : counts[lv]}
+                    {lv === "ALL" ? all.filter((l) => matchStatus(l, status)).length : counts[lv]}
                   </span>
                 </button>
               );
@@ -134,6 +146,7 @@ function RiskMapPageContent() {
               >
                 <option value="ALL">종료 제외 전체</option>
                 <option value="OPEN">조치 전 전체</option>
+                <option value="PENDING">AI 분석 대기</option>
                 {ALL_STATUSES.map((s) => (
                   <option key={s} value={s}>
                     {STATUS_META[s].label}

@@ -14,6 +14,15 @@ export interface NearbyFacility {
   meters: number;
 }
 
+/** 현장 촬영 사진 */
+export interface LocationPhoto {
+  url: string;
+  /** ISO 8601 촬영 시각 */
+  takenAt: string;
+  /** 원본 파일 이름 (예: IMG_9290) */
+  label?: string;
+}
+
 /**
  * 분석된 보행구간. Firestore `locations` 컬렉션 문서에 대응한다.
  * 위험도·보행공간 수치는 해당 구간의 "가장 최근" 분석 결과를 반영한다.
@@ -48,6 +57,12 @@ export interface Location {
   /** status 가 CLOSED 일 때의 종료 사유 */
   closeReason?: CloseReason;
   plannedActions: ActionType[];
+  /** true 면 현장 사진만 올라온 'AI 분석 대기' 구간 — 위험도·보행공간 값은 아직 의미가 없다 */
+  pendingAnalysis?: boolean;
+  /** 현장 촬영 사진 (한 지점에서 여러 장) */
+  photos?: LocationPhoto[];
+  /** 일괄 등록 때 붙인 지점 키 (예: 1007-01) — 같은 지점을 두 번 등록하지 않기 위해 쓴다 */
+  importKey?: string;
   /** 주변 시설 (카카오 장소 검색, 처음 볼 때 한 번 찾아 저장). 없으면 아직 찾지 않은 것 */
   nearbyFacilities?: NearbyFacility[];
   /** 예시 데이터 여부 — 실제 촬영·AI 분석 결과가 아닌 개발용/모의 데이터 */
@@ -67,6 +82,17 @@ export interface Improvement {
   location: Location;
   before: AnalysisResult;
   after: AnalysisResult;
+}
+
+/** 현장 사진만으로 'AI 분석 대기' 구간을 만들 때 */
+export interface CreatePendingLocationInput {
+  name: string;
+  address: string;
+  area: string;
+  latitude: number;
+  longitude: number;
+  photos: LocationPhoto[];
+  importKey: string;
 }
 
 export interface LocationQuery {

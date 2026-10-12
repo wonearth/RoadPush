@@ -42,4 +42,8 @@ export const firebaseStorageService: StorageService = {
     const image = await dataUrlToBlob(await imageFileToDataUrl(file));
     return { mediaType: "image", imageUrl: await put(`${base}.jpg`, image, "image/jpeg") };
   },
+
+  async uploadPhoto(image, label) {
+    return put(`${basePath()}_${label}.jpg`, image, "image/jpeg");
+  },
 };

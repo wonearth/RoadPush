@@ -27,7 +27,8 @@ export const DEPARTMENT: Record<ObstacleType, string> = {
  * 담당 부서 — 현재 장애물 기준. 조치 후 재분석으로 장애물이 사라진 구간은
  * 담당자가 기록한 조치 내용(예: 적치물 제거 → 건설관리과)으로 정한다.
  */
-export function departmentOf(location: Pick<Location, "obstacleTypes" | "plannedActions">): string {
+export function departmentOf(location: Pick<Location, "obstacleTypes" | "plannedActions" | "pendingAnalysis">): string {
+  if (location.pendingAnalysis) return "—";
   const main = location.obstacleTypes[0] ?? (location.plannedActions[0] && ACTION_META[location.plannedActions[0]].resolves);
   return main ? DEPARTMENT[main] : "도로과";
 }
@@ -48,9 +49,10 @@ export interface DueInfo {
 
 /** 조치가 끝나지 않은 구간의 처리기한. 안전 등급이거나 조치 완료·종료면 null */
 export function dueOf(
-  location: Pick<Location, "riskLevel" | "status" | "analyzedAt">,
+  location: Pick<Location, "riskLevel" | "status" | "analyzedAt" | "pendingAnalysis">,
   now = new Date(),
 ): DueInfo | null {
+  if (location.pendingAnalysis) return null;
   const days = DUE_DAYS[location.riskLevel];
   if (!days || (location.status !== "NEW" && location.status !== "ACTION_PLANNED")) return null;
   const due = new Date(new Date(location.analyzedAt).getTime() + days * DAY);

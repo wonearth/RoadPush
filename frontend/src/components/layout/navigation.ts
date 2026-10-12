@@ -10,6 +10,9 @@ export function getPageMeta(pathname: string) {
   if (pathname.startsWith("/account")) {
     return { title: "계정 설정" };
   }
+  if (pathname.startsWith("/dev/")) {
+    return { title: "현장 사진 일괄 등록" };
+  }
   if (pathname.startsWith("/locations/")) {
     return { title: "위험구간 상세" };
   }
