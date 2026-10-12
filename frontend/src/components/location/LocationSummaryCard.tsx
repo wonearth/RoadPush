@@ -1,30 +1,41 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
-import { OBSTACLE_META, PASSABILITY_META, RISK_META, STATUS_META, getPassability } from "@/constants/risk";
+import { OBSTACLE_META, PASSABILITY_META, RISK_META, STATUS_META, getPassability, isPendingAnalysis } from "@/constants/risk";
 import { departmentOf } from "@/lib/admin";
 import { formatDateTime, formatPercent, subAddress } from "@/lib/format";
 import type { Location } from "@/types";
-import { RiskBadge } from "../risk/RiskBadge";
+import { PendingBadge, RiskBadge } from "../risk/RiskBadge";
+import { MockBadge } from "../ui/MockNotice";
 import { ButtonLink } from "../ui/Button";
 import { DueText } from "./AdminMeta";
 
 /** 지도 marker 선택 시 보여주는 구간 요약 */
 export function LocationSummaryCard({ location, onClose }: { location: Location; onClose?: () => void }) {
-  const rows: [string, ReactNode][] = [
-    ["관리번호", location.code ?? "—"],
-    ["주요 원인", location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(", ") || "주요 장애물 없음"],
-    ["통행 판단", PASSABILITY_META[getPassability(location)].label],
-    ["유효 보행공간", formatPercent(location.walkableRatio)],
-    ["조치상태", STATUS_META[location.status].label],
-    ["담당 부서", departmentOf(location)],
-    ["처리기한", <DueText key="due" location={location} />],
-    ["분석 일시", formatDateTime(location.analyzedAt)],
-  ];
+  const pending = isPendingAnalysis(location);
+  const rows: [string, ReactNode][] = pending
+    ? [
+        ["관리번호", location.code ?? "—"],
+        ["현장 사진", `${location.photos?.length ?? 0}장`],
+        ["촬영 일시", formatDateTime(location.analyzedAt)],
+      ]
+    : [
+        ["관리번호", location.code ?? "—"],
+        ["주요 원인", location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(", ") || "주요 장애물 없음"],
+        ["통행 판단", PASSABILITY_META[getPassability(location)].label],
+        ["유효 보행공간", formatPercent(location.walkableRatio)],
+        ["조치상태", STATUS_META[location.status].label],
+        ["담당 부서", departmentOf(location)],
+        ["처리기한", <DueText key="due" location={location} />],
+        ["분석 일시", formatDateTime(location.analyzedAt)],
+      ];
   return (
     <div className="w-full rounded-2xl bg-white p-5 shadow-[0_8px_28px_rgba(25,31,40,0.14)] sm:w-80">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-lg font-bold text-slate-900">{location.name}</p>
+          <p className="text-lg font-bold text-slate-900">
+            {location.name}
+            {location.isSample && <MockBadge label="예시" className="ml-1.5 align-middle" />}
+          </p>
           {subAddress(location) && <p className="mt-0.5 truncate text-sm text-slate-500">{subAddress(location)}</p>}
         </div>
         {onClose && (
@@ -34,12 +45,22 @@ export function LocationSummaryCard({ location, onClose }: { location: Location;
         )}
       </div>
 
-      <p className="mt-3 flex items-baseline gap-1.5">
-        <span className={`tabular text-4xl font-extrabold tracking-tight ${RISK_META[location.riskLevel].text}`}>
-          {location.riskScore}
-        </span>
-        <RiskBadge level={location.riskLevel} className="text-base" />
-      </p>
+      {pending ? (
+        <>
+          {location.photos?.[0] && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={location.photos[0].url} alt={`${location.name} 현장 사진`} className="mt-3 aspect-[4/3] w-full rounded-xl object-cover" />
+          )}
+          <PendingBadge className="mt-3" />
+        </>
+      ) : (
+        <p className="mt-3 flex items-baseline gap-1.5">
+          <span className={`tabular text-4xl font-extrabold tracking-tight ${RISK_META[location.riskLevel].text}`}>
+            {location.riskScore}
+          </span>
+          <RiskBadge level={location.riskLevel} className="text-base" />
+        </p>
+      )}
 
       <dl className="mt-3 space-y-2 text-[14px]">
         {rows.map(([k, v]) => (

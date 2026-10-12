@@ -16,9 +16,10 @@ export function applyLocationQuery(items: Location[], query: LocationQuery = {})
   });
 }
 
-/** 대시보드 요약 — 조치 없이 종료된 구간(CLOSED)은 집계에서 뺀다. */
+/** 대시보드 요약 — 조치 없이 종료된 구간(CLOSED)과 AI 분석 대기 구간은 집계에서 뺀다. */
 export function summarizeLocations(all: Location[]): DashboardSummary {
-  const locations = all.filter((l) => l.status !== "CLOSED");
+  // 종료된 구간과 아직 점수가 없는 'AI 분석 대기' 구간은 집계에서 뺀다
+  const locations = all.filter((l) => l.status !== "CLOSED" && !l.pendingAnalysis);
   const distribution = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
   locations.forEach((l) => distribution[l.riskLevel]++);
   const total = locations.length;
@@ -45,6 +46,8 @@ export function applyAnalysisToLocation(location: Location, analysis: AnalysisRe
     beforeImage: analysis.originalImageUrl,
     resultImage: analysis.resultImageUrl,
     isSample: Boolean(location.isSample || analysis.isMock),
+    // 분석 결과가 들어오면 더 이상 'AI 분석 대기'가 아니다 (undefined 는 저장 시 빠진다)
+    pendingAnalysis: undefined,
   };
 }
 

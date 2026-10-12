@@ -42,3 +42,4 @@ next-env.d.ts
 
 # env 예시 파일은 커밋한다
 !.env.example
+/public/_import/

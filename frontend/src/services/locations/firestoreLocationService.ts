@@ -12,6 +12,7 @@ import {
   deleteField,
   doc,
   getDoc,
+  setDoc,
   getDocs,
   query,
   updateDoc,
@@ -37,9 +38,22 @@ function toLocation(id: string, data: DocumentData): Location {
   return { id, ...(data as Omit<Location, "id">), status: normalizeStatus(data.status) };
 }
 
-async function fetchAll(): Promise<Location[]> {
+/**
+ * 화면에 남겨 둘 예시 구간 — 실제 촬영 데이터와 헷갈리지 않도록 기능 설명에 필요한 두 곳만 보인다.
+ * (조치 완료 → 개선 효과, 상습 발생). 나머지 예시 구간은 지우지 않고 숨긴다.
+ */
+const VISIBLE_SAMPLE_IDS = new Set(["sinchon-j", "sinchon-d"]);
+const isVisible = (l: Location) => !l.isSample || VISIBLE_SAMPLE_IDS.has(l.id);
+
+/** 숨긴 예시 구간까지 포함한 전체 (예시 데이터 보충·관리번호 부여용) */
+async function fetchRaw(): Promise<Location[]> {
   const snap = await getDocs(locationsCol());
   return snap.docs.map((d) => toLocation(d.id, d.data()));
+}
+
+/** 화면에 보이는 구간 */
+async function fetchAll(): Promise<Location[]> {
+  return (await fetchRaw()).filter(isVisible);
 }
 
 async function fetchLocation(id: string): Promise<Location> {
@@ -57,7 +71,9 @@ export const firestoreLocationService: LocationService = {
 
   async get(id) {
     const snap = await getDoc(doc(locationsCol(), id));
-    return snap.exists() ? toLocation(snap.id, snap.data()) : null;
+    if (!snap.exists()) return null;
+    const location = toLocation(snap.id, snap.data());
+    return isVisible(location) ? location : null;
   },
 
   async getDashboardSummary() {
@@ -68,7 +84,7 @@ export const firestoreLocationService: LocationService = {
     const locationRef = doc(locationsCol());
     const resultRef = doc(resultsCol());
     const fallback = randomAreaCoordinate();
-    const [code] = nextCodes(await fetchAll(), 1);
+    const [code] = nextCodes(await fetchRaw(), 1);
     const location = applyAnalysisToLocation(
       {
         id: locationRef.id,
@@ -96,6 +112,38 @@ export const firestoreLocationService: LocationService = {
     batch.set(locationRef, withoutId(location));
     batch.set(resultRef, toStoredAnalysis({ ...analysis, locationId: locationRef.id, phase: "INITIAL" }));
     await batch.commit();
+    return location;
+  },
+
+  async createPendingLocation(input) {
+    const locationRef = doc(locationsCol());
+    const [code] = nextCodes(await fetchRaw(), 1);
+    const takenAt = input.photos.map((p) => p.takenAt).sort().at(-1) ?? new Date().toISOString();
+    const location: Location = {
+      id: locationRef.id,
+      code,
+      name: input.name.trim(),
+      address: input.address.trim(),
+      area: input.area.trim() || "기타",
+      latitude: input.latitude,
+      longitude: input.longitude,
+      pendingAnalysis: true,
+      photos: input.photos,
+      ...(input.importKey && { importKey: input.importKey }),
+      status: "NEW",
+      plannedActions: [],
+      // 점수 관련 값은 AI 분석 전이라 기본값으로 둔다 (화면에서는 pendingAnalysis 로 구분해 표시하지 않는다)
+      riskScore: 0,
+      riskLevel: "SAFE",
+      walkableRatio: 1,
+      obstructionRatio: 0,
+      roadDetourRequired: false,
+      obstacleTypes: [],
+      analyzedAt: takenAt,
+      beforeImage: input.photos[0]?.url ?? "",
+      resultImage: "",
+    };
+    await setDoc(locationRef, withoutId(location));
     return location;
   },
 
@@ -135,7 +183,7 @@ export const firestoreLocationService: LocationService = {
   },
 
   async assignMissingCodes() {
-    const all = await fetchAll();
+    const all = await fetchRaw();
     const missing = all
       .filter((l) => !l.code)
       .sort((a, b) => Number(!a.isSample) - Number(!b.isSample) || a.analyzedAt.localeCompare(b.analyzedAt));
@@ -227,7 +275,7 @@ export const firestoreLocationService: LocationService = {
   async seedSampleData() {
     // 아직 없는 예시 구간·이력만 추가한다 (이미 있는 구간은 담당자가 바꾼 상태를 그대로 둔다).
     // 실제 데이터만 있고 예시 데이터를 쓰지 않는 환경이면 건드리지 않는다.
-    const existing = await fetchAll();
+    const existing = await fetchRaw();
     if (existing.length && !existing.some((l) => l.isSample)) return 0;
     const byId = new Map(existing.map((l) => [l.id, l]));
     const missing = new Set(MOCK_LOCATIONS.filter((l) => !byId.has(l.id)).map((l) => l.id));

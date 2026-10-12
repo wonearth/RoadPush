@@ -38,3 +38,8 @@ export function RiskScore({
     </span>
   );
 }
+
+/** 현장 사진만 있고 아직 AI 점수가 없는 구간 */
+export function PendingBadge({ className }: { className?: string }) {
+  return <Badge className={cn("border border-dashed border-slate-300 bg-white text-slate-500", className)}>AI 분석 대기</Badge>;
+}

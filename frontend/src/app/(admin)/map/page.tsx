@@ -1,30 +1,44 @@
 "use client";
 
-import { Download, Search, SlidersHorizontal } from "lucide-react";
+import { Camera, Download, Search, SlidersHorizontal } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { LocationListItem } from "@/components/location/LocationListItem";
 import { LocationSummaryCard } from "@/components/location/LocationSummaryCard";
+import { RegisterPhotosDialog } from "@/components/location/RegisterPhotosDialog";
+import { Button } from "@/components/ui/Button";
 import { RiskMap } from "@/components/map/RiskMap";
 import { RiskLegend } from "@/components/risk/RiskLegend";
 import { inputClass } from "@/components/ui/Field";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { ALL_STATUSES, OBSTACLE_META, OBSTACLE_TYPES, RISK_LEVELS, RISK_META, STATUS_META, isOpenStatus } from "@/constants/risk";
+import {
+  ALL_STATUSES,
+  OBSTACLE_META,
+  OBSTACLE_TYPES,
+  RISK_LEVELS,
+  RISK_META,
+  STATUS_META,
+  isOpenStatus,
+  isPendingAnalysis,
+} from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { downloadCsv, locationsToCsv } from "@/lib/exportCsv";
 import { locationService } from "@/services";
-import type { LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
+import type { Location, LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
 
 type SortKey = NonNullable<LocationQuery["sort"]>;
 /** OPEN = 조치 완료 전 (담당자가 가장 자주 보는 목록) */
-/** ALL 은 종료된 구간을 뺀 전체, OPEN 은 조치가 끝나지 않은 구간 */
-type StatusFilter = "ALL" | "OPEN" | LocationStatus;
+/** ALL 은 종료된 구간을 뺀 전체, OPEN 은 조치가 끝나지 않은 구간, PENDING 은 AI 분석 대기 구간 */
+type StatusFilter = "ALL" | "OPEN" | "PENDING" | LocationStatus;
 
-function matchStatus(s: LocationStatus, filter: StatusFilter) {
-  if (filter === "ALL") return s !== "CLOSED";
-  if (filter === "OPEN") return isOpenStatus(s);
-  return s === filter;
+function matchStatus(l: Location, filter: StatusFilter) {
+  if (filter === "ALL") return l.status !== "CLOSED";
+  if (filter === "PENDING") return isPendingAnalysis(l);
+  // 나머지 조치 상태는 점수가 있는 구간만 대상으로 한다
+  if (isPendingAnalysis(l)) return false;
+  if (filter === "OPEN") return isOpenStatus(l.status);
+  return l.status === filter;
 }
 
 function RiskMapPageContent() {
@@ -43,16 +57,16 @@ function RiskMapPageContent() {
   const counts = useMemo(() => {
     const c = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
     // 위험등급 칩 숫자는 고른 조치상태 안에서 센다 (목록 개수와 맞춘다)
-    all.filter((l) => matchStatus(l.status, status)).forEach((l) => c[l.riskLevel]++);
+    all.filter((l) => matchStatus(l, status) && !isPendingAnalysis(l)).forEach((l) => c[l.riskLevel]++);
     return c;
   }, [all, status]);
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
     return all
-      .filter((l) => level === "ALL" || l.riskLevel === level)
+      .filter((l) => level === "ALL" || (!isPendingAnalysis(l) && l.riskLevel === level))
       .filter((l) => !obstacle || l.obstacleTypes.includes(obstacle))
-      .filter((l) => matchStatus(l.status, status))
+      .filter((l) => matchStatus(l, status))
       .filter((l) => !kw || `${l.name} ${l.address} ${l.area}`.toLowerCase().includes(kw))
       .sort((a, b) =>
         sort === "risk-asc"
@@ -70,21 +84,30 @@ function RiskMapPageContent() {
     downloadCsv(`RoadPush_위험구간_${today}.csv`, locationsToCsv(filtered));
   };
   const select = (id: string | null) => router.replace(id ? `/map?selected=${id}` : "/map", { scroll: false });
+  const [registerOpen, setRegisterOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5 pb-8 lg:h-[calc(100vh-7.75rem)] lg:flex-row sm:px-8">
+      {registerOpen && (
+        <RegisterPhotosDialog onClose={() => setRegisterOpen(false)} onRegistered={(loc) => router.push(`/locations/${loc.id}`)} />
+      )}
       {/* 목록 panel */}
       <aside className="flex min-h-0 flex-col rounded-2xl bg-white p-4 lg:w-[380px] lg:shrink-0">
         <div className="space-y-3 px-1 pb-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-            <input
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="구간명, 주소, 생활권 검색"
-              className={cn(inputClass, "pl-9")}
-              aria-label="위치 검색"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="구간명, 주소, 생활권 검색"
+                className={cn(inputClass, "pl-9")}
+                aria-label="위치 검색"
+              />
+            </div>
+            <Button onClick={() => setRegisterOpen(true)} icon={<Camera className="size-4" />} className="shrink-0">
+              사진 등록
+            </Button>
           </div>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="위험등급 필터">
             {(["ALL", ...RISK_LEVELS] as const).map((lv) => {
@@ -102,7 +125,7 @@ function RiskMapPageContent() {
                 >
                   {lv === "ALL" ? "전체" : RISK_META[lv].label}
                   <span className={cn("tabular", active ? "text-slate-300" : "text-slate-500")}>
-                    {lv === "ALL" ? RISK_LEVELS.reduce((sum, l) => sum + counts[l], 0) : counts[lv]}
+                    {lv === "ALL" ? all.filter((l) => matchStatus(l, status)).length : counts[lv]}
                   </span>
                 </button>
               );
@@ -134,6 +157,7 @@ function RiskMapPageContent() {
               >
                 <option value="ALL">종료 제외 전체</option>
                 <option value="OPEN">조치 전 전체</option>
+                <option value="PENDING">AI 분석 대기</option>
                 {ALL_STATUSES.map((s) => (
                   <option key={s} value={s}>
                     {STATUS_META[s].label}

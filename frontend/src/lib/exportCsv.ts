@@ -16,6 +16,10 @@ export function locationsToCsv(locations: Location[]): string {
   ];
   const rows = locations.map((l) => {
     const due = dueOf(l);
+    // AI 분석 대기 구간은 점수 관련 칸을 비운다
+    if (l.pendingAnalysis) {
+      return [l.code ?? "", l.name, l.address, l.area, "", "AI 분석 대기", "", "", "", "AI 분석 대기", "", "", formatDateTime(l.analyzedAt), l.latitude.toFixed(5), l.longitude.toFixed(5)];
+    }
     return [
       l.code ?? "",
       l.name,

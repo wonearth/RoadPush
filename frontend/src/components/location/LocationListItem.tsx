@@ -1,8 +1,9 @@
-import { OBSTACLE_META, PASSABILITY_META, RISK_META, getPassability } from "@/constants/risk";
+import { OBSTACLE_META, PASSABILITY_META, RISK_META, getPassability, isPendingAnalysis } from "@/constants/risk";
 import { cn } from "@/lib/cn";
 import { formatPercent, subAddress } from "@/lib/format";
 import type { Location } from "@/types";
-import { StatusBadge } from "../risk/RiskBadge";
+import { PendingBadge, StatusBadge } from "../risk/RiskBadge";
+import { MockBadge } from "../ui/MockNotice";
 
 export function LocationListItem({
   location,
@@ -13,6 +14,7 @@ export function LocationListItem({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const pending = isPendingAnalysis(location);
   const causes = location.obstacleTypes.map((t) => OBSTACLE_META[t].label).join(", ") || "주요 장애물 없음";
   return (
     <button
@@ -24,23 +26,37 @@ export function LocationListItem({
         selected ? "bg-brand-50" : "hover:bg-slate-50",
       )}
     >
-      <span className={cn("tabular w-11 shrink-0 text-2xl font-extrabold", RISK_META[location.riskLevel].text)}>
-        {location.riskScore}
+      <span
+        className={cn(
+          "tabular w-11 shrink-0 font-extrabold",
+          pending ? "text-base text-slate-300" : cn("text-2xl", RISK_META[location.riskLevel].text),
+        )}
+      >
+        {pending ? "—" : location.riskScore}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-bold text-slate-900">{location.name}</span>
+        <span className="flex items-center gap-1.5">
+          <span className="truncate font-bold text-slate-900">{location.name}</span>
+          {location.isSample && <MockBadge label="예시" className="shrink-0" />}
+        </span>
         <span className="mt-0.5 block truncate text-[13.5px] text-slate-500">
           {location.code && <span className="tabular mr-1.5 text-slate-400">{location.code}</span>}
           {subAddress(location)}
         </span>
         <span className="mt-1 block truncate text-[13px] text-slate-600">
-          {causes}
-          <span className="ml-2 text-slate-400">
-            보행공간 {formatPercent(location.walkableRatio)}, {PASSABILITY_META[getPassability(location)].label}
-          </span>
+          {pending ? (
+            `현장 사진 ${location.photos?.length ?? 0}장`
+          ) : (
+            <>
+              {causes}
+              <span className="ml-2 text-slate-400">
+                보행공간 {formatPercent(location.walkableRatio)}, {PASSABILITY_META[getPassability(location)].label}
+              </span>
+            </>
+          )}
         </span>
       </span>
-      <StatusBadge status={location.status} className="shrink-0" />
+      {pending ? <PendingBadge className="shrink-0" /> : <StatusBadge status={location.status} className="shrink-0" />}
     </button>
   );
 }

@@ -24,7 +24,14 @@ export interface PickedLocation {
 // 서울 전체에서 시작 → 검색하거나 확대해 위치 지정
 const START = { lat: 37.5665, lng: 126.978, level: 8 };
 
-export function LocationPicker({ onChange }: { onChange: (value: PickedLocation) => void }) {
+export function LocationPicker({
+  onChange,
+  initial,
+}: {
+  onChange: (value: PickedLocation) => void;
+  /** 처음 핀을 꽂을 위치 (예: 사진 GPS). 바뀌면 그 위치로 다시 옮긴다 */
+  initial?: { latitude: number; longitude: number } | null;
+}) {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -38,6 +45,7 @@ export function LocationPicker({ onChange }: { onChange: (value: PickedLocation)
   const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState<PickedLocation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   /** 핀을 옮기고 주소를 다시 찾는다. */
   const moveTo = async (lat: number, lng: number, knownAddress?: string) => {
@@ -69,6 +77,7 @@ export function LocationPicker({ onChange }: { onChange: (value: PickedLocation)
         map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
         kakao.maps.event.addListener(map, "click", (e: any) => void moveTo(e.latLng.getLat(), e.latLng.getLng()));
         mapRef.current = map;
+        setReady(true);
       })
       .catch(() => !cancelled && setError("지도를 불러오지 못했습니다."));
     return () => {
@@ -76,6 +85,16 @@ export function LocationPicker({ onChange }: { onChange: (value: PickedLocation)
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 사진 GPS 등으로 시작 위치가 주어지면 그곳에 핀을 꽂고 가까이 확대한다
+  useEffect(() => {
+    if (!ready || !initial) return;
+    const kakao = window.kakao;
+    mapRef.current.setLevel(3);
+    mapRef.current.setCenter(new kakao.maps.LatLng(initial.latitude, initial.longitude));
+    void moveTo(initial.latitude, initial.longitude);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, initial?.latitude, initial?.longitude]);
 
   const search = async (e?: React.FormEvent) => {
     e?.preventDefault();
