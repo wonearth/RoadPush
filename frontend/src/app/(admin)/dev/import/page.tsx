@@ -5,7 +5,7 @@
  *
  * public/_import/ 에 JPEG 로 변환한 사진과 manifest.json(지점별 사진·좌표)을 두고,
  * 로그인한 계정으로 Storage 업로드 + 'AI 분석 대기' 구간 생성을 한 번에 한다.
- * 이미 등록한 지점(importKey 가 같은 구간)은 건너뛴다.
+ * 이미 등록한 지점(importKey 가 같은 구간)은 건너뛰고, 기록표에서 이름이 바뀌었으면 이름만 맞춘다.
  */
 import { notFound } from "next/navigation";
 import { useState } from "react";
@@ -65,9 +65,19 @@ export default function ImportPage() {
   const [spots = [], existing = []] = data ?? [];
   const imported = new Set(existing.map((l) => l.importKey).filter(Boolean));
   const todo = spots.filter((s) => !imported.has(s.key));
+  // 이미 등록했지만 기록표에서 이름이 고쳐진 지점
+  const renames = existing.flatMap((l) => {
+    const spot = spots.find((s) => s.key === l.importKey);
+    return spot && spot.name !== l.name ? [{ id: l.id, key: spot.key, name: spot.name, current: l.name }] : [];
+  });
 
   const run = async () => {
     setRunning(true);
+    for (const r of renames) {
+      setProgress((p) => ({ ...p, [r.key]: "running" }));
+      await locationService.renameLocation(r.id, r.name);
+      setProgress((p) => ({ ...p, [r.key]: "done" }));
+    }
     // 하나씩 순서대로 — 관리번호가 등록 순서대로 붙는다
     for (const spot of todo) {
       setProgress((p) => ({ ...p, [spot.key]: "running" }));
@@ -89,8 +99,10 @@ export default function ImportPage() {
           title={`현장 사진 일괄 등록 (${spots.length}곳, ${spots.reduce((n, s) => n + s.photos.length, 0)}장)`}
           description="촬영 폴더의 사진을 지점별로 묶어 'AI 분석 대기' 구간으로 등록합니다."
           action={
-            <Button onClick={run} disabled={running || !todo.length} icon={running ? <Spinner /> : undefined}>
-              {todo.length ? `${todo.length}곳 등록` : "모두 등록됨"}
+            <Button onClick={run} disabled={running || !(todo.length || renames.length)} icon={running ? <Spinner /> : undefined}>
+              {todo.length || renames.length
+                ? [todo.length && `${todo.length}곳 등록`, renames.length && `이름 ${renames.length}곳 수정`].filter(Boolean).join(" · ")
+                : "모두 등록됨"}
             </Button>
           }
         />
@@ -109,15 +121,20 @@ export default function ImportPage() {
               <tbody>
                 {spots.map((s) => {
                   const pr = progress[s.key];
-                  const state = imported.has(s.key)
-                    ? "등록됨"
-                    : pr === "running"
-                      ? "올리는 중…"
-                      : pr === "done"
-                        ? "완료"
-                        : pr
-                          ? `오류: ${pr.error}`
-                          : "대기";
+                  const rename = renames.find((r) => r.key === s.key);
+                  const state = rename
+                    ? pr === "done"
+                      ? "이름 수정됨"
+                      : `이름 수정 예정 (현재: ${rename.current})`
+                    : imported.has(s.key)
+                      ? "등록됨"
+                      : pr === "running"
+                        ? "올리는 중…"
+                        : pr === "done"
+                          ? "완료"
+                          : pr
+                            ? `오류: ${pr.error}`
+                            : "대기";
                   return (
                     <tr key={s.key} className="border-b border-slate-100 align-top">
                       <td className="tabular py-2 pl-3 text-slate-500">{s.key}</td>

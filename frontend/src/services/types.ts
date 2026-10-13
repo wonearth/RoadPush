@@ -56,6 +56,8 @@ export interface LocationService {
   saveNearbyFacilities(locationId: string, facilities: NearbyFacility[]): Promise<void>;
   /** 관리번호가 없는 구간에 번호를 붙인다 (예시 구간 먼저, 분석 일시 순). 붙인 개수를 반환 */
   assignMissingCodes(): Promise<number>;
+  /** 구간명을 바꾼다 */
+  renameLocation(locationId: string, name: string): Promise<void>;
   /** 현장 사진만 있는 'AI 분석 대기' 구간을 만든다 (점수는 AI 분석 때 채운다) */
   createPendingLocation(input: CreatePendingLocationInput): Promise<Location>;
   /** 아직 없는 신촌·이대 예시 구간·이력을 넣는다. 넣은 문서 수를 반환 (실제 데이터만 쓰는 환경이면 0) */

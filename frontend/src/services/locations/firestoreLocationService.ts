@@ -115,6 +115,10 @@ export const firestoreLocationService: LocationService = {
     return location;
   },
 
+  async renameLocation(locationId, name) {
+    await updateDoc(doc(locationsCol(), locationId), { name: name.trim() });
+  },
+
   async createPendingLocation(input) {
     const locationRef = doc(locationsCol());
     const [code] = nextCodes(await fetchRaw(), 1);
