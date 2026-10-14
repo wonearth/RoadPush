@@ -28,7 +28,7 @@ import { CLOSE_REASON_META, RISK_META, isOpenStatus, isPendingAnalysis } from "@
 import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/hooks/useAuth";
 import { describeRisk, formatDateTime } from "@/lib/format";
-import { locationService } from "@/services";
+import { analysisService, isLiveAnalysis, locationService } from "@/services";
 import type { AnalysisResult, LocationStatus, UpdateActionInput } from "@/types";
 
 /** 조치상태를 상단 진행 단계로 바꾼다. 조치 완료 후 재분석까지 마쳤으면 모든 단계 완료(4). */
@@ -43,6 +43,9 @@ export default function LocationDetailPage() {
   const [layers, setLayers] = useState(DEFAULT_LAYERS);
   // 조치 완료로 저장하려는 내용 — 사진·재분석 흐름(ResolveFlowDialog)을 거쳐 저장한다
   const [pendingResolve, setPendingResolve] = useState<UpdateActionInput | null>(null);
+  // 'AI 분석 대기' 구간의 사진 분석 진행 상태
+  const [analyzing, setAnalyzing] = useState<{ done: number; total: number } | null>(null);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   const { data, loading, reload } = useAsync(
     () =>
@@ -78,6 +81,35 @@ export default function LocationDetailPage() {
   const followUp = history.filter((r) => r.phase === "FOLLOW_UP").at(-1);
   const meta = RISK_META[location.riskLevel];
   const pending = isPendingAnalysis(location);
+
+  /** 등록된 사진을 AI 서버로 모두 분석하고, 위험도가 가장 높은 결과를 이 구간의 첫 분석으로 기록한다. */
+  const runPendingAnalysis = async () => {
+    const photos = location.photos ?? [];
+    if (!photos.length || analyzing) return;
+    setAnalyzeError(null);
+    setAnalyzing({ done: 0, total: photos.length });
+    const results: AnalysisResult[] = [];
+    let firstError = "";
+    for (const [i, photo] of photos.entries()) {
+      try {
+        results.push(await analysisService.analyze({ file: null, mediaType: "image", originalImageUrl: photo.url }));
+      } catch (e) {
+        if (!firstError) firstError = e instanceof Error ? e.message : "분석에 실패했습니다";
+      }
+      setAnalyzing({ done: i + 1, total: photos.length });
+    }
+    try {
+      if (!results.length) throw new Error(firstError || "분석에 실패했습니다");
+      // 지점 점수 = 사진별 위험도 중 최댓값
+      const best = results.reduce((a, b) => (b.riskScore > a.riskScore ? b : a));
+      await locationService.completeInitialAnalysis(location.id, best);
+      await reload();
+    } catch (e) {
+      setAnalyzeError(e instanceof Error ? e.message : "분석에 실패했습니다");
+    } finally {
+      setAnalyzing(null);
+    }
+  };
 
   const saveAction = async (input: UpdateActionInput) => {
     await locationService.updateAction(location.id, input, user?.name ?? "담당자");
@@ -117,11 +149,24 @@ export default function LocationDetailPage() {
                 <p className="mt-3 text-base text-slate-700">
                   현장 사진 {location.photos?.length ?? 0}장 · {formatDateTime(location.analyzedAt)} 촬영. AI 분석 후 위험도가 표시됩니다.
                 </p>
-                {/* TODO(ai): 모델이 연결되면 사진들을 분석해 점수를 채운다 (지점 점수 = 사진별 위험도 중 최댓값) */}
-                <Button className="mt-4" disabled title="AI 모델 연결 후 사용할 수 있습니다">
-                  AI 분석
+                <Button
+                  className="mt-4"
+                  onClick={runPendingAnalysis}
+                  disabled={!isLiveAnalysis || Boolean(analyzing) || !location.photos?.length}
+                  title={isLiveAnalysis ? undefined : "AI 서버 주소(NEXT_PUBLIC_API_BASE_URL)가 설정되면 사용할 수 있습니다"}
+                >
+                  {analyzing ? `분석 중 (${analyzing.done}/${analyzing.total})` : "AI 분석"}
                 </Button>
-                <p className="mt-1.5 text-xs text-slate-400">AI 모델 연결 후 사용할 수 있습니다</p>
+                <p className="mt-1.5 text-xs text-slate-400">
+                  {isLiveAnalysis
+                    ? "등록된 사진을 모두 분석하고, 위험도가 가장 높은 결과를 이 구간에 기록합니다."
+                    : "AI 서버 주소(NEXT_PUBLIC_API_BASE_URL)가 설정되면 사용할 수 있습니다"}
+                </p>
+                {analyzeError && (
+                  <p role="alert" className="mt-2 text-sm font-medium text-[#d92d20]">
+                    {analyzeError}
+                  </p>
+                )}
               </>
             ) : (
               <>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { isMockMediaUrl } from "@/lib/scene";
 import { cn } from "@/lib/cn";
 import type { AnalysisOverlay } from "@/types";
@@ -41,6 +42,9 @@ export function MediaFrame({
   const isResult = variant === "result";
   const useServerResult = isResult && resultSrc && !isMockMediaUrl(resultSrc);
   const isMockScene = isMockMediaUrl(src);
+  // AI 가 준 좌표는 사진 전체 기준이라, 사진을 잘라내지 않고(object-contain) 실제 비율로 겹쳐 그려야 위치가 맞는다.
+  const alignOverlay = isResult && !useServerResult && !isMockScene && !!overlay;
+  const [aspect, setAspect] = useState<number | null>(null);
 
   return (
     <figure className={cn("relative aspect-[16/10] overflow-hidden rounded-lg bg-slate-200", className)}>
@@ -59,7 +63,11 @@ export function MediaFrame({
         <img
           src={src}
           alt={isResult ? "AI 분석 결과" : "원본 이미지"}
-          className={cn("size-full object-cover", isResult && "saturate-[0.35] brightness-95")}
+          className={cn("size-full", alignOverlay ? "object-contain" : "object-cover", isResult && "saturate-[0.35] brightness-95")}
+          onLoad={(e) => {
+            const im = e.currentTarget;
+            if (im.naturalHeight) setAspect(im.naturalWidth / im.naturalHeight);
+          }}
         />
       )}
 
@@ -69,6 +77,7 @@ export function MediaFrame({
           layers={layers}
           walkableRatio={walkableRatio}
           roadDetourRequired={roadDetourRequired}
+          aspect={alignOverlay && aspect ? aspect : undefined}
         />
       )}
 

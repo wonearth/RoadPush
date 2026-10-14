@@ -147,6 +147,15 @@ export const firestoreLocationService: LocationService = {
     return location;
   },
 
+  async completeInitialAnalysis(locationId, analysis) {
+    const updated = applyAnalysisToLocation(await fetchLocation(locationId), analysis);
+    const batch = writeBatch(firestore());
+    batch.set(doc(resultsCol()), toStoredAnalysis({ ...analysis, locationId, phase: "INITIAL" }));
+    batch.set(doc(locationsCol(), locationId), withoutId(updated));
+    await batch.commit();
+    return updated;
+  },
+
   async addFollowUpAnalysis(locationId, analysis) {
     const updated = applyAnalysisToLocation(await fetchLocation(locationId), analysis);
     const batch = writeBatch(firestore());
