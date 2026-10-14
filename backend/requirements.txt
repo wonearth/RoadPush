@@ -1,0 +1,5 @@
+-r ../ai/requirements.txt
+fastapi
+uvicorn[standard]
+python-multipart
+# 테스트: pytest, httpx
