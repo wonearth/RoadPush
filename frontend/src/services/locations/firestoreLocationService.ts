@@ -38,12 +38,8 @@ function toLocation(id: string, data: DocumentData): Location {
   return { id, ...(data as Omit<Location, "id">), status: normalizeStatus(data.status) };
 }
 
-/**
- * 화면에 남겨 둘 예시 구간 — 실제 촬영 데이터와 헷갈리지 않도록 기능 설명에 필요한 두 곳만 보인다.
- * (조치 완료 → 개선 효과, 상습 발생). 나머지 예시 구간은 지우지 않고 숨긴다.
- */
-const VISIBLE_SAMPLE_IDS = new Set(["sinchon-j", "sinchon-d"]);
-const isVisible = (l: Location) => !l.isSample || VISIBLE_SAMPLE_IDS.has(l.id);
+/** 예시(mock) 구간은 화면에 보이지 않는다 — 실제 촬영·AI 분석 데이터만 쓴다. 예시 문서는 지우지 않고 숨긴다. */
+const isVisible = (l: Location) => !l.isSample;
 
 /** 숨긴 예시 구간까지 포함한 전체 (예시 데이터 보충·관리번호 부여용) */
 async function fetchRaw(): Promise<Location[]> {
