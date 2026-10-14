@@ -18,13 +18,8 @@
   "choke_ok": 0.3,
   "vcov_min": 0.6,
   "choke_min": 0.1,
-  "weights": {
-    "erosion": 0.5,
-    "disconnect": 0.3,
-    "departure": 0.2
-  },
   "stage_thresholds": [
-    25,
+    10,
     50,
     75
   ],
@@ -46,10 +41,92 @@
     "road_id": 0,
     "building_ids": [
       2,
-      3,
-      4
+      3
     ],
     "strip_ratio": 0.25,
-    "min_row_ratio": 0.35
+    "min_row_ratio": 0.35,
+    "trigger_ratio": 0.03
+  },
+  "min_component_ratio": 0.003,
+  "green_pavement": {
+    "_note": "녹색 포장 색 단서(OpenCV HSV: H 0~179). 도로/보도 클래스 안에서만 찾는다.",
+    "enabled": true,
+    "h_min": 32,
+    "h_max": 100,
+    "s_min": 22,
+    "v_min": 60,
+    "allowed_class_ids": [
+      0,
+      1
+    ],
+    "min_row_ratio": 0.4,
+    "min_component_ratio": 0.01
+  },
+  "open_vocab": {
+    "_note": "글자로 물체를 찾는 탐지기. --owl 옵션을 주거나 enabled를 true로 하면 쓴다. labels를 고쳐서 찾을 물체를 바꾼다.",
+    "enabled": true,
+    "model": "google/owlv2-base-patch16-ensemble",
+    "threshold": 0.25,
+    "max_area_ratio": 0.5,
+    "labels": [
+      "standing sign",
+      "sandwich board sign",
+      "clothing rack",
+      "cardboard box",
+      "plastic crate",
+      "potted plant",
+      "bicycle",
+      "electric scooter",
+      "traffic cone",
+      "construction barrier",
+      "trash can",
+      "stack of goods"
+    ],
+    "shrink": 0.1
+  },
+  "service": {
+    "_note": "API 서버 전용 설정. 장애물을 서비스 4개 유형으로 묶고, 화면에 보여줄 위험 단계 경계를 정한다.",
+    "max_side": 1280,
+    "display_thresholds": [
+      25,
+      50,
+      75
+    ],
+    "presence_min_ratio": 0.002,
+    "max_detections": 12,
+    "overlay": {
+      "max_side": 320,
+      "epsilon": 0.01,
+      "min_area_ratio": 0.005,
+      "walkable_regions": 3
+    },
+    "seg_obstacle_types": {
+      "13": "주정차 차량",
+      "14": "주정차 차량",
+      "15": "주정차 차량",
+      "17": "주정차 차량",
+      "18": "방치 자전거·PM"
+    },
+    "yolo_class_types": {
+      "1": "방치 자전거·PM",
+      "2": "주정차 차량",
+      "3": "주정차 차량",
+      "5": "주정차 차량",
+      "7": "주정차 차량"
+    },
+    "owl_label_types": {
+      "standing sign": "적치물",
+      "sandwich board sign": "적치물",
+      "clothing rack": "적치물",
+      "cardboard box": "적치물",
+      "plastic crate": "적치물",
+      "potted plant": "적치물",
+      "trash can": "적치물",
+      "stack of goods": "적치물",
+      "bicycle": "방치 자전거·PM",
+      "electric scooter": "방치 자전거·PM",
+      "traffic cone": "공사시설",
+      "construction barrier": "공사시설"
+    }
   }
 }
