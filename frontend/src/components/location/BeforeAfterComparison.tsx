@@ -24,6 +24,7 @@ function Snapshot({ title, result, tone }: { title: string; result: AnalysisResu
       <MediaFrame
         variant="result"
         src={result.originalImageUrl}
+        mock={result.isMock}
         resultSrc={result.resultImageUrl}
         overlay={result.overlay}
         walkableRatio={result.walkableRatio}

@@ -24,7 +24,8 @@ import {
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { downloadCsv, locationsToCsv } from "@/lib/exportCsv";
-import { locationService } from "@/services";
+import { isAiConnected, locationService } from "@/services";
+import { analyzePendingLocation } from "@/services/analysis/analyzePendingLocation";
 import type { Location, LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
 
 type SortKey = NonNullable<LocationQuery["sort"]>;
@@ -52,7 +53,27 @@ function RiskMapPageContent() {
   const [sort, setSort] = useState<SortKey>("risk-desc");
   const [status, setStatus] = useState<StatusFilter>("ALL");
 
-  const { data: all = [], loading } = useAsync(() => locationService.list(), "locations");
+  const { data: all = [], loading, reload } = useAsync(() => locationService.list(), "locations");
+
+  // AI 분석 대기 구간 전체를 순서대로 분석한다 (서버가 사진을 한 장씩 처리하므로 한 곳씩)
+  const [bulk, setBulk] = useState<{ done: number; total: number; photo: string; failed: string[] } | null>(null);
+  const pendingList = all.filter(isPendingAnalysis);
+  const analyzeAll = async () => {
+    const targets = [...pendingList].sort((a, b) => (a.code ?? "").localeCompare(b.code ?? ""));
+    const failed: string[] = [];
+    for (const [i, loc] of targets.entries()) {
+      setBulk({ done: i, total: targets.length, photo: "", failed });
+      try {
+        await analyzePendingLocation(loc, (d, t) => setBulk({ done: i, total: targets.length, photo: `${Math.min(d + 1, t)}/${t}`, failed }));
+      } catch (e) {
+        failed.push(`${loc.name}: ${e instanceof Error ? e.message : e}`);
+        // 서버에 연결할 수 없으면 나머지도 실패하므로 멈춘다
+        if (e instanceof Error && e.message.startsWith("AI 서버에 연결할 수 없습니다")) break;
+      }
+    }
+    await reload();
+    setBulk({ done: targets.length, total: targets.length, photo: "", failed });
+  };
 
   const counts = useMemo(() => {
     const c = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
@@ -172,6 +193,29 @@ function RiskMapPageContent() {
             </label>
           </div>
         </div>
+        {status === "PENDING" && isAiConnected && (pendingList.length > 0 || bulk) && (
+          <div className="mx-1 mb-2 rounded-xl bg-slate-50 px-3 py-2.5 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-600">
+                {bulk && bulk.done < bulk.total
+                  ? `분석 중 ${bulk.done + 1}/${bulk.total}곳${bulk.photo && ` · 사진 ${bulk.photo}`}`
+                  : bulk
+                    ? `분석 완료 (실패 ${bulk.failed.length}곳)`
+                    : `AI 분석 대기 ${pendingList.length}곳`}
+              </span>
+              <Button size="sm" onClick={analyzeAll} disabled={!pendingList.length || (!!bulk && bulk.done < bulk.total)}>
+                전체 분석
+              </Button>
+            </div>
+            {bulk && bulk.failed.length > 0 && (
+              <ul className="mt-1.5 space-y-0.5 text-xs text-red-600">
+                {bulk.failed.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         <div className="flex items-center justify-between px-1 pb-1 text-sm text-slate-500">
           <p>
             <span className="tabular font-bold text-slate-900">{filtered.length}</span>개 구간

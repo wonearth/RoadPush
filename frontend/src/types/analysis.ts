@@ -59,6 +59,8 @@ export interface AnalysisResult {
   analyzedAt: string;
   /** mock AI 서비스가 만든 모의 결과 (실제 모델 추론 아님) */
   isMock?: boolean;
+  /** 여러 장을 분석해 가장 위험한 사진을 대표로 쓴 경우, 사진별 위험도 */
+  photoScores?: { label: string; riskScore: number | null }[];
 }
 
 /**

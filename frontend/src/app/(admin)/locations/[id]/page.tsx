@@ -10,6 +10,7 @@ import { AdminMeta } from "@/components/location/AdminMeta";
 import { BeforeAfterComparison } from "@/components/location/BeforeAfterComparison";
 import { FollowUpAnalysis } from "@/components/location/FollowUpAnalysis";
 import { OccurrenceHistory } from "@/components/location/OccurrenceHistory";
+import { PendingAnalyzeButton } from "@/components/location/PendingAnalyzeButton";
 import { PhotoGallery } from "@/components/location/PhotoGallery";
 import { ReasonTags } from "@/components/location/ReasonTags";
 import { ResolveFlowDialog } from "@/components/location/ResolveFlowDialog";
@@ -20,7 +21,7 @@ import { PendingBadge, RiskBadge, StatusBadge } from "@/components/risk/RiskBadg
 import { RiskBar } from "@/components/risk/RiskBar";
 import { PassabilityText } from "@/components/risk/PassabilityText";
 import { RiskMetrics } from "@/components/risk/RiskMetrics";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { MockBadge } from "@/components/ui/MockNotice";
 import { EmptyState, Skeleton } from "@/components/ui/States";
@@ -117,11 +118,7 @@ export default function LocationDetailPage() {
                 <p className="mt-3 text-base text-slate-700">
                   현장 사진 {location.photos?.length ?? 0}장 · {formatDateTime(location.analyzedAt)} 촬영. AI 분석 후 위험도가 표시됩니다.
                 </p>
-                {/* TODO(ai): 모델이 연결되면 사진들을 분석해 점수를 채운다 (지점 점수 = 사진별 위험도 중 최댓값) */}
-                <Button className="mt-4" disabled title="AI 모델 연결 후 사용할 수 있습니다">
-                  AI 분석
-                </Button>
-                <p className="mt-1.5 text-xs text-slate-400">AI 모델 연결 후 사용할 수 있습니다</p>
+                <PendingAnalyzeButton location={location} onDone={reload} />
               </>
             ) : (
               <>
@@ -153,7 +150,7 @@ export default function LocationDetailPage() {
         </div>
       </Card>
 
-      {location.photos && location.photos.length > 0 && <PhotoGallery photos={location.photos} />}
+      {location.photos && location.photos.length > 0 && <PhotoGallery photos={location.photos} scores={initial?.photoScores} />}
 
       {/* 분석 결과 */}
       {latest && (
@@ -188,6 +185,7 @@ export default function LocationDetailPage() {
                 <MediaFrame
                   variant="result"
                   src={latest.originalImageUrl}
+                  mock={latest.isMock}
                   resultSrc={latest.resultImageUrl}
                   overlay={latest.overlay}
                   layers={layers}

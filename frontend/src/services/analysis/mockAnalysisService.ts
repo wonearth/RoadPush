@@ -49,7 +49,8 @@ export function toAnalysisResult(
   return {
     id,
     ...meta,
-    riskScore: res.riskScore,
+    // 화면은 정수 점수를 쓴다 (AI 서버는 소수 첫째 자리까지 준다)
+    riskScore: Math.round(res.riskScore),
     riskLevel: RISK_LEVEL_FROM_LABEL[res.riskLevel] ?? getRiskLevel(res.riskScore),
     walkableRatio: res.walkableRatio,
     obstructionRatio: res.obstructionRatio,

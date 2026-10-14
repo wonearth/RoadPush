@@ -7,6 +7,7 @@
  *   - locationId: (선택) 재분석 대상 구간
  *   응답: AnalysisApiResponse
  */
+import { firebaseStorageService as storageService } from "@/services/storage/firebaseStorageService";
 import type { AnalysisService } from "@/services/types";
 import type { AnalysisApiResponse } from "@/types";
 import { toAnalysisResult } from "./mockAnalysisService";
@@ -23,6 +24,11 @@ export const apiAnalysisService: AnalysisService = {
     const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, { method: "POST", body: form });
     if (!response.ok) throw new Error(`분석 요청 실패 (${response.status})`);
     const data = (await response.json()) as AnalysisApiResponse;
+    // 서버가 만든 결과 이미지는 1시간 뒤 지워지므로 Storage 로 옮겨 둔다
+    if (data.resultImageUrl) {
+      const blob = await (await fetch(data.resultImageUrl)).blob().catch(() => null);
+      data.resultImageUrl = blob ? await storageService.uploadPhoto(blob, "result") : "";
+    }
 
     return toAnalysisResult(data, {
       mediaType: input.mediaType,
