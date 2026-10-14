@@ -10,8 +10,9 @@ import { useId } from "react";
 import { OBSTACLE_META } from "@/constants/risk";
 import type { AnalysisOverlay, NormalizedPolygon } from "@/types";
 
-const W = 160;
 const H = 100;
+/** 화면 비율을 모를 때(예시 장면) 쓰는 기본 가로/세로 */
+const DEFAULT_ASPECT = 1.6;
 
 export interface OverlayLayers {
   segmentation: boolean;
@@ -22,9 +23,9 @@ export interface OverlayLayers {
 
 export const DEFAULT_LAYERS: OverlayLayers = { segmentation: true, walkable: true, detections: true, detour: true };
 
-const toPoints = (poly: NormalizedPolygon) => poly.map(([x, y]) => `${x * W},${y * H}`).join(" ");
+const toPoints = (poly: NormalizedPolygon, W: number) => poly.map(([x, y]) => `${x * W},${y * H}`).join(" ");
 
-function bounds(poly: NormalizedPolygon) {
+function bounds(poly: NormalizedPolygon, W: number) {
   const ys = poly.map((p) => p[1] * H);
   const xs = poly.map((p) => p[0] * W);
   return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
@@ -47,23 +48,27 @@ export function AnalysisOverlayLayer({
   layers = DEFAULT_LAYERS,
   walkableRatio,
   roadDetourRequired,
+  aspect,
 }: {
   overlay: AnalysisOverlay;
   layers?: OverlayLayers;
   walkableRatio?: number;
   roadDetourRequired?: boolean;
+  /** 실제 사진의 가로/세로 비율. 주면 사진을 잘라내지 않고(object-contain) 그린 프레임에 맞춰 정확히 겹친다. */
+  aspect?: number;
 }) {
+  const W = 100 * (aspect ?? DEFAULT_ASPECT);
   const maskId = useId();
   const arrowId = useId();
-  const side = bounds(overlay.sidewalkRegion);
-  const road = bounds(overlay.roadRegion);
+  const side = bounds(overlay.sidewalkRegion, W);
+  const road = bounds(overlay.roadRegion, W);
   const main = overlay.detections[0];
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 size-full">
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={aspect ? "xMidYMid meet" : "none"} className="absolute inset-0 size-full">
       <defs>
         <mask id={maskId}>
-          <polygon points={toPoints(overlay.sidewalkRegion)} fill="white" />
+          <polygon points={toPoints(overlay.sidewalkRegion, W)} fill="white" />
           {overlay.detections.map((d) => (
             <rect key={d.id} x={d.box.x * W} y={d.box.y * H} width={d.box.width * W} height={d.box.height * H} fill="black" />
           ))}
@@ -75,9 +80,9 @@ export function AnalysisOverlayLayer({
 
       {layers.segmentation && (
         <g>
-          <polygon points={toPoints(overlay.roadRegion)} fill="#0f172a" opacity={0.28} />
+          <polygon points={toPoints(overlay.roadRegion, W)} fill="#0f172a" opacity={0.28} />
           <polygon
-            points={toPoints(overlay.sidewalkRegion)}
+            points={toPoints(overlay.sidewalkRegion, W)}
             fill="#3b82f6"
             fillOpacity={0.12}
             stroke="#2563eb"
@@ -92,10 +97,10 @@ export function AnalysisOverlayLayer({
       {layers.walkable &&
         (overlay.walkableRegions?.length ? (
           overlay.walkableRegions.map((poly, i) => (
-            <polygon key={i} points={toPoints(poly)} fill="#10b981" fillOpacity={0.5} />
+            <polygon key={i} points={toPoints(poly, W)} fill="#10b981" fillOpacity={0.5} />
           ))
         ) : (
-          <polygon points={toPoints(overlay.sidewalkRegion)} fill="#10b981" fillOpacity={0.5} mask={`url(#${maskId})`} />
+          <polygon points={toPoints(overlay.sidewalkRegion, W)} fill="#10b981" fillOpacity={0.5} mask={`url(#${maskId})`} />
         ))}
       {layers.walkable && walkableRatio !== undefined && (
         <Label

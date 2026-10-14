@@ -60,6 +60,11 @@ export interface LocationService {
   renameLocation(locationId: string, name: string): Promise<void>;
   /** 현장 사진만 있는 'AI 분석 대기' 구간을 만든다 (점수는 AI 분석 때 채운다) */
   createPendingLocation(input: CreatePendingLocationInput): Promise<Location>;
+  /**
+   * 'AI 분석 대기' 구간에 첫 분석 결과(INITIAL)를 기록하고 위험도·보행공간을 채운다.
+   * 지점 점수는 사진별 분석 중 위험도가 가장 높은 결과를 넘겨 정한다.
+   */
+  completeInitialAnalysis(locationId: string, analysis: AnalysisResult): Promise<Location>;
   /** 아직 없는 신촌·이대 예시 구간·이력을 넣는다. 넣은 문서 수를 반환 (실제 데이터만 쓰는 환경이면 0) */
   seedSampleData(): Promise<number>;
 }
