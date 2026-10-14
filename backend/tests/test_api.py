@@ -179,3 +179,39 @@ def test_health_and_cors():
         assert c.get("/health").json()["status"] == "ok"
         r = c.options("/api/v1/analyze", headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "POST"})
         assert r.headers.get("access-control-allow-origin") == "http://localhost:3000"
+
+
+def test_image_url_downloads_from_allowed_host(monkeypatch):
+    monkeypatch.setattr(appmod, "_fetch_bytes", lambda url: jpeg_bytes())
+    ok = "https://firebasestorage.googleapis.com/v0/b/x/o/a.jpg?alt=media&token=t"
+    with client(scene()) as c:
+        r = c.post("/api/v1/analyze", data={"imageUrl": ok})
+    assert r.status_code == 200 and r.json()["riskLevel"] == "안전"
+
+
+def test_image_url_rejects_other_hosts_and_http(monkeypatch):
+    called = []
+    monkeypatch.setattr(appmod, "_fetch_bytes", lambda url: called.append(url) or jpeg_bytes())
+    with client(scene()) as c:
+        for bad in ["https://evil.example.com/a.jpg", "http://firebasestorage.googleapis.com/a.jpg",
+                    "https://169.254.169.254/latest/meta-data", "file:///etc/passwd",
+                    "https://firebasestorage.googleapis.com.evil.com/a.jpg"]:
+            assert c.post("/api/v1/analyze", data={"imageUrl": bad}).status_code == 400, bad
+    assert called == []  # 허용되지 않은 주소로는 요청 자체를 보내지 않는다
+
+
+def test_file_and_url_both_or_neither_is_400():
+    with client(scene()) as c:
+        assert c.post("/api/v1/analyze", data={}).status_code == 400
+        r = c.post("/api/v1/analyze", files={"file": ("a.jpg", jpeg_bytes(), "image/jpeg")},
+                   data={"imageUrl": "https://firebasestorage.googleapis.com/a.jpg"})
+        assert r.status_code == 400
+
+
+def test_image_url_download_failure_is_502(monkeypatch):
+    def boom(url):
+        raise OSError("down")
+    monkeypatch.setattr(appmod, "_fetch_bytes", boom)
+    with client(scene()) as c:
+        r = c.post("/api/v1/analyze", data={"imageUrl": "https://firebasestorage.googleapis.com/a.jpg"})
+    assert r.status_code == 502
