@@ -12,9 +12,11 @@ import os
 import sys
 import tempfile
 import time
+import urllib.request
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,6 +37,12 @@ RESULT_DIR = Path(os.environ.get("ROADPUSH_RESULT_DIR", tempfile.gettempdir())) 
 RESULT_KEEP_SECONDS = 3600
 RESULT_KEEP_FILES = 200
 DEBUG = os.environ.get("ROADPUSH_DEBUG", "") == "1"
+# imageUrl 로 받을 수 있는 이미지 주소의 호스트 (Firebase Storage 만). 서버가 임의의 주소를 내려받지 못하게 막는다.
+IMAGE_HOSTS = {
+    h.strip().lower()
+    for h in os.environ.get("ROADPUSH_IMAGE_HOSTS", "firebasestorage.googleapis.com,storage.googleapis.com").split(",")
+    if h.strip()
+}
 
 try:  # HEIC 사진
     from pillow_heif import register_heif_opener
@@ -80,6 +88,31 @@ def _read_limited(upload, limit):
     return data
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):  # 다른 주소로 넘어가는 응답은 따라가지 않는다
+        return None
+
+
+def _fetch_bytes(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "roadpush-analysis"})
+    with urllib.request.build_opener(_NoRedirect).open(req, timeout=15) as r:
+        return r.read(MAX_IMAGE_BYTES + 1)
+
+
+def _download_image(url):
+    """등록된 현장 사진(Firebase Storage 주소)을 서버가 직접 내려받는다. 브라우저의 CORS 설정과 무관하게 동작한다."""
+    p = urlparse(url)
+    if p.scheme != "https" or (p.hostname or "").lower() not in IMAGE_HOSTS:
+        raise HTTPException(400, "허용되지 않은 이미지 주소입니다")
+    try:
+        data = _fetch_bytes(url)
+    except Exception:
+        raise HTTPException(502, "저장된 사진을 내려받지 못했습니다")
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(413, f"파일이 너무 큽니다 (최대 {MAX_IMAGE_BYTES // 1024 // 1024}MB)")
+    return data
+
+
 def _open_image(data, max_side):
     try:
         img = ImageOps.exif_transpose(Image.open(io.BytesIO(data))).convert("RGB")
@@ -98,36 +131,44 @@ def health():
 @app.post("/api/v1/analyze")
 def analyze(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(None),
+    imageUrl: str | None = Form(None),
     locationId: str | None = Form(None),
     withImage: bool = Form(False),
 ):
-    """locationId는 프론트가 보내는 값이라 받기만 하고 쓰지 않는다 (구간 연결은 프론트가 한다).
+    """사진은 file(직접 업로드) 또는 imageUrl(이미 저장된 사진의 Firebase Storage 주소) 중 하나로 보낸다.
+    locationId는 프론트가 보내는 값이라 받기만 하고 쓰지 않는다 (구간 연결은 프론트가 한다).
     withImage=true면 결과 이미지를 만들어 resultImageUrl로 돌려준다. 기본은 빈 값이라 프론트가 overlay를 직접 그린다."""
     engine = app.state.engine
     max_side = engine.svc.get("max_side", 1280)
-    suffix = Path(file.filename or "").suffix.lower()
-    ctype = (file.content_type or "").lower()
-    is_video = suffix in VIDEO_SUFFIXES or ctype.startswith("video/")
-    if not (is_video or suffix in IMAGE_SUFFIXES or ctype.startswith("image/")):
-        raise HTTPException(415, "이미지(jpg, png, heic) 또는 영상(mp4, mov 등)만 올릴 수 있습니다")
+    if (file is None) == (not imageUrl):
+        raise HTTPException(400, "file 또는 imageUrl 중 하나만 보내 주세요")
 
-    if is_video:
-        data = _read_limited(file, MAX_VIDEO_BYTES)
-        with tempfile.NamedTemporaryFile(suffix=suffix or ".mp4", delete=False) as tmp:
-            tmp.write(data)
-        try:
-            frames = video_frames(tmp.name, count=3)
-        finally:
-            os.unlink(tmp.name)
-        if not frames:
-            raise HTTPException(415, "영상에서 프레임을 읽을 수 없습니다")
-        candidates = []
-        for fr in frames:
-            fr.thumbnail((max_side, max_side))
-            candidates.append(fr)
+    if imageUrl:
+        candidates = [_open_image(_download_image(imageUrl), max_side)]
+        is_video = False
     else:
-        candidates = [_open_image(_read_limited(file, MAX_IMAGE_BYTES), max_side)]
+        suffix = Path(file.filename or "").suffix.lower()
+        ctype = (file.content_type or "").lower()
+        is_video = suffix in VIDEO_SUFFIXES or ctype.startswith("video/")
+        if not (is_video or suffix in IMAGE_SUFFIXES or ctype.startswith("image/")):
+            raise HTTPException(415, "이미지(jpg, png, heic) 또는 영상(mp4, mov 등)만 올릴 수 있습니다")
+        if is_video:
+            data = _read_limited(file, MAX_VIDEO_BYTES)
+            with tempfile.NamedTemporaryFile(suffix=suffix or ".mp4", delete=False) as tmp:
+                tmp.write(data)
+            try:
+                frames = video_frames(tmp.name, count=3)
+            finally:
+                os.unlink(tmp.name)
+            if not frames:
+                raise HTTPException(415, "영상에서 프레임을 읽을 수 없습니다")
+            candidates = []
+            for fr in frames:
+                fr.thumbnail((max_side, max_side))
+                candidates.append(fr)
+        else:
+            candidates = [_open_image(_read_limited(file, MAX_IMAGE_BYTES), max_side)]
 
     best = None  # 영상이면 프레임 중 가장 위험한 장면을 대표로 쓴다
     for img in candidates:
