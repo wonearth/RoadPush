@@ -17,3 +17,7 @@ out/
 __pycache__/
 *.pyc
 .venv/
+
+
+## 점수 가중치 파일이 git에 올라가는 것을 방지
+ai/config.private.json
