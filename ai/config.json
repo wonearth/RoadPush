@@ -13,6 +13,7 @@
     ]
   },
   "dilate_ratio": 0.03,
+  "obstacle_near_ratio": 0.15,
   "min_area_ratio": 0.01,
   "choke_percentile": 10,
   "choke_ok": 0.3,
