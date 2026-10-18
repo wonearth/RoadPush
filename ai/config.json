@@ -25,15 +25,17 @@
     75
   ],
   "yolo": {
-    "_note": "weights가 빈 문자열이면 YOLO를 쓰지 않는다. COCO id: 1 bicycle, 2 car, 3 motorcycle, 5 bus, 7 truck",
+    "_note": "weights가 빈 문자열이면 YOLO를 쓰지 않는다. 아래 id는 AI Hub Bbox로 직접 학습한 모델(train_yolo.py)의 번호: 7 입간판, 9 화분, 10 오토바이, 11 자전거, 13 의자, 14 가림막, 21 탁자. 자동차·사람·고정 시설물은 일부러 뺐다. 가중치 경로는 config.private.json 또는 환경변수 ROADPUSH_YOLO로 넣는다.",
     "weights": "",
     "conf": 0.3,
     "obstacle_class_ids": [
-      1,
-      2,
-      3,
-      5,
-      7
+      7,
+      9,
+      10,
+      11,
+      13,
+      14,
+      21
     ]
   },
   "fallback": {
@@ -109,11 +111,13 @@
       "18": "방치 자전거·PM"
     },
     "yolo_class_types": {
-      "1": "방치 자전거·PM",
-      "2": "주정차 차량",
-      "3": "주정차 차량",
-      "5": "주정차 차량",
-      "7": "주정차 차량"
+      "7": "적치물",
+      "9": "적치물",
+      "13": "적치물",
+      "21": "적치물",
+      "10": "주정차 차량",
+      "11": "방치 자전거·PM",
+      "14": "공사시설"
     },
     "owl_label_types": {
       "standing sign": "적치물",
