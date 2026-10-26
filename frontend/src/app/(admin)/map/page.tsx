@@ -1,8 +1,8 @@
 "use client";
 
-import { Camera, Download, Search, SlidersHorizontal } from "lucide-react";
+import { Camera, Download, Search, SlidersHorizontal, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import { LocationListItem } from "@/components/location/LocationListItem";
 import { LocationSummaryCard } from "@/components/location/LocationSummaryCard";
 import { RegisterPhotosDialog } from "@/components/location/RegisterPhotosDialog";
@@ -24,8 +24,8 @@ import {
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { downloadCsv, locationsToCsv } from "@/lib/exportCsv";
-import { locationService } from "@/services";
-import type { Location, LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
+import { analysisService, isLiveAnalysis, locationService } from "@/services";
+import type { AnalysisResult, Location, LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
 
 type SortKey = NonNullable<LocationQuery["sort"]>;
 /** OPEN = 조치 완료 전 (담당자가 가장 자주 보는 목록) */
@@ -52,7 +52,51 @@ function RiskMapPageContent() {
   const [sort, setSort] = useState<SortKey>("risk-desc");
   const [status, setStatus] = useState<StatusFilter>("ALL");
 
-  const { data: all = [], loading } = useAsync(() => locationService.list(), "locations");
+  const { data: all = [], loading, reload } = useAsync(() => locationService.list(), "locations");
+
+  // 'AI 분석 대기' 구간을 순서대로 모두 분석한다 (서버는 사진을 한 장씩 처리하므로 순차 실행)
+  const [bulk, setBulk] = useState<{ done: number; total: number; name: string; failed: string[] } | null>(null);
+  const stopBulk = useRef(false);
+  const pendingTargets = useMemo(() => all.filter((l) => isPendingAnalysis(l) && l.photos?.length), [all]);
+
+  const runBulkAnalysis = async () => {
+    if (bulk || !pendingTargets.length) return;
+    stopBulk.current = false;
+    const targets = pendingTargets;
+    const failed: string[] = [];
+    let consecutiveFail = 0;
+    setBulk({ done: 0, total: targets.length, name: "", failed });
+    for (const [i, loc] of targets.entries()) {
+      if (stopBulk.current) break;
+      setBulk({ done: i, total: targets.length, name: loc.name, failed: [...failed] });
+      const results: AnalysisResult[] = [];
+      for (const photo of loc.photos ?? []) {
+        if (stopBulk.current) break;
+        try {
+          results.push(await analysisService.analyze({ file: null, mediaType: "image", originalImageUrl: photo.url }));
+        } catch {
+          /* 사진 한 장 실패는 건너뛴다 (보도를 못 찾은 사진 등) */
+        }
+      }
+      if (!results.length) {
+        failed.push(loc.name);
+        // 서버가 꺼져 있거나 주소가 틀리면 계속 실패하므로 연속 3곳 실패하면 멈춘다
+        if (++consecutiveFail >= 3) break;
+        continue;
+      }
+      consecutiveFail = 0;
+      try {
+        const best = results.reduce((a, b) => (b.riskScore > a.riskScore ? b : a)); // 지점 점수 = 사진별 최댓값
+        await locationService.completeInitialAnalysis(loc.id, best);
+        await reload();
+      } catch {
+        failed.push(loc.name);
+      }
+    }
+    setBulk({ done: targets.length, total: targets.length, name: "", failed: [...failed] });
+    await reload();
+    setTimeout(() => setBulk(null), failed.length ? 15000 : 4000);
+  };
 
   const counts = useMemo(() => {
     const c = Object.fromEntries(RISK_LEVELS.map((lv) => [lv, 0])) as Record<RiskLevel, number>;
@@ -136,6 +180,44 @@ function RiskMapPageContent() {
               );
             })}
           </div>
+          {(pendingTargets.length > 0 || bulk) && (
+            <div className="rounded-xl bg-slate-50 p-3 text-sm">
+              {bulk ? (
+                <div className="space-y-1.5" role="status">
+                  <p className="font-semibold text-slate-900">
+                    {bulk.done >= bulk.total ? "분석 완료" : `AI 분석 중 ${bulk.done + 1}/${bulk.total}`}
+                    {bulk.name && <span className="font-normal text-slate-600"> · {bulk.name}</span>}
+                  </p>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-full bg-brand-500 transition-all" style={{ width: `${(bulk.done / bulk.total) * 100}%` }} />
+                  </div>
+                  {bulk.failed.length > 0 && (
+                    <p className="text-red-600">실패 {bulk.failed.length}곳: {bulk.failed.slice(0, 3).join(", ")}{bulk.failed.length > 3 ? " 외" : ""}</p>
+                  )}
+                  {bulk.done < bulk.total && (
+                    <button type="button" onClick={() => (stopBulk.current = true)} className="font-medium text-slate-600 underline">
+                      중지
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-slate-600">
+                    AI 분석 대기 <span className="tabular font-bold text-slate-900">{pendingTargets.length}</span>곳
+                  </p>
+                  <Button
+                    onClick={runBulkAnalysis}
+                    disabled={!isLiveAnalysis}
+                    title={isLiveAnalysis ? undefined : "AI 서버 주소(NEXT_PUBLIC_API_BASE_URL)가 설정되면 사용할 수 있습니다"}
+                    icon={<Sparkles className="size-4" />}
+                    className="shrink-0"
+                  >
+                    전체 분석
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex gap-2">
             <label className="relative flex-1">
               <span className="sr-only">원인 필터</span>
