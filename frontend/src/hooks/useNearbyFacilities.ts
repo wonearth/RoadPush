@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { findNearbyFacilities } from "@/components/map/kakaoGeo";
+import { findNearbyFacilities, isChildZoneFacility } from "@/components/map/kakaoGeo";
 import { KAKAO_MAP_KEY } from "@/components/map/kakaoLoader";
 import { locationService } from "@/services";
 import type { Location, NearbyFacility } from "@/types";
@@ -30,5 +30,5 @@ export function useNearbyFacilities(location: Pick<Location, "id" | "latitude" |
     };
   }, [id, latitude, longitude, nearbyFacilities]);
 
-  return nearbyFacilities ?? (found?.id === id ? found.list : []);
+  return (nearbyFacilities ?? (found?.id === id ? found.list : [])).filter(isChildZoneFacility);
 }
