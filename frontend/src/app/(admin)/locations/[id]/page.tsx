@@ -80,6 +80,9 @@ export default function LocationDetailPage() {
   const latest = history.at(-1);
   // 조치 후 재분석 중 가장 최근 것 (같은 위치 반복 분석은 전후 비교에 쓰지 않는다)
   const followUp = history.filter((r) => r.phase === "FOLLOW_UP").at(-1);
+  // 현장 사진을 나중에 분석한 구간은 분석 시각이 아니라 촬영 시각을 발견 시각으로 본다 (시간대 집계용)
+  const takenAt = location.photos?.[0]?.takenAt;
+  const occurrences = takenAt ? history.map((r) => (r.phase === "INITIAL" ? { ...r, analyzedAt: takenAt } : r)) : history;
   const meta = RISK_META[location.riskLevel];
   const pending = isPendingAnalysis(location);
 
@@ -282,7 +285,7 @@ export default function LocationDetailPage() {
         </CardBody>
       </Card>
 
-      {history.length > 0 && <OccurrenceHistory history={history} />}
+      {history.length > 0 && <OccurrenceHistory history={occurrences} />}
 
       {/* 현장조치·전후 비교는 AI 분석으로 점수가 생긴 뒤에 한다 */}
       {!pending && (

@@ -30,11 +30,12 @@ export function describeRisk(input: {
   if (obstacleTypes.length === 0) {
     return "보행을 방해하는 주요 장애요인이 없으며 보행공간이 연속적으로 이어집니다.";
   }
-  const cause = obstacleTypes.map((t) => OBSTACLE_META[t].label).join("·");
+  // 원인을 전부 나열하면 읽기 어려워 앞의 두 가지만 쓰고 나머지는 "등"으로 줄인다
+  const cause = obstacleTypes.slice(0, 2).map((t) => OBSTACLE_META[t].label).join("·") + (obstacleTypes.length > 2 ? " 등으로" : " 때문에");
   const tail = roadDetourRequired
     ? "보행자가 차도로 내려가 우회해야 합니다."
     : "보행은 가능하지만 통행 폭이 좁아졌습니다.";
-  return `${cause} 때문에 보행공간의 ${formatPercent(obstructionRatio)}가 잠식되어 ${tail}`;
+  return `${cause} 보행공간의 ${formatPercent(obstructionRatio)}가 잠식되어 ${tail}`;
 }
 
 /** 목록용 짧은 주소: 앞의 시·도·구 단위를 빼고 도로명·장소만 남긴다. */
