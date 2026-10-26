@@ -154,14 +154,14 @@ export default function LocationDetailPage() {
                   className="mt-4"
                   onClick={runPendingAnalysis}
                   disabled={!isLiveAnalysis || Boolean(analyzing) || !location.photos?.length}
-                  title={isLiveAnalysis ? undefined : "AI 서버 주소(NEXT_PUBLIC_API_BASE_URL)가 설정되면 사용할 수 있습니다"}
+                  title={isLiveAnalysis ? undefined : "AI 서버에 연결되지 않아 지금은 분석할 수 없습니다"}
                 >
                   {analyzing ? `분석 중 (${analyzing.done}/${analyzing.total})` : "AI 분석"}
                 </Button>
                 <p className="mt-1.5 text-xs text-slate-400">
                   {isLiveAnalysis
                     ? "등록된 사진을 모두 분석하고, 위험도가 가장 높은 결과를 이 구간에 기록합니다."
-                    : "AI 서버 주소(NEXT_PUBLIC_API_BASE_URL)가 설정되면 사용할 수 있습니다"}
+                    : "AI 서버에 연결되지 않아 지금은 분석할 수 없습니다"}
                 </p>
                 {analyzeError && (
                   <p role="alert" className="mt-2 text-sm font-medium text-[#d92d20]">

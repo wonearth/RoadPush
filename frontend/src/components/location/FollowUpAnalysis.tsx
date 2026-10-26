@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { useState } from "react";
-import { analysisService, storageService, type UploadedMedia } from "@/services";
+import { analysisService, isLiveAnalysis, storageService, type UploadedMedia } from "@/services";
 import type { AnalysisResult } from "@/types";
 import { UploadDropzone } from "../analysis/UploadDropzone";
 import { Button } from "../ui/Button";
@@ -10,7 +10,7 @@ import { Spinner } from "../ui/States";
 
 /**
  * 동일 구간 재분석. 현장조치 후 다시 촬영한 영상을 분석해 개선 여부를 확인한다.
- * (mock: 파일이 없으면 개발용 예시 장면으로 재분석 결과를 만든다)
+ * (mock: 파일이 없으면 개발용 예시 장면으로 재분석 결과를 만든다. 실제 AI 서버에서는 사진이 있어야 실행한다)
  */
 export function FollowUpAnalysis({
   locationId,
@@ -52,6 +52,9 @@ export function FollowUpAnalysis({
     }
   };
 
+  // 실제 AI 서버는 예시 장면을 분석할 수 없어, 파일 선택란이 없는 compact 재실행 버튼은 숨긴다
+  if (compact && isLiveAnalysis) return null;
+
   return (
     <div className="space-y-3">
       {!compact &&
@@ -81,14 +84,14 @@ export function FollowUpAnalysis({
       {error && <p className="text-xs font-medium text-red-600">{error}</p>}
       <Button
         onClick={run}
-        disabled={running}
+        disabled={running || (isLiveAnalysis && !file)}
         // 카메라 촬영이 주 동작일 때는 예시 장면 재분석을 보조 버튼으로 낮춘다
         variant={compact || (camera && !file) ? "secondary" : "primary"}
         size={compact ? "sm" : "md"}
         icon={running ? <Spinner /> : undefined}
         className={compact ? undefined : "w-full"}
       >
-        {running ? "재분석 중…" : file ? "업로드한 파일로 재분석" : compact ? "재분석 다시 실행" : "조치 후 재분석 실행 (예시 장면)"}
+        {running ? "재분석 중…" : file ? "업로드한 파일로 재분석" : compact ? "재분석 다시 실행" : isLiveAnalysis ? "조치 후 사진을 올려 재분석" : "조치 후 재분석 실행 (예시 장면)"}
       </Button>
     </div>
   );

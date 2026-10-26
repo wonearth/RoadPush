@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { isMockMediaUrl } from "@/lib/scene";
 import { cn } from "@/lib/cn";
+import { isLiveAnalysis } from "@/services";
 import type { AnalysisOverlay } from "@/types";
 import { AnalysisOverlayLayer, DEFAULT_LAYERS, type OverlayLayers } from "./AnalysisOverlayLayer";
 import { SceneIllustration } from "./SceneIllustration";
@@ -86,7 +87,7 @@ export function MediaFrame({
           {label}
         </figcaption>
       )}
-      {(isMockScene || (isResult && !useServerResult)) && (
+      {(isMockScene || (isResult && !useServerResult && !isLiveAnalysis)) && (
         <span className="absolute right-2.5 bottom-2.5 rounded bg-white/85 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
           {isMockScene ? "예시 이미지" : "예시 결과 · AI 연동 전"}
         </span>
