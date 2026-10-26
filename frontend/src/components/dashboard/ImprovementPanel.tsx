@@ -93,7 +93,6 @@ function BestCase({ item }: { item: Improvement }) {
             <MediaFrame
               variant="result"
               src={r.originalImageUrl}
-              mock={r.isMock}
               resultSrc={r.resultImageUrl}
               overlay={r.overlay}
               walkableRatio={r.walkableRatio}

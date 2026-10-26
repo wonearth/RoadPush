@@ -147,7 +147,6 @@ export default function AnalysisPage() {
                   <MediaFrame
                     variant="result"
                     src={result.originalImageUrl}
-                    mock={result.isMock}
                     resultSrc={result.resultImageUrl}
                     overlay={result.overlay}
                     layers={layers}

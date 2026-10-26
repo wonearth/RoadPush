@@ -20,7 +20,4 @@ export const analysisService: AnalysisService = process.env.NEXT_PUBLIC_API_BASE
   ? apiAnalysisService
   : mockAnalysisService;
 
-/** 실제 AI 분석 서버가 연결돼 있는지 (없으면 예시 분석 — 실제 현장 사진에는 쓰지 않는다) */
-export const isAiConnected = Boolean(process.env.NEXT_PUBLIC_API_BASE_URL);
-
 export type * from "./types";

@@ -115,15 +115,6 @@ export const firestoreLocationService: LocationService = {
     return location;
   },
 
-  async completePendingAnalysis(locationId, result) {
-    const updated = applyAnalysisToLocation(await fetchLocation(locationId), result);
-    const batch = writeBatch(firestore());
-    batch.set(doc(resultsCol()), toStoredAnalysis({ ...result, locationId, phase: "INITIAL" }));
-    batch.set(doc(locationsCol(), locationId), withoutId(updated));
-    await batch.commit();
-    return updated;
-  },
-
   async renameLocation(locationId, name) {
     await updateDoc(doc(locationsCol(), locationId), { name: name.trim() });
   },
