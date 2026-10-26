@@ -67,11 +67,22 @@ export async function reverseGeocode(latitude: number, longitude: number): Promi
   };
 }
 
+/** 어린이보호구역 판단에 쓰는 시설 이름 · 직선거리 기준. 어린이집은 골목마다 있어 거의 모든 구간에 붙으므로 뺀다. */
+const CHILD_ZONE = [
+  { match: /초등학교/, meters: 300 },
+  { match: /유치원/, meters: 200 },
+];
+
+/** 저장된 어린이 시설이 지금 기준에도 맞는지 (기준을 바꾸기 전에 저장된 값을 걸러내는 데도 쓴다) */
+export function isChildZoneFacility(f: NearbyFacility) {
+  return f.kind !== "CHILD" || CHILD_ZONE.some((c) => c.match.test(f.name) && f.meters <= c.meters);
+}
+
 /** 시설 종류별 카카오 카테고리 · 검색 반경 · 이름 조건 */
 const FACILITY_QUERIES: { kind: FacilityKind; code: string; radius: number; match?: RegExp; exclude?: RegExp }[] = [
   { kind: "SUBWAY", code: "SW8", radius: 200 },
-  { kind: "CHILD", code: "SC4", radius: 300, match: /초등학교/ },
-  { kind: "CHILD", code: "PS3", radius: 300 },
+  { kind: "CHILD", code: "SC4", radius: CHILD_ZONE[0].meters, match: CHILD_ZONE[0].match },
+  { kind: "CHILD", code: "PS3", radius: CHILD_ZONE[1].meters, match: CHILD_ZONE[1].match },
   { kind: "HOSPITAL", code: "HP8", radius: 200, match: /병원/, exclude: /동물|한방|치과/ },
 ];
 

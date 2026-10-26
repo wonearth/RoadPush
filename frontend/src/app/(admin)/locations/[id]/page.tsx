@@ -80,6 +80,9 @@ export default function LocationDetailPage() {
   const latest = history.at(-1);
   // 조치 후 재분석 중 가장 최근 것 (같은 위치 반복 분석은 전후 비교에 쓰지 않는다)
   const followUp = history.filter((r) => r.phase === "FOLLOW_UP").at(-1);
+  // 현장 사진을 나중에 분석한 구간은 분석 시각이 아니라 촬영 시각을 발견 시각으로 본다 (시간대 집계용)
+  const takenAt = location.photos?.[0]?.takenAt;
+  const occurrences = takenAt ? history.map((r) => (r.phase === "INITIAL" ? { ...r, analyzedAt: takenAt } : r)) : history;
   const meta = RISK_META[location.riskLevel];
   const pending = isPendingAnalysis(location);
 
@@ -154,14 +157,14 @@ export default function LocationDetailPage() {
                   className="mt-4"
                   onClick={runPendingAnalysis}
                   disabled={!isLiveAnalysis || Boolean(analyzing) || !location.photos?.length}
-                  title={isLiveAnalysis ? undefined : "AI 서버 주소(NEXT_PUBLIC_API_BASE_URL)가 설정되면 사용할 수 있습니다"}
+                  title={isLiveAnalysis ? undefined : "AI 서버에 연결되지 않아 지금은 분석할 수 없습니다"}
                 >
                   {analyzing ? `분석 중 (${analyzing.done}/${analyzing.total})` : "AI 분석"}
                 </Button>
                 <p className="mt-1.5 text-xs text-slate-400">
                   {isLiveAnalysis
                     ? "등록된 사진을 모두 분석하고, 위험도가 가장 높은 결과를 이 구간에 기록합니다."
-                    : "AI 서버 주소(NEXT_PUBLIC_API_BASE_URL)가 설정되면 사용할 수 있습니다"}
+                    : "AI 서버에 연결되지 않아 지금은 분석할 수 없습니다"}
                 </p>
                 {analyzeError && (
                   <p role="alert" className="mt-2 text-sm font-medium text-[#d92d20]">
@@ -282,7 +285,7 @@ export default function LocationDetailPage() {
         </CardBody>
       </Card>
 
-      {history.length > 0 && <OccurrenceHistory history={history} />}
+      {history.length > 0 && <OccurrenceHistory history={occurrences} />}
 
       {/* 현장조치·전후 비교는 AI 분석으로 점수가 생긴 뒤에 한다 */}
       {!pending && (

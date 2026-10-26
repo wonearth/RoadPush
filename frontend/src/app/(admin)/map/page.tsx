@@ -208,7 +208,7 @@ function RiskMapPageContent() {
                   <Button
                     onClick={runBulkAnalysis}
                     disabled={!isLiveAnalysis}
-                    title={isLiveAnalysis ? undefined : "AI 서버 주소(NEXT_PUBLIC_API_BASE_URL)가 설정되면 사용할 수 있습니다"}
+                    title={isLiveAnalysis ? undefined : "AI 서버에 연결되지 않아 지금은 분석할 수 없습니다"}
                     icon={<Sparkles className="size-4" />}
                     className="shrink-0"
                   >

@@ -18,7 +18,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { MockBadge } from "@/components/ui/MockNotice";
 import { Spinner } from "@/components/ui/States";
 import { MOCK_SAMPLE_OVERLAY, MOCK_SAMPLE_SCENE_URL } from "@/mocks/mockOverlay";
-import { analysisService, storageService, type UploadedMedia } from "@/services";
+import { analysisService, isLiveAnalysis, storageService, type UploadedMedia } from "@/services";
 import type { AnalysisResult } from "@/types";
 
 type Phase = "idle" | "ready" | "analyzing" | "done";
@@ -94,7 +94,7 @@ export default function AnalysisPage() {
         <Card>
           <CardHeader
             title="영상·사진 업로드"
-            action={<MockBadge label="AI 연동 전 · 예시 분석" />}
+            action={!isLiveAnalysis && <MockBadge label="AI 연동 전 · 예시 분석" />}
           />
           <CardBody className="space-y-4">
             <UploadDropzone onFile={onFile} disabled={preparing} />
@@ -104,12 +104,14 @@ export default function AnalysisPage() {
               </p>
             )}
             {error && <p className="text-xs font-medium text-red-600">{error}</p>}
-            <div className="flex flex-col items-start justify-between gap-3 rounded-lg bg-slate-50 px-4 py-3 sm:flex-row sm:items-center">
-              <p className="text-[13px] text-slate-600">촬영본이 없으면 예시 장면으로 분석할 수 있습니다.</p>
-              <Button variant="secondary" size="sm" onClick={useSample}>
-                예시 장면으로 분석
-              </Button>
-            </div>
+            {!isLiveAnalysis && (
+              <div className="flex flex-col items-start justify-between gap-3 rounded-lg bg-slate-50 px-4 py-3 sm:flex-row sm:items-center">
+                <p className="text-[13px] text-slate-600">촬영본이 없으면 예시 장면으로 분석할 수 있습니다.</p>
+                <Button variant="secondary" size="sm" onClick={useSample}>
+                  예시 장면으로 분석
+                </Button>
+              </div>
+            )}
           </CardBody>
         </Card>
       )}
@@ -192,7 +194,7 @@ export default function AnalysisPage() {
             {phase === "done" && result && (
               <>
                 <Card>
-                  <CardHeader title="보행공간 단절 위험도" action={<MockBadge label="예시 결과" />} />
+                  <CardHeader title="보행공간 단절 위험도" action={!isLiveAnalysis && <MockBadge label="예시 결과" />} />
                   <CardBody className="flex flex-col items-center pt-2">
                     <RiskGauge score={result.riskScore} level={result.riskLevel} />
                     <RiskBadge level={result.riskLevel} className="mt-1 px-2.5 py-1 text-sm" />
