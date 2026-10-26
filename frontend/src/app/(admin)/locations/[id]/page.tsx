@@ -15,6 +15,7 @@ import { ReasonTags } from "@/components/location/ReasonTags";
 import { ResolveFlowDialog } from "@/components/location/ResolveFlowDialog";
 import { WorkflowProgress } from "@/components/location/WorkflowProgress";
 import { DEFAULT_LAYERS } from "@/components/media/AnalysisOverlayLayer";
+import { RoadviewPanel } from "@/components/map/RoadviewPanel";
 import { MediaFrame } from "@/components/media/MediaFrame";
 import { PendingBadge, RiskBadge, StatusBadge } from "@/components/risk/RiskBadge";
 import { RiskBar } from "@/components/risk/RiskBar";
@@ -272,6 +273,14 @@ export default function LocationDetailPage() {
           </CardBody>
         </Card>
       )}
+
+      {/* 로드뷰 — 사진만으로 판단이 어려울 때 주변 맥락(관행적으로 쓰이는 길인지 등)을 확인한다 */}
+      <Card>
+        <CardHeader title="로드뷰" />
+        <CardBody className="pt-4">
+          <RoadviewPanel latitude={location.latitude} longitude={location.longitude} />
+        </CardBody>
+      </Card>
 
       {history.length > 0 && <OccurrenceHistory history={history} />}
 

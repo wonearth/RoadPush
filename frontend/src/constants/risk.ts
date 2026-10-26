@@ -180,12 +180,16 @@ const shortFacilityName = (name: string) =>
     .replace(/\s*초등학교$/, "초")
     .replace(/^.*\s(\S+초)$/, "$1");
 
-/** 주변 시설 → 우선순위 이유 태그 문구 */
-export function facilityTag(f: NearbyFacility): string {
+/**
+ * 주변 시설 → 우선순위 이유 태그 문구.
+ * compact(대시보드 표)는 이유만, 기본(상세)은 시설명과 직선거리까지 보여준다.
+ */
+export function facilityTag(f: NearbyFacility, compact = false): string {
   const name = shortFacilityName(f.name);
-  if (f.kind === "SUBWAY") return `${name} ${f.meters}m`;
-  if (f.kind === "CHILD") return `어린이보호구역 인접 가능 · ${name} ${f.meters}m`;
-  return `의료시설 인접 · ${name} ${f.meters}m`;
+  if (compact) return f.kind === "SUBWAY" ? `${name} 인접` : f.kind === "CHILD" ? "어린이보호구역 인접" : "의료시설 인접";
+  if (f.kind === "SUBWAY") return `${name} · 직선 ${f.meters}m`;
+  if (f.kind === "CHILD") return `어린이보호구역 인접 가능 · ${name} 직선 ${f.meters}m`;
+  return `의료시설 인접 · ${name} 직선 ${f.meters}m`;
 }
 
 /** 현장 사진만 있고 아직 AI 점수가 없는 구간 */

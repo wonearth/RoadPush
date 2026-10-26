@@ -9,7 +9,18 @@ import type { FacilityKind, Location } from "@/types";
 const ORDER: FacilityKind[] = ["CHILD", "SUBWAY", "HOSPITAL"];
 
 /** 우선순위 이유 태그 — 구간 주변 지하철역·어린이 시설·병원 */
-export function ReasonTags({ location, max, className }: { location: Location; max?: number; className?: string }) {
+export function ReasonTags({
+  location,
+  max,
+  compact = false,
+  className,
+}: {
+  location: Location;
+  max?: number;
+  /** 거리 없이 이유만 짧게 (대시보드 표) */
+  compact?: boolean;
+  className?: string;
+}) {
   const facilities = [...useNearbyFacilities(location)].sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
   if (!facilities.length) return null;
   return (
@@ -22,7 +33,7 @@ export function ReasonTags({ location, max, className }: { location: Location; m
             f.kind === "CHILD" ? "border-amber-300 text-amber-800" : "border-slate-300 text-slate-600",
           )}
         >
-          {facilityTag(f)}
+          {facilityTag(f, compact)}
         </li>
       ))}
     </ul>
