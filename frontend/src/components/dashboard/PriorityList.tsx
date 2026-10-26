@@ -38,7 +38,7 @@ export function PriorityList({ locations }: { locations: Location[] }) {
                   {loc.code && <span className="tabular mr-1.5 text-slate-400">{loc.code}</span>}
                   {subAddress(loc)}
                 </p>
-                <ReasonTags location={loc} max={2} className="mt-1.5" />
+                <ReasonTags location={loc} max={2} compact className="mt-1.5" />
               </td>
               <td className="py-4 pr-4 whitespace-nowrap">
                 <span className={`tabular mr-1.5 text-xl font-extrabold ${RISK_META[loc.riskLevel].text}`}>{loc.riskScore}</span>

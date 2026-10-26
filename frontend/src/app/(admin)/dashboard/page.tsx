@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, RotateCw } from "lucide-react";
+import { ArrowRight, Clock, OctagonAlert, Route, RotateCw, ScanSearch, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -12,8 +12,9 @@ import { RiskMap } from "@/components/map/RiskMap";
 import { RiskDistribution } from "@/components/risk/RiskDistribution";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { RISK_META, getRiskLevel, isOpenStatus, isPendingAnalysis } from "@/constants/risk";
+import { RISK_META, isOpenStatus, isPendingAnalysis } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
+import { dueOf } from "@/lib/admin";
 import { cn } from "@/lib/cn";
 import { formatDateTime, subAddress } from "@/lib/format";
 import { locationService } from "@/services";
@@ -57,8 +58,9 @@ export default function DashboardPage() {
   // 현장 사진만 있고 아직 점수가 없는 구간 — 지도에는 회색으로 보이고 통계에서는 빠진다
   const pendingCount = locations.filter(isPendingAnalysis).length;
   const scored = locations.filter((l) => !isPendingAnalysis(l));
+  // 처리기한이 지났는데 아직 조치가 끝나지 않은 구간
+  const overdueCount = scored.filter((l) => l.status !== "CLOSED" && dueOf(l)?.overdue).length;
   const priority = active.filter((l) => isOpenStatus(l.status) && l.riskLevel !== "SAFE").slice(0, 6);
-  const avgLevel = summary ? getRiskLevel(summary.averageRiskScore) : "SAFE";
   const top = priority[0];
 
   if (summary && locations.length === 0) {
@@ -72,11 +74,6 @@ export default function DashboardPage() {
   return (
     <div className="space-y-5 px-4 pt-5 pb-10 sm:px-8">
       <div className="-mb-2 flex items-center justify-end gap-2 text-sm text-slate-500">
-        {pendingCount > 0 && (
-          <Link href="/map" className="mr-2 hover:text-slate-700">
-            AI 분석 대기 <b className="tabular font-semibold text-slate-700">{pendingCount}</b>곳
-          </Link>
-        )}
         {loadedAt && <span className="tabular">{formatDateTime(loadedAt)} 기준</span>}
         <button
           type="button"
@@ -117,13 +114,17 @@ export default function DashboardPage() {
               unit="개"
               hint={`${new Set(active.filter((l) => !isPendingAnalysis(l)).map((l) => l.area)).size}개 생활권`}
               info="AI 분석 후 관리 대상으로 등록된 보행구간 수 (조치 없이 종료된 구간 제외)"
+              icon={<Route className="size-[18px]" />}
+              tone="bg-blue-50 text-blue-600"
             />
             <KpiCard
-              label="발견된 단절구간"
+              label="점검 필요 구간"
               value={summary.disconnectedCount}
               unit="개"
               hint="위험도 26점 이상"
               info="위험도 26점 이상(주의·경고·위험) 구간. 장애물로 보행공간이 좁아지거나 끊긴 상태"
+              icon={<TriangleAlert className="size-[18px]" />}
+              tone="bg-amber-50 text-amber-600"
             />
             <KpiCard
               label="고위험 구간"
@@ -131,16 +132,30 @@ export default function DashboardPage() {
               unit="개"
               hint="위험도 76점 이상"
               info="위험도 76점 이상 구간. 보행자가 차도로 내려가야 하는 수준으로 최우선 점검 대상"
+              icon={<OctagonAlert className="size-[18px]" />}
+              tone="bg-red-50 text-red-600"
             />
             <KpiCard
-              label="평균 단절 위험도"
-              value={<span className={RISK_META[avgLevel].text}>{summary.averageRiskScore}</span>}
-              unit={`/ 100 ${RISK_META[avgLevel].label}`}
-              info="전체 구간 위험도 평균. 0~25 안전, 26~50 주의, 51~75 경고, 76~100 위험"
+              label="조치 지연 구간"
+              value={<span className={overdueCount ? "text-[#c2410c]" : undefined}>{overdueCount}</span>}
+              unit="개"
+              hint="처리기한 초과"
+              info="처리기한(위험 3일, 경고 7일, 주의 14일)이 지났는데 아직 조치가 끝나지 않은 구간"
+              icon={<Clock className="size-[18px]" />}
+              tone="bg-orange-50 text-orange-600"
+            />
+            <KpiCard
+              label="AI 분석 대기"
+              value={pendingCount}
+              unit="개"
+              hint="현장 사진만 등록된 구간"
+              info="현장 사진은 올라왔지만 아직 AI 분석 전인 구간. 위험지도에서 분석할 수 있습니다"
+              icon={<ScanSearch className="size-[18px]" />}
+              tone="bg-violet-50 text-violet-600"
             />
           </>
         ) : (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[88px] rounded-none" />)
+          Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-[96px] rounded-none" />)
         )}
       </KpiStrip>
 
