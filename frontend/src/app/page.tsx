@@ -52,7 +52,7 @@ export default function LandingPage() {
         </div>
         <div className="mx-auto mt-14 max-w-6xl overflow-hidden rounded-t-3xl bg-slate-100 px-3 pt-3 sm:px-7 sm:pt-7">
           <Image
-            src="/landing/riskmap-preview.jpg"
+            src="/landing/riskmap.jpg"
             alt="RoadPush 보행공간 단절 위험지도 화면"
             width={2160}
             height={1350}
