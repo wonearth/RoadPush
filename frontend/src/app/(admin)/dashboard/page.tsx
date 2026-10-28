@@ -2,7 +2,6 @@
 
 import { ArrowRight, Clock, OctagonAlert, Route, RotateCw, ScanSearch, TriangleAlert } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard";
 import { ImprovementPanel } from "@/components/dashboard/ImprovementPanel";
@@ -20,7 +19,6 @@ import { formatDateTime, subAddress } from "@/lib/format";
 import { locationService } from "@/services";
 
 export default function DashboardPage() {
-  const router = useRouter();
   const { data, loading, reload } = useAsync(
     () =>
       Promise.all([
@@ -110,6 +108,7 @@ export default function DashboardPage() {
           <>
             <KpiCard
               label="전체 분석 구간"
+              href="/map"
               value={summary.totalCount}
               unit="개"
               hint={`${new Set(active.filter((l) => !isPendingAnalysis(l)).map((l) => l.area)).size}개 생활권`}
@@ -119,6 +118,7 @@ export default function DashboardPage() {
             />
             <KpiCard
               label="점검 필요 구간"
+              href="/map?level=ATTENTION"
               value={summary.disconnectedCount}
               unit="개"
               hint="위험도 26점 이상"
@@ -128,6 +128,7 @@ export default function DashboardPage() {
             />
             <KpiCard
               label="고위험 구간"
+              href="/map?level=DANGER"
               value={<span className={RISK_META.DANGER.text}>{summary.highRiskCount}</span>}
               unit="개"
               hint="위험도 76점 이상"
@@ -137,6 +138,7 @@ export default function DashboardPage() {
             />
             <KpiCard
               label="조치 지연 구간"
+              href="/map?status=OVERDUE"
               value={<span className={overdueCount ? "text-[#c2410c]" : undefined}>{overdueCount}</span>}
               unit="개"
               hint="처리기한 초과"
@@ -146,6 +148,7 @@ export default function DashboardPage() {
             />
             <KpiCard
               label="AI 분석 대기"
+              href="/map?status=PENDING"
               value={pendingCount}
               unit="개"
               hint="현장 사진만 등록된 구간"
@@ -164,7 +167,7 @@ export default function DashboardPage() {
         <Card className="min-w-0">
           <CardHeader
             title="우선점검 필요 구간"
-            action={<TextLink href="/map">전체 보기</TextLink>}
+            action={<TextLink href="/map?level=ATTENTION&status=OPEN">전체 보기</TextLink>}
           />
           <div className="px-6 pt-4 pb-3">
             {loading ? (
@@ -185,21 +188,17 @@ export default function DashboardPage() {
           <Card>
             <CardHeader title="위험지도" action={<TextLink href="/map">지도에서 보기</TextLink>} />
             <CardBody className="pt-4">
-              <button
-                type="button"
-                onClick={() => router.push("/map")}
-                className="block w-full overflow-hidden rounded-xl"
-                aria-label="위험지도로 이동"
-              >
-                <RiskMap locations={active} interactive={false} className="aspect-[16/11] w-full" />
-              </button>
+              {/* 카카오맵이 지도 위 클릭을 가로채므로 지도는 클릭을 받지 않게 하고 링크가 받는다 */}
+              <Link href="/map" className="block w-full overflow-hidden rounded-xl" aria-label="위험지도로 이동">
+                <RiskMap locations={active} interactive={false} className="pointer-events-none aspect-[16/11] w-full" />
+              </Link>
             </CardBody>
           </Card>
 
           <Card>
             <CardHeader title="위험도 단계별 분포" />
             <CardBody className="pt-4">
-              {summary ? <RiskDistribution distribution={summary.distribution} /> : <Skeleton className="h-32" />}
+              {summary ? <RiskDistribution distribution={summary.distribution} hrefOf={(lv) => `/map?level=${lv}`} /> : <Skeleton className="h-32" />}
             </CardBody>
           </Card>
         </div>

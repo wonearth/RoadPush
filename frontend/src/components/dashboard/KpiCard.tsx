@@ -1,8 +1,10 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { InfoTip } from "../ui/InfoTip";
 
-/** 요약 띠의 지표 한 칸 — 아이콘으로 지표 성격을 바로 알아보게 하고, info 가 있으면 제목 옆 ❓ 로 기준을 설명한다. */
+/** 요약 띠의 지표 한 칸 — 아이콘으로 지표 성격을 바로 알아보게 하고, info 가 있으면 제목 옆 ❓ 로 기준을 설명한다.
+ *  href 가 있으면 칸 전체가 해당 목록으로 가는 링크가 된다. */
 export function KpiCard({
   label,
   value,
@@ -11,6 +13,7 @@ export function KpiCard({
   info,
   icon,
   tone = "bg-slate-100 text-slate-500",
+  href,
 }: {
   label: string;
   value: ReactNode;
@@ -20,14 +23,21 @@ export function KpiCard({
   icon?: ReactNode;
   /** 아이콘 배경·색 (예: "bg-red-50 text-red-600") */
   tone?: string;
+  href?: string;
 }) {
   return (
-    <div className="flex items-start gap-3 bg-white px-5 py-4">
+    <div className="relative flex items-start gap-3 bg-white px-5 py-4 transition-colors has-[a:hover]:bg-slate-50">
+      {/* 칸 전체를 덮는 링크. ❓ 버튼은 위(z-10)에 올려 따로 눌리게 한다 */}
+      {href && <Link href={href} aria-label={`${label} 목록 보기`} className="absolute inset-0" />}
       {icon && <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", tone)}>{icon}</span>}
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="text-sm text-slate-500">{label}</p>
-          {info && <InfoTip text={info} label={`${label} 기준 보기`} />}
+          {info && (
+            <span className="relative z-10 inline-flex">
+              <InfoTip text={info} label={`${label} 기준 보기`} />
+            </span>
+          )}
         </div>
         <p className="mt-0.5 flex items-baseline gap-1">
           <span className="tabular text-[26px] leading-tight font-bold text-slate-900">{value}</span>
