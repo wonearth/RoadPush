@@ -151,7 +151,7 @@ export default function DashboardPage() {
               value={<span className={overdueCount ? "text-[#c2410c]" : undefined}>{overdueCount}</span>}
               unit="개"
               hint="처리기한 초과"
-              info="처리기한(위험 3일, 경고 7일, 주의 14일)이 지났는데 아직 조치가 끝나지 않은 구간"
+              info="처리기한(위험 14일, 경고 40일, 주의 60일)이 지났는데 아직 조치가 끝나지 않은 구간"
               icon={<Clock className="size-[18px]" />}
               tone="bg-orange-50 text-orange-600"
             />
