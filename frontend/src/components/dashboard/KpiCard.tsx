@@ -27,14 +27,15 @@ export function KpiCard({
 }) {
   return (
     <div className="relative flex items-start gap-3 bg-white px-5 py-4 transition-colors has-[a:hover]:bg-slate-50">
-      {/* 칸 전체를 덮는 링크. ❓ 버튼은 위(z-10)에 올려 따로 눌리게 한다 */}
+      {/* 칸 전체를 덮는 링크. ❓ 버튼은 링크 뒤에 오는 relative 요소라 위에 그려져 따로 눌린다.
+          z-index 를 주면 설명 말풍선이 사이드바 아래로 깔리므로 주지 않는다 */}
       {href && <Link href={href} aria-label={`${label} 목록 보기`} className="absolute inset-0" />}
       {icon && <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", tone)}>{icon}</span>}
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="text-sm text-slate-500">{label}</p>
           {info && (
-            <span className="relative z-10 inline-flex">
+            <span className="relative inline-flex">
               <InfoTip text={info} label={`${label} 기준 보기`} />
             </span>
           )}
