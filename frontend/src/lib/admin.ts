@@ -34,7 +34,7 @@ export function departmentOf(location: Pick<Location, "obstacleTypes" | "planned
 }
 
 /** 위험등급별 처리기한(일) — 최근 발견일 기준 */
-export const DUE_DAYS: Partial<Record<RiskLevel, number>> = { DANGER: 3, WARNING: 7, CAUTION: 14 };
+export const DUE_DAYS: Partial<Record<RiskLevel, number>> = { DANGER: 14, WARNING: 40, CAUTION: 60 };
 
 /** 화면 표시와 같은 로컬 날짜 기준 일 번호 */
 const dayIndex = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY;
