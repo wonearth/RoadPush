@@ -10,6 +10,7 @@ import { PriorityList } from "@/components/dashboard/PriorityList";
 import { RiskMap } from "@/components/map/RiskMap";
 import { RiskDistribution } from "@/components/risk/RiskDistribution";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { LoadError } from "@/components/ui/LoadError";
 import { EmptyState, Skeleton } from "@/components/ui/States";
 import { RISK_META, isOpenStatus, isPendingAnalysis } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
@@ -19,7 +20,7 @@ import { formatDateTime, subAddress } from "@/lib/format";
 import { locationService } from "@/services";
 
 export default function DashboardPage() {
-  const { data, loading, reload } = useAsync(
+  const { data, loading, error, reload } = useAsync(
     () =>
       Promise.all([
         locationService.getDashboardSummary(),
@@ -60,6 +61,14 @@ export default function DashboardPage() {
   const overdueCount = scored.filter((l) => l.status !== "CLOSED" && dueOf(l)?.overdue).length;
   const priority = active.filter((l) => isOpenStatus(l.status) && l.riskLevel !== "SAFE").slice(0, 6);
   const top = priority[0];
+
+  if (error && !data) {
+    return (
+      <div className="px-4 pt-5 pb-10 sm:px-8">
+        <LoadError className="rounded-2xl bg-white py-24" onRetry={reload} />
+      </div>
+    );
+  }
 
   if (summary && locations.length === 0) {
     return (

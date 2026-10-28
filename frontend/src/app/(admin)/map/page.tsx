@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { RiskMap } from "@/components/map/RiskMap";
 import { RiskLegend } from "@/components/risk/RiskLegend";
 import { inputClass } from "@/components/ui/Field";
+import { LoadError } from "@/components/ui/LoadError";
 import { EmptyState, Skeleton } from "@/components/ui/States";
 import {
   ALL_STATUSES,
@@ -24,6 +25,7 @@ import {
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { downloadCsv, locationsToCsv } from "@/lib/exportCsv";
+import { saveLastMapUrl } from "@/lib/lastMapUrl";
 import { dueOf } from "@/lib/admin";
 import { analysisService, isLiveAnalysis, locationService } from "@/services";
 import type { AnalysisResult, Location, LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
@@ -72,7 +74,8 @@ function RiskMapPageContent() {
     return v && STATUS_FILTERS.includes(v) ? (v as StatusFilter) : "ALL";
   });
 
-  const { data: all = [], loading, reload } = useAsync(() => locationService.list(), "locations");
+  const { data, loading, error, reload } = useAsync(() => locationService.list(), "locations");
+  const all = useMemo(() => data ?? [], [data]);
 
   // 'AI 분석 대기' 구간을 순서대로 모두 분석한다 (서버는 사진을 한 장씩 처리하므로 순차 실행)
   const [bulk, setBulk] = useState<{ done: number; total: number; name: string; failed: string[] } | null>(null);
@@ -162,9 +165,16 @@ function RiskMapPageContent() {
     if (st !== "ALL") params.set("status", st);
     if (sel) params.set("selected", sel);
     const qs = params.toString();
-    router.replace(qs ? `/map?${qs}` : "/map", { scroll: false });
+    const url = qs ? `/map?${qs}` : "/map";
+    saveLastMapUrl(url);
+    router.replace(url, { scroll: false });
   };
-  const select = (id: string | null) => replaceQuery({ selected: id });
+  // 좁은 화면에서는 지도가 목록 아래에 있으므로, 목록에서 구간을 고르면 지도로 내려가 요약 카드를 보여준다
+  const mapRef = useRef<HTMLElement>(null);
+  const select = (id: string | null) => {
+    replaceQuery({ selected: id });
+    if (id && window.innerWidth < 1024) mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const changeLevel = (lv: LevelFilter) => {
     setLevel(lv);
     replaceQuery({ level: lv });
@@ -323,7 +333,9 @@ function RiskMapPageContent() {
           </div>
         </div>
         <div className="max-h-[420px] flex-1 space-y-0.5 overflow-y-auto lg:max-h-none">
-          {loading ? (
+          {error && !data ? (
+            <LoadError onRetry={reload} />
+          ) : loading ? (
             <div className="space-y-2 p-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-16" />
@@ -340,7 +352,7 @@ function RiskMapPageContent() {
       </aside>
 
       {/* 지도 */}
-      <section className="relative h-[520px] overflow-hidden rounded-2xl lg:h-auto lg:flex-1">
+      <section ref={mapRef} className="relative h-[520px] scroll-mt-4 overflow-hidden rounded-2xl lg:h-auto lg:flex-1">
         <div className="absolute inset-0">
           <RiskMap locations={filtered} selectedId={selectedId} onSelect={select} className="size-full" />
         </div>
@@ -348,7 +360,7 @@ function RiskMapPageContent() {
           <RiskLegend compact />
         </div>
         {selected && (
-          <div className="animate-sheet-up fixed inset-x-3 bottom-3 z-40 sm:inset-x-auto sm:right-6 lg:absolute lg:right-4 lg:bottom-4 lg:z-10">
+          <div className="animate-sheet-up absolute inset-x-3 bottom-3 z-10 sm:inset-x-auto sm:right-4 lg:bottom-4">
             <LocationSummaryCard location={selected} onClose={() => select(null)} />
           </div>
         )}

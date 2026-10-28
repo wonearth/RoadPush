@@ -2,7 +2,7 @@
 
 import { ArrowLeft, CalendarClock, MapPin } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { LayerToggles } from "@/components/analysis/LayerToggles";
 import { ActionManagement } from "@/components/location/ActionManagement";
@@ -24,11 +24,13 @@ import { RiskMetrics } from "@/components/risk/RiskMetrics";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { MockBadge } from "@/components/ui/MockNotice";
+import { LoadError } from "@/components/ui/LoadError";
 import { EmptyState, Skeleton } from "@/components/ui/States";
 import { CLOSE_REASON_META, RISK_META, isOpenStatus, isPendingAnalysis } from "@/constants/risk";
 import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/hooks/useAuth";
 import { describeRisk, formatDateTime } from "@/lib/format";
+import { lastMapUrl } from "@/lib/lastMapUrl";
 import { analysisService, isLiveAnalysis, locationService } from "@/services";
 import type { AnalysisResult, LocationStatus, UpdateActionInput } from "@/types";
 
@@ -41,6 +43,7 @@ function workflowStage(status: Exclude<LocationStatus, "CLOSED">, hasFollowUp: b
 export default function LocationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const router = useRouter();
   const [layers, setLayers] = useState(DEFAULT_LAYERS);
   // 조치 완료로 저장하려는 내용 — 사진·재분석 흐름(ResolveFlowDialog)을 거쳐 저장한다
   const [pendingResolve, setPendingResolve] = useState<UpdateActionInput | null>(null);
@@ -48,7 +51,7 @@ export default function LocationDetailPage() {
   const [analyzing, setAnalyzing] = useState<{ done: number; total: number } | null>(null);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
-  const { data, loading, reload } = useAsync(
+  const { data, loading, error, reload } = useAsync(
     () =>
       Promise.all([locationService.get(id), locationService.getAnalysisHistory(id), locationService.getActionLogs(id)]),
     id,
@@ -62,6 +65,8 @@ export default function LocationDetailPage() {
       </div>
     );
   }
+
+  if (error && !data) return <LoadError className="py-24" onRetry={reload} />;
 
   const [location, history = [], logs = []] = data ?? [];
   if (!location) {
@@ -135,7 +140,15 @@ export default function LocationDetailPage() {
       <Card>
         <div className="flex flex-col gap-6 p-6 lg:flex-row lg:items-center">
           <div className="min-w-0 flex-1">
-            <Link href="/map" className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-800">
+            {/* 위험지도에서 걸어 둔 필터 그대로 돌아간다 */}
+            <Link
+              href="/map"
+              onClick={(e) => {
+                e.preventDefault();
+                router.push(lastMapUrl());
+              }}
+              className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-800"
+            >
               <ArrowLeft className="size-3.5" /> 위험지도
             </Link>
             <div className="mt-2 flex flex-wrap items-center gap-2">

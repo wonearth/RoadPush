@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -26,10 +27,17 @@ export function KpiCard({
   href?: string;
 }) {
   return (
-    <div className="relative flex items-start gap-3 bg-white px-5 py-4 transition-colors has-[a:hover]:bg-slate-50">
+    <div className="group relative flex items-start gap-3 bg-white px-5 py-4 transition-colors has-[a:hover]:bg-slate-50">
       {/* 칸 전체를 덮는 링크. ❓ 버튼은 링크 뒤에 오는 relative 요소라 위에 그려져 따로 눌린다.
           z-index 를 주면 설명 말풍선이 사이드바 아래로 깔리므로 주지 않는다 */}
       {href && <Link href={href} aria-label={`${label} 목록 보기`} className="absolute inset-0" />}
+      {/* 눌러서 목록으로 갈 수 있다는 표시 */}
+      {href && (
+        <ChevronRight
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-slate-300 transition-colors group-has-[a:hover]:text-slate-500"
+        />
+      )}
       {icon && <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", tone)}>{icon}</span>}
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">

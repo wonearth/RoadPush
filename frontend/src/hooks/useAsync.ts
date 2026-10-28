@@ -12,6 +12,14 @@ interface AsyncState<T> {
 
 const toError = (e: unknown) => (e instanceof Error ? e : new Error(String(e)));
 
+/** 응답이 오지 않는 경우(브라우저에서 연결이 멈춘 경우 등) 빈 화면에 머물지 않도록 이 시간이 지나면 실패로 본다 */
+const TIMEOUT_MS = 20_000;
+const withTimeout = <T,>(p: Promise<T>) =>
+  Promise.race([
+    p,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error("응답 시간이 초과되었습니다")), TIMEOUT_MS)),
+  ]);
+
 /**
  * service 호출 결과를 상태로 관리하는 최소 훅. key 가 바뀌면 다시 불러온다.
  * (추후 SWR / React Query 로 교체 가능)
@@ -26,7 +34,7 @@ export function useAsync<T>(fn: () => Promise<T>, key: string): AsyncState<T> {
 
   useEffect(() => {
     let active = true;
-    fnRef.current().then(
+    withTimeout(fnRef.current()).then(
       (data) => active && setState({ key, data, error: null }),
       (e) => active && setState((s) => ({ key, data: s.data, error: toError(e) })),
     );
@@ -37,12 +45,13 @@ export function useAsync<T>(fn: () => Promise<T>, key: string): AsyncState<T> {
 
   const reload = useCallback(async () => {
     try {
-      const data = await fnRef.current();
-      setState((s) => ({ ...s, data, error: null }));
+      const data = await withTimeout(fnRef.current());
+      // 첫 불러오기가 끝나지 않은 채 다시 불러온 경우에도 로딩 상태를 끝낸다
+      setState({ key, data, error: null });
     } catch (e) {
-      setState((s) => ({ ...s, error: toError(e) }));
+      setState((s) => ({ ...s, key, error: toError(e) }));
     }
-  }, []);
+  }, [key]);
 
   return { data: state.data, loading: state.key !== key, error: state.error, reload };
 }
