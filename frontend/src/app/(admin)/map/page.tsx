@@ -24,13 +24,19 @@ import {
 import { useAsync } from "@/hooks/useAsync";
 import { cn } from "@/lib/cn";
 import { downloadCsv, locationsToCsv } from "@/lib/exportCsv";
+import { dueOf } from "@/lib/admin";
 import { analysisService, isLiveAnalysis, locationService } from "@/services";
 import type { AnalysisResult, Location, LocationQuery, LocationStatus, ObstacleType, RiskLevel } from "@/types";
 
 type SortKey = NonNullable<LocationQuery["sort"]>;
 /** OPEN = 조치 완료 전 (담당자가 가장 자주 보는 목록) */
-/** ALL 은 종료된 구간을 뺀 전체, OPEN 은 조치가 끝나지 않은 구간, PENDING 은 AI 분석 대기 구간 */
-type StatusFilter = "ALL" | "OPEN" | "PENDING" | LocationStatus;
+/** ALL 은 종료된 구간을 뺀 전체, OPEN 은 조치가 끝나지 않은 구간, PENDING 은 AI 분석 대기 구간, OVERDUE 는 처리기한 초과 구간 */
+type StatusFilter = "ALL" | "OPEN" | "PENDING" | "OVERDUE" | LocationStatus;
+/** ATTENTION 은 점검 필요(주의·경고·위험) 구간 — 대시보드 '점검 필요 구간'에서 넘어올 때 쓴다 */
+type LevelFilter = RiskLevel | "ALL" | "ATTENTION";
+
+const STATUS_FILTERS: string[] = ["ALL", "OPEN", "PENDING", "OVERDUE", ...ALL_STATUSES];
+const LEVEL_FILTERS: string[] = ["ALL", "ATTENTION", ...RISK_LEVELS];
 
 function matchStatus(l: Location, filter: StatusFilter) {
   if (filter === "ALL") return l.status !== "CLOSED";
@@ -38,7 +44,14 @@ function matchStatus(l: Location, filter: StatusFilter) {
   // 나머지 조치 상태는 점수가 있는 구간만 대상으로 한다
   if (isPendingAnalysis(l)) return false;
   if (filter === "OPEN") return isOpenStatus(l.status);
+  if (filter === "OVERDUE") return Boolean(dueOf(l)?.overdue);
   return l.status === filter;
+}
+
+function matchLevel(l: Location, filter: LevelFilter) {
+  if (filter === "ALL") return true;
+  if (isPendingAnalysis(l)) return false;
+  return filter === "ATTENTION" ? l.riskLevel !== "SAFE" : l.riskLevel === filter;
 }
 
 function RiskMapPageContent() {
@@ -46,11 +59,18 @@ function RiskMapPageContent() {
   const searchParams = useSearchParams();
   const selectedId = searchParams.get("selected");
 
-  const [level, setLevel] = useState<RiskLevel | "ALL">("ALL");
+  // 대시보드 지표에서 넘어오면 주소의 level·status 로 필터를 걸어 둔다
+  const [level, setLevel] = useState<LevelFilter>(() => {
+    const v = searchParams.get("level");
+    return v && LEVEL_FILTERS.includes(v) ? (v as LevelFilter) : "ALL";
+  });
   const [keyword, setKeyword] = useState("");
   const [obstacle, setObstacle] = useState<ObstacleType | "">("");
   const [sort, setSort] = useState<SortKey>("risk-desc");
-  const [status, setStatus] = useState<StatusFilter>("ALL");
+  const [status, setStatus] = useState<StatusFilter>(() => {
+    const v = searchParams.get("status");
+    return v && STATUS_FILTERS.includes(v) ? (v as StatusFilter) : "ALL";
+  });
 
   const { data: all = [], loading, reload } = useAsync(() => locationService.list(), "locations");
 
@@ -108,7 +128,7 @@ function RiskMapPageContent() {
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
     return all
-      .filter((l) => level === "ALL" || (!isPendingAnalysis(l) && l.riskLevel === level))
+      .filter((l) => matchLevel(l, level))
       .filter((l) => !obstacle || l.obstacleTypes.includes(obstacle))
       .filter((l) => matchStatus(l, status))
       .filter((l) => !kw || `${l.name} ${l.address} ${l.area}`.toLowerCase().includes(kw))
@@ -132,7 +152,27 @@ function RiskMapPageContent() {
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     downloadCsv(`RoadPush_위험구간_${today}.csv`, locationsToCsv(filtered));
   };
-  const select = (id: string | null) => router.replace(id ? `/map?selected=${id}` : "/map", { scroll: false });
+  // 등급·조치상태 필터와 선택한 구간을 주소에 남겨, 구간 상세에 다녀와도 그대로 돌아오게 한다
+  const replaceQuery = (next: { level?: LevelFilter; status?: StatusFilter; selected?: string | null }) => {
+    const params = new URLSearchParams();
+    const lv = next.level ?? level;
+    const st = next.status ?? status;
+    const sel = next.selected === undefined ? selectedId : next.selected;
+    if (lv !== "ALL") params.set("level", lv);
+    if (st !== "ALL") params.set("status", st);
+    if (sel) params.set("selected", sel);
+    const qs = params.toString();
+    router.replace(qs ? `/map?${qs}` : "/map", { scroll: false });
+  };
+  const select = (id: string | null) => replaceQuery({ selected: id });
+  const changeLevel = (lv: LevelFilter) => {
+    setLevel(lv);
+    replaceQuery({ level: lv });
+  };
+  const changeStatus = (st: StatusFilter) => {
+    setStatus(st);
+    replaceQuery({ status: st });
+  };
   const [registerOpen, setRegisterOpen] = useState(false);
 
   return (
@@ -160,12 +200,12 @@ function RiskMapPageContent() {
           </div>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="위험등급 필터">
             {(["ALL", ...RISK_LEVELS] as const).map((lv) => {
-              const active = level === lv;
+              const active = level === lv || (level === "ATTENTION" && lv !== "ALL" && lv !== "SAFE");
               return (
                 <button
                   key={lv}
                   type="button"
-                  onClick={() => setLevel(lv)}
+                  onClick={() => changeLevel(lv)}
                   aria-pressed={active}
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors",
@@ -239,12 +279,13 @@ function RiskMapPageContent() {
               <span className="sr-only">조치 상태 필터</span>
               <select
                 value={status}
-                onChange={(e) => setStatus(e.target.value as StatusFilter)}
+                onChange={(e) => changeStatus(e.target.value as StatusFilter)}
                 className={cn(inputClass, "py-2.5 text-sm")}
               >
                 <option value="ALL">종료 제외 전체</option>
                 <option value="OPEN">조치 전 전체</option>
                 <option value="PENDING">AI 분석 대기</option>
+                <option value="OVERDUE">처리기한 초과</option>
                 {ALL_STATUSES.map((s) => (
                   <option key={s} value={s}>
                     {STATUS_META[s].label}
